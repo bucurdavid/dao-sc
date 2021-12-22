@@ -1,5 +1,5 @@
 [package]
-name = "fellowships-wasm"
+name = "manager-wasm"
 version = "0.1.0"
 authors = ["Micha Vie <micha@freeiam.com>", "Superciety <hello@superciety.com>"]
 edition = "2018"
@@ -20,7 +20,7 @@ lto = true
 debug = false
 panic = "abort"
 
-[dependencies.fellowships]
+[dependencies.manager]
 path = ".."
 
 [dependencies.elrond-wasm-node]

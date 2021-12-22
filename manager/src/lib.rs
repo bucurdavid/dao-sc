@@ -3,7 +3,7 @@
 elrond_wasm::imports!();
 
 #[elrond_wasm::contract]
-pub trait Fellowships {
+pub trait Manager {
     #[init]
     fn init(&self) {}
 }

@@ -153,14 +153,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c34f04666d835ff5d62e058c3995147c06f42fe86ff053337632bca83e42702d"
 
 [[package]]
-name = "fellowships"
-version = "0.1.0"
-dependencies = [
- "elrond-wasm",
- "elrond-wasm-debug",
-]
-
-[[package]]
 name = "generic-array"
 version = "0.14.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -219,6 +211,23 @@ name = "libc"
 version = "0.2.112"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1b03d17f364a3a042d5e5d46b053bbbf82c92c9430c592dd4c064dc6ee997125"
+
+[[package]]
+name = "manager"
+version = "0.1.0"
+dependencies = [
+ "elrond-wasm",
+ "elrond-wasm-debug",
+]
+
+[[package]]
+name = "manager-meta"
+version = "0.1.0"
+dependencies = [
+ "elrond-wasm",
+ "elrond-wasm-debug",
+ "manager",
+]
 
 [[package]]
 name = "mandos"
