@@ -2,8 +2,10 @@
 
 elrond_wasm::imports!();
 
+mod features;
+
 #[elrond_wasm::contract]
-pub trait Entity {
+pub trait Entity: features::FeaturesModule {
     #[init]
     fn init(&self) {}
 }
