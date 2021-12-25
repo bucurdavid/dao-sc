@@ -235,6 +235,7 @@ version = "0.1.0"
 dependencies = [
  "elrond-wasm",
  "elrond-wasm-debug",
+ "entity",
 ]
 
 [[package]]

@@ -8,7 +8,12 @@ elrond_wasm_node::wasm_endpoints! {
     manager
     (
         init
+        callBack
+        createEntity
+        createEntityWithToken
+        finalize
+        getEntityAddress
+        setup
+        upgradeEntity
     )
 }
-
-elrond_wasm_node::wasm_empty_callback! {}
