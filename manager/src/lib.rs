@@ -2,13 +2,15 @@
 
 elrond_wasm::imports!();
 
+mod cost;
 mod factory;
 
 #[elrond_wasm::contract]
-pub trait Manager: factory::FactoryModule {
+pub trait Manager: factory::FactoryModule + cost::CostModule {
     #[init]
-    fn init(&self, entity_template_address: ManagedAddress) {
-        self.init_factory(entity_template_address);
+    fn init(&self, entity_template_address: ManagedAddress, currency_token: TokenIdentifier, creation_cost: BigUint) {
+        self.init_factory_module(entity_template_address);
+        self.init_cost_module(currency_token, creation_cost);
     }
 
     #[payable("EGLD")]
@@ -38,12 +40,21 @@ pub trait Manager: factory::FactoryModule {
         Ok(())
     }
 
+    #[payable("*")]
     #[endpoint(setupEntity)]
-    fn setup_entity_endpoint(&self, token_id: TokenIdentifier) -> SCResult<AsyncCall> {
+    fn setup_entity_endpoint(
+        &self,
+        #[payment_token] cost_token_id: TokenIdentifier,
+        #[payment_amount] cost_amount: BigUint,
+        token_id: TokenIdentifier,
+    ) -> SCResult<AsyncCall> {
         self.require_caller_is_temp_owner(&token_id)?;
         let entity_address = self.get_entity_address(&token_id)?;
 
-        // burn super esdts
+        // burn cost
+        let expected_cost_amount = self.cost_creation_amount().get();
+        require!(cost_amount >= expected_cost_amount, "invalid cost amount");
+        self.burn_cost_tokens(&cost_token_id, &cost_amount);
 
         Ok(self.set_entity_edst_roles(&token_id, &entity_address))
     }

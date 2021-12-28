@@ -2,7 +2,7 @@ elrond_wasm::imports!();
 
 #[elrond_wasm::module]
 pub trait FactoryModule {
-    fn init_factory(&self, entity_template_address: ManagedAddress) {
+    fn init_factory_module(&self, entity_template_address: ManagedAddress) {
         self.entity_templ_address().set(&entity_template_address);
     }
 
