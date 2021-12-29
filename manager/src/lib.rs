@@ -55,7 +55,7 @@ pub trait Manager: factory::FactoryModule + edst::EdstModule + cost::CostModule 
 
         self.enable_entity_features(&entity_address, feature_names);
 
-        self.burn_cost_tokens(cost_token_id, cost_amount)?;
+        self.burn_entity_creation_cost_tokens(cost_token_id, cost_amount)?;
 
         Ok(self.set_entity_edst_roles(&token_id, &entity_address))
     }
