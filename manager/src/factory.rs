@@ -21,7 +21,7 @@ pub trait FactoryModule {
         Ok(address)
     }
 
-    fn enable_entity_features(&self, address: &ManagedAddress, features_names: VarArgs<Vec<u8>>) {
+    fn enable_entity_features(&self, address: &ManagedAddress, features_names: VarArgs<ManagedBuffer>) {
         self.entity_contract_proxy(address.clone())
             .enable_features(features_names)
             .execute_on_dest_context();

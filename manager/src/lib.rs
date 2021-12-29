@@ -48,7 +48,7 @@ pub trait Manager: factory::FactoryModule + edst::EdstModule + cost::CostModule 
         #[payment_token] cost_token_id: TokenIdentifier,
         #[payment_amount] cost_amount: BigUint,
         token_id: TokenIdentifier,
-        #[var_args] feature_names: VarArgs<Vec<u8>>,
+        #[var_args] feature_names: VarArgs<ManagedBuffer>,
     ) -> SCResult<AsyncCall> {
         self.require_caller_is_temp_owner(&token_id)?;
         let entity_address = self.get_entity_address(&token_id)?;
@@ -73,10 +73,10 @@ pub trait Manager: factory::FactoryModule + edst::EdstModule + cost::CostModule 
 
     #[callback]
     fn token_issue_callback(&self, initial_caller: &ManagedAddress, #[call_result] result: ManagedAsyncCallResult<TokenIdentifier>) -> SCResult<()> {
-        match result {
-            ManagedAsyncCallResult::Ok(token_id) => self.store_new_entity(initial_caller, token_id),
-            ManagedAsyncCallResult::Err(_) => Ok(self.send_back_egld(&initial_caller)),
-        }
+        Ok(match result {
+            ManagedAsyncCallResult::Ok(token_id) => self.store_new_entity(initial_caller, token_id)?,
+            ManagedAsyncCallResult::Err(_) => self.send_back_egld(&initial_caller),
+        })
     }
 
     #[endpoint(upgradeEntity)]
@@ -111,7 +111,7 @@ pub trait Manager: factory::FactoryModule + edst::EdstModule + cost::CostModule 
     fn require_caller_is_temp_owner(&self, token_id: &TokenIdentifier) -> SCResult<()> {
         let caller = self.blockchain().get_caller();
         let temp_owner_token_id = self.temp_setup_owner(&caller).get();
-        require!(&temp_owner_token_id == token_id, "not in setup");
+        require!(&temp_owner_token_id == token_id, "token not in setup");
         Ok(())
     }
 
