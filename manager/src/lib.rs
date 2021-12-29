@@ -8,9 +8,9 @@ mod factory;
 #[elrond_wasm::contract]
 pub trait Manager: factory::FactoryModule + cost::CostModule {
     #[init]
-    fn init(&self, entity_template_address: ManagedAddress, currency_token: TokenIdentifier, creation_cost: BigUint) {
+    fn init(&self, entity_template_address: ManagedAddress, cost_token: TokenIdentifier, cost_entity_creation: BigUint) {
         self.init_factory_module(entity_template_address);
-        self.init_cost_module(currency_token, creation_cost);
+        self.init_cost_module(cost_token, cost_entity_creation);
     }
 
     #[payable("EGLD")]
