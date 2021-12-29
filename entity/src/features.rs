@@ -41,10 +41,7 @@ pub trait FeaturesModule {
             "only owner allowed to change features"
         );
 
-        self.set_feature_flag(
-            FeatureName(feature_name.as_slice()),
-            if value { FEATURE_ON } else { FEATURE_OFF },
-        );
+        self.set_feature_flag(FeatureName(feature_name.as_slice()), if value { FEATURE_ON } else { FEATURE_OFF });
         Ok(())
     }
 }
@@ -52,7 +49,7 @@ pub trait FeaturesModule {
 elrond_wasm::derive_imports!();
 
 #[derive(TopEncode)]
-pub struct FeatureName<'a>(&'a [u8]);
+pub struct FeatureName<'a>(pub &'a [u8]);
 
 use elrond_wasm::elrond_codec::*;
 impl<'a> NestedEncode for FeatureName<'a> {
@@ -63,12 +60,7 @@ impl<'a> NestedEncode for FeatureName<'a> {
     }
 
     #[inline]
-    fn dep_encode_or_exit<O: NestedEncodeOutput, ExitCtx: Clone>(
-        &self,
-        dest: &mut O,
-        _: ExitCtx,
-        _: fn(ExitCtx, EncodeError) -> !,
-    ) {
+    fn dep_encode_or_exit<O: NestedEncodeOutput, ExitCtx: Clone>(&self, dest: &mut O, _: ExitCtx, _: fn(ExitCtx, EncodeError) -> !) {
         dest.write(self.0);
     }
 }

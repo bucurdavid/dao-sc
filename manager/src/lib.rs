@@ -3,10 +3,11 @@
 elrond_wasm::imports!();
 
 mod cost;
+mod edst;
 mod factory;
 
 #[elrond_wasm::contract]
-pub trait Manager: factory::FactoryModule + cost::CostModule {
+pub trait Manager: factory::FactoryModule + edst::EdstModule + cost::CostModule {
     #[init]
     fn init(&self, entity_template_address: ManagedAddress, cost_token: TokenIdentifier, cost_entity_creation: BigUint) {
         self.init_factory_module(entity_template_address);
@@ -47,9 +48,12 @@ pub trait Manager: factory::FactoryModule + cost::CostModule {
         #[payment_token] cost_token_id: TokenIdentifier,
         #[payment_amount] cost_amount: BigUint,
         token_id: TokenIdentifier,
+        #[var_args] feature_names: VarArgs<Vec<u8>>,
     ) -> SCResult<AsyncCall> {
         self.require_caller_is_temp_owner(&token_id)?;
         let entity_address = self.get_entity_address(&token_id)?;
+
+        self.enable_entity_features(&entity_address, feature_names);
 
         self.burn_cost_tokens(cost_token_id, cost_amount)?;
 
@@ -62,7 +66,7 @@ pub trait Manager: factory::FactoryModule + cost::CostModule {
         let entity_address = self.get_entity_address(&token_id)?;
         let caller = self.blockchain().get_caller();
 
-        self.temp_setup_owner().remove(&caller);
+        self.temp_setup_owner(&caller).clear();
 
         Ok(self.transfer_entity_edst_ownership(&token_id, &entity_address))
     }
@@ -86,9 +90,9 @@ pub trait Manager: factory::FactoryModule + cost::CostModule {
     }
 
     fn store_new_entity(&self, caller: &ManagedAddress, token_id: TokenIdentifier) -> SCResult<()> {
-        let address = self.create_entity()?;
+        let address = self.create_entity(token_id.clone())?;
         self.entities_map().insert(token_id.clone(), address.clone());
-        self.temp_setup_owner().insert(caller.clone(), token_id);
+        self.temp_setup_owner(&caller).set(&token_id);
         Ok(())
     }
 
@@ -106,8 +110,8 @@ pub trait Manager: factory::FactoryModule + cost::CostModule {
 
     fn require_caller_is_temp_owner(&self, token_id: &TokenIdentifier) -> SCResult<()> {
         let caller = self.blockchain().get_caller();
-        let temp_owner_token_id = self.temp_setup_owner().get(&caller).unwrap_or(TokenIdentifier::egld());
-        require!(temp_owner_token_id == *token_id, "not in setup");
+        let temp_owner_token_id = self.temp_setup_owner(&caller).get();
+        require!(&temp_owner_token_id == token_id, "not in setup");
         Ok(())
     }
 
@@ -115,5 +119,5 @@ pub trait Manager: factory::FactoryModule + cost::CostModule {
     fn entities_map(&self) -> MapMapper<TokenIdentifier, ManagedAddress>;
 
     #[storage_mapper("temp_setup_owner")]
-    fn temp_setup_owner(&self) -> MapMapper<ManagedAddress, TokenIdentifier>;
+    fn temp_setup_owner(&self, owner: &ManagedAddress) -> SingleValueMapper<TokenIdentifier>;
 }
