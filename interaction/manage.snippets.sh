@@ -11,6 +11,10 @@ ENTITY_DEPLOY_TRANSACTION=$(erdpy data load --partition ${NETWORK_NAME} --key=en
 MANAGER_ADDRESS=$(erdpy data load --partition ${NETWORK_NAME} --key=manager--address)
 MANAGER_DEPLOY_TRANSACTION=$(erdpy data load --partition ${NETWORK_NAME} --key=manager--deploy-transaction)
 
+COST_TOKEN=$(erdpy data load --partition ${NETWORK_NAME} --key=cost-token-id)
+COST_TOKEN_HEX="0x$(echo -n ${COST_TOKEN} | xxd -p -u | tr -d '\n')"
+COST_ENTITY_CREATION_AMOUNT=$(erdpy data load --partition ${NETWORK_NAME} --key=cost-entity-creation-amount)
+
 deploy() {
     echo ">> building ENTITY contract for deployment ..."
     erdpy --verbose contract build entity || return
@@ -37,7 +41,7 @@ deploy() {
 
     echo ">> deploying MANAGER to ${NETWORK_NAME} ..."
     erdpy --verbose contract deploy --project manager \
-        --arguments ${ENTITY_ADDRESS_HEX} \
+        --arguments $entity_template_address_hex ${COST_TOKEN_HEX} ${COST_ENTITY_CREATION_AMOUNT} \
         --recall-nonce --gas-limit=80000000 \
         --pem=${DEPLOYER} --outfile="deploy-${NETWORK_NAME}-manager.interaction.json" \
         --proxy=${PROXY} --chain=${CHAIN_ID} \
@@ -62,7 +66,7 @@ upgradeManager() {
 
     echo "upgrading MANAGER contract ${MANAGER_ADDRESS} on ${NETWORK_NAME} ..."
     erdpy --verbose contract upgrade ${MANAGER_ADDRESS} --project manager \
-        --arguments $entity_template_address_hex \
+        --arguments $entity_template_address_hex ${COST_TOKEN_HEX} ${COST_ENTITY_CREATION_AMOUNT} \
         --recall-nonce --gas-limit=80000000 \
         --pem=${DEPLOYER} --proxy=${PROXY} --chain=${CHAIN_ID} \
         --send || return
