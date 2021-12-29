@@ -10,8 +10,10 @@ use features::{FeatureName, FEATURE_ON};
 #[elrond_wasm::contract]
 pub trait Entity: features::FeaturesModule + esdt::EsdtModule {
     #[init]
-    fn init(&self, token_id: TokenIdentifier) {
-        self.token_id().set_if_empty(&token_id);
+    fn init(&self, #[var_args] opt_token_id: OptionalArg<TokenIdentifier>) {
+        if let OptionalArg::Some(token_id) = opt_token_id {
+            self.token_id().set_if_empty(&token_id);
+        }
     }
 
     #[endpoint(enableFeatures)]

@@ -7,13 +7,11 @@ pub trait FactoryModule {
     }
 
     fn create_entity(&self, token_id: TokenIdentifier) -> SCResult<ManagedAddress> {
-        require!(!self.entity_templ_address().is_empty(), "no template set");
-
-        let template_contract = self.entity_templ_address().get();
+        let template_contract = self.get_template_address()?;
 
         let (address, _) = self
             .entity_contract_proxy(ManagedAddress::zero())
-            .init(token_id)
+            .init(OptionalArg::Some(token_id))
             .deploy_from_source(&template_contract, CodeMetadata::UPGRADEABLE);
 
         require!(!address.is_zero(), "address is zero");
@@ -21,10 +19,25 @@ pub trait FactoryModule {
         Ok(address)
     }
 
+    fn upgrade_entity(&self, address: &ManagedAddress) -> SCResult<()> {
+        let template_contract = self.get_template_address()?;
+
+        self.entity_contract_proxy(address.clone())
+            .init(OptionalArg::None)
+            .upgrade_from_source(&template_contract, CodeMetadata::UPGRADEABLE);
+
+        Ok(())
+    }
+
     fn enable_entity_features(&self, address: &ManagedAddress, features_names: VarArgs<ManagedBuffer>) {
         self.entity_contract_proxy(address.clone())
             .enable_features(features_names)
             .execute_on_dest_context();
+    }
+
+    fn get_template_address(&self) -> SCResult<ManagedAddress> {
+        require!(!self.entity_templ_address().is_empty(), "no template set");
+        Ok(self.entity_templ_address().get())
     }
 
     #[storage_mapper("entity_templ_addr")]

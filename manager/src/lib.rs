@@ -80,7 +80,11 @@ pub trait Manager: factory::FactoryModule + edst::EdstModule + cost::CostModule 
     }
 
     #[endpoint(upgradeEntity)]
-    fn upgrade_entity_entity(&self) -> SCResult<()> {
+    fn upgrade_entity_endpoint(&self, token_id: TokenIdentifier) -> SCResult<()> {
+        let entity_address = self.get_entity_address(&token_id)?;
+
+        self.upgrade_entity(&entity_address)?;
+
         Ok(())
     }
 

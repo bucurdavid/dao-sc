@@ -80,14 +80,11 @@ upgradeManager() {
 }
 
 upgradeEntityTemplate() {
-    entity_template_address_hex="0x$(erdpy wallet bech32 --decode ${ENTITY_ADDRESS})"
-
     echo "building contract for upgrade ..."
     erdpy --verbose contract build entity || return
 
     echo "upgrading ENTITY template contract ${ENTITY_ADDRESS} on ${NETWORK_NAME} ..."
     erdpy --verbose contract upgrade ${ENTITY_ADDRESS} --project entity \
-        --arguments ${COST_TOKEN_ID_HEX}\
         --recall-nonce --gas-limit=80000000 \
         --pem=${DEPLOYER} --proxy=${PROXY} --chain=${CHAIN_ID} \
         --send || return
