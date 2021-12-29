@@ -13,7 +13,7 @@ elrond_wasm_node::wasm_endpoints! {
         createEntityWithToken
         finalize
         getEntityAddress
-        setup
+        setupEntity
         upgradeEntity
     )
 }

@@ -51,10 +51,7 @@ pub trait Manager: factory::FactoryModule + cost::CostModule {
         self.require_caller_is_temp_owner(&token_id)?;
         let entity_address = self.get_entity_address(&token_id)?;
 
-        // burn cost
-        let expected_cost_amount = self.cost_creation_amount().get();
-        require!(cost_amount >= expected_cost_amount, "invalid cost amount");
-        self.burn_cost_tokens(&cost_token_id, &cost_amount);
+        self.burn_cost_tokens(cost_token_id, cost_amount)?;
 
         Ok(self.set_entity_edst_roles(&token_id, &entity_address))
     }
