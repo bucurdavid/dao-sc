@@ -23,6 +23,7 @@ pub trait Manager: factory::FactoryModule + edst::EdstModule + cost::CostModule 
         dec_amount: usize,
         #[payment] issue_cost: BigUint,
     ) -> SCResult<AsyncCall> {
+        require!(dec_amount >= 18 as usize, "invalid token decimals");
         let initial_caller = self.blockchain().get_caller();
 
         Ok(self
