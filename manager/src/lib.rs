@@ -61,13 +61,13 @@ pub trait Manager: factory::FactoryModule + edst::EdstModule + cost::CostModule 
         Ok(self.set_entity_edst_roles(&token_id, &entity_address))
     }
 
-    #[endpoint(finalize)]
-    fn finalize_endpoint(&self, token_id: TokenIdentifier) -> SCResult<AsyncCall> {
+    #[endpoint(finalizeEntity)]
+    fn finalize_entity_endpoint(&self, token_id: TokenIdentifier) -> SCResult<AsyncCall> {
         self.require_caller_is_temp_owner(&token_id)?;
         let entity_address = self.get_entity_address(&token_id)?;
         let caller = self.blockchain().get_caller();
 
-        self.temp_setup_owner(&caller).clear();
+        self.setup_owner_token(&caller).clear();
 
         Ok(self.transfer_entity_edst_ownership(&token_id, &entity_address))
     }
@@ -91,13 +91,13 @@ pub trait Manager: factory::FactoryModule + edst::EdstModule + cost::CostModule 
 
     #[view(getEntityAddress)]
     fn get_entity_address_view(&self, token_id: TokenIdentifier) -> ManagedAddress {
-        self.entities_map().get(&token_id).unwrap_or_else(|| ManagedAddress::zero())
+        self.entities_map().get(&token_id).unwrap_or_default()
     }
 
     fn store_new_entity(&self, caller: &ManagedAddress, token_id: TokenIdentifier) -> SCResult<()> {
         let address = self.create_entity(token_id.clone())?;
         self.entities_map().insert(token_id.clone(), address.clone());
-        self.temp_setup_owner(&caller).set(&token_id);
+        self.setup_owner_token(&caller).set(&token_id);
         Ok(())
     }
 
@@ -115,7 +115,7 @@ pub trait Manager: factory::FactoryModule + edst::EdstModule + cost::CostModule 
 
     fn require_caller_is_temp_owner(&self, token_id: &TokenIdentifier) -> SCResult<()> {
         let caller = self.blockchain().get_caller();
-        let temp_owner_token_id = self.temp_setup_owner(&caller).get();
+        let temp_owner_token_id = self.setup_owner_token(&caller).get();
         require!(&temp_owner_token_id == token_id, "token not in setup");
         Ok(())
     }
@@ -123,6 +123,7 @@ pub trait Manager: factory::FactoryModule + edst::EdstModule + cost::CostModule 
     #[storage_mapper("entities")]
     fn entities_map(&self) -> MapMapper<TokenIdentifier, ManagedAddress>;
 
-    #[storage_mapper("temp_setup_owner")]
-    fn temp_setup_owner(&self, owner: &ManagedAddress) -> SingleValueMapper<TokenIdentifier>;
+    #[view(getSetupOwnerToken)]
+    #[storage_mapper("setup_owner_token")]
+    fn setup_owner_token(&self, owner: &ManagedAddress) -> SingleValueMapper<TokenIdentifier>;
 }
