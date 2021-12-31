@@ -85,7 +85,7 @@ upgradeEntityTemplate() {
 
     echo "upgrading ENTITY template contract ${ENTITY_ADDRESS} on ${NETWORK_NAME} ..."
     erdpy --verbose contract upgrade ${ENTITY_ADDRESS} --project entity \
-        --recall-nonce --gas-limit=80000000 \
+        --recall-nonce --gas-limit=150000000 \
         --pem=${DEPLOYER} --proxy=${PROXY} --chain=${CHAIN_ID} \
         --send || return
 
