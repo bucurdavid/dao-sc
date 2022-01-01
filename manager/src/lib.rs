@@ -15,8 +15,8 @@ pub trait Manager: factory::FactoryModule + edst::EdstModule + cost::CostModule 
     }
 
     #[payable("EGLD")]
-    #[endpoint(createEntity)]
-    fn create_entity_endpoint(
+    #[endpoint(createEntityToken)]
+    fn create_entity_token_endpoint(
         &self,
         token_name: ManagedBuffer,
         token_ticker: ManagedBuffer,
@@ -33,18 +33,18 @@ pub trait Manager: factory::FactoryModule + edst::EdstModule + cost::CostModule 
 
     #[only_owner]
     #[endpoint(createEntityWithToken)]
-    fn create_entity_with_token_endpoint(&self, token: TokenIdentifier) -> SCResult<()> {
-        require!(token.is_valid_esdt_identifier(), "not an esdt");
+    fn create_entity_with_token_endpoint(&self, token_id: TokenIdentifier) -> SCResult<()> {
+        require!(token_id.is_valid_esdt_identifier(), "not an esdt");
 
         let caller = self.blockchain().get_caller();
 
-        self.store_new_entity(&caller, token)?;
+        self.setup_owner_token(&caller).set(&token_id);
         Ok(())
     }
 
     #[payable("*")]
-    #[endpoint(setupEntity)]
-    fn setup_entity_endpoint(
+    #[endpoint(createEntity)]
+    fn create_entity_endpoint(
         &self,
         #[payment_token] cost_token_id: TokenIdentifier,
         #[payment_amount] cost_amount: BigUint,
@@ -52,9 +52,14 @@ pub trait Manager: factory::FactoryModule + edst::EdstModule + cost::CostModule 
         #[var_args] feature_names: VarArgs<ManagedBuffer>,
     ) -> SCResult<AsyncCall> {
         self.require_caller_is_temp_owner(&token_id)?;
-        let entity_address = self.get_entity_address(&token_id)?;
+
+        let entity_address = self.create_entity(&token_id)?;
+
+        self.entities_map().insert(token_id.clone(), entity_address.clone());
 
         self.enable_entity_features(&entity_address, feature_names);
+
+        self.init_governance(&entity_address, &token_id);
 
         self.burn_entity_creation_cost_tokens(cost_token_id, cost_amount)?;
 
@@ -64,6 +69,7 @@ pub trait Manager: factory::FactoryModule + edst::EdstModule + cost::CostModule 
     #[endpoint(finalizeEntity)]
     fn finalize_entity_endpoint(&self, token_id: TokenIdentifier) -> SCResult<AsyncCall> {
         self.require_caller_is_temp_owner(&token_id)?;
+
         let entity_address = self.get_entity_address(&token_id)?;
         let caller = self.blockchain().get_caller();
 
@@ -73,11 +79,11 @@ pub trait Manager: factory::FactoryModule + edst::EdstModule + cost::CostModule 
     }
 
     #[callback]
-    fn token_issue_callback(&self, initial_caller: &ManagedAddress, #[call_result] result: ManagedAsyncCallResult<TokenIdentifier>) -> SCResult<()> {
-        Ok(match result {
-            ManagedAsyncCallResult::Ok(token_id) => self.store_new_entity(initial_caller, token_id)?,
+    fn token_issue_callback(&self, initial_caller: &ManagedAddress, #[call_result] result: ManagedAsyncCallResult<TokenIdentifier>) {
+        match result {
+            ManagedAsyncCallResult::Ok(token_id) => self.setup_owner_token(&initial_caller).set(&token_id),
             ManagedAsyncCallResult::Err(_) => self.send_back_egld(&initial_caller),
-        })
+        };
     }
 
     #[endpoint(upgradeEntity)]
@@ -92,13 +98,6 @@ pub trait Manager: factory::FactoryModule + edst::EdstModule + cost::CostModule 
     #[view(getEntityAddress)]
     fn get_entity_address_view(&self, token_id: TokenIdentifier) -> ManagedAddress {
         self.entities_map().get(&token_id).unwrap_or_default()
-    }
-
-    fn store_new_entity(&self, caller: &ManagedAddress, token_id: TokenIdentifier) -> SCResult<()> {
-        let address = self.create_entity(token_id.clone())?;
-        self.entities_map().insert(token_id.clone(), address.clone());
-        self.setup_owner_token(&caller).set(&token_id);
-        Ok(())
     }
 
     fn get_entity_address(&self, token_id: &TokenIdentifier) -> SCResult<ManagedAddress> {

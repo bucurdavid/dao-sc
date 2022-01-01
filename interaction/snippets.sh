@@ -115,7 +115,7 @@ addManagerCostTokenBurnRole() {
 
 # params:
 #   $1 = token amount
-createEntity() {
+createEntityToken() {
     token_name="0x$(echo -n 'test' | xxd -p -u | tr -d '\n')"
     token_ticker="0x$(echo -n 'TEST' | xxd -p -u | tr -d '\n')"
 
@@ -123,7 +123,7 @@ createEntity() {
         --recall-nonce \
         --pem=${DEPLOYER} \
         --gas-limit=100000000 \
-        --function="createEntity" \
+        --function="createEntityToken" \
         --arguments $token_name $token_ticker 0 \
         --value=50000000000000000 \
         --proxy=${PROXY} \
@@ -133,8 +133,8 @@ createEntity() {
 
 # params:
 #   $1 = token id
-setupEntity() {
-    function="0x$(echo -n 'setupEntity' | xxd -p -u | tr -d '\n')"
+createEntity() {
+    function="0x$(echo -n 'createEntity' | xxd -p -u | tr -d '\n')"
     token_id="0x$(echo -n $1 | xxd -p -u | tr -d '\n')"
 
     feature1="0x$(echo -n $2 | xxd -p -u | tr -d '\n')"

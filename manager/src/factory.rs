@@ -6,12 +6,12 @@ pub trait FactoryModule {
         self.entity_templ_address().set(&entity_template_address);
     }
 
-    fn create_entity(&self, token_id: TokenIdentifier) -> SCResult<ManagedAddress> {
+    fn create_entity(&self, token_id: &TokenIdentifier) -> SCResult<ManagedAddress> {
         let template_contract = self.get_template_address()?;
 
         let (address, _) = self
             .entity_contract_proxy(ManagedAddress::zero())
-            .init(OptionalArg::Some(token_id))
+            .init(OptionalArg::Some(&token_id.clone()))
             .deploy_from_source(&template_contract, CodeMetadata::UPGRADEABLE);
 
         require!(!address.is_zero(), "address is zero");
@@ -33,6 +33,12 @@ pub trait FactoryModule {
         self.entity_contract_proxy(address.clone())
             .enable_features(features_names)
             .execute_on_dest_context();
+    }
+
+    fn init_governance(&self, address: &ManagedAddress, token_id: &TokenIdentifier) {
+        // self.entity_contract_proxy(address.clone())
+        //     .init_governance_module(token_id)
+        //     .execute_on_dest_context();
     }
 
     fn get_template_address(&self) -> SCResult<ManagedAddress> {
