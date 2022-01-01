@@ -1,23 +1,19 @@
 elrond_wasm::imports!();
 
+use crate::config::{DEFAULT_VOTING_MAX_ACTIONS, DEFAULT_VOTING_DELAY, DEFAULT_VOTING_PERIOD, DEFAULT_VOTING_LOCKTIME, DEFAULT_PROPOSAL_MIN_TOKENS};
 use super::storage;
-
-const DEFAULT_VOTING_PERIOD: u64 = 100_800; // ~7 days in blocks (assuming 6s blocks)
-const DEFAULT_VOTING_DELAY: u64 = 1; // 1 block
-const DEFAULT_VOTING_LOCKTIME: u64 = 28_800; // 2 days
-const DEFAULT_VOTING_MAX_ACTIONS: usize = 10;
 
 #[elrond_wasm::module]
 pub trait GovConfigurableModule: storage::GovStorageModule {
     #[only_owner]
     #[endpoint(initGovernanceModule)]
-    fn init_governance_module(&self, governance_token_id: TokenIdentifier, quorum: BigUint, min_token_balance_for_proposal: BigUint) -> SCResult<()> {
+    fn init_governance_module(&self, governance_token_id: TokenIdentifier, quorum: BigUint) -> SCResult<()> {
         require!(governance_token_id.is_valid_esdt_identifier(), "invalid edst");
 
         self.governance_token_id().set_if_empty(&governance_token_id);
 
         self.try_change_quorum(quorum)?;
-        self.try_change_min_token_balance_for_proposing(min_token_balance_for_proposal)?;
+        self.try_change_min_token_balance_for_proposing(BigUint::from(DEFAULT_PROPOSAL_MIN_TOKENS))?;
         self.try_change_max_actions_per_proposal(DEFAULT_VOTING_MAX_ACTIONS)?;
         self.try_change_voting_delay_in_blocks(DEFAULT_VOTING_DELAY)?;
         self.try_change_voting_period_in_blocks(DEFAULT_VOTING_PERIOD)?;
@@ -91,35 +87,35 @@ pub trait GovConfigurableModule: storage::GovStorageModule {
     }
 
     fn try_change_min_token_balance_for_proposing(&self, new_value: BigUint) -> SCResult<()> {
-        require!(new_value != 0, "min token balance for proposing can't be set to 0");
+        require!(new_value != 0, "min token balance for proposing can not be 0");
         self.min_token_balance_for_proposing().set(&new_value);
 
         Ok(())
     }
 
     fn try_change_max_actions_per_proposal(&self, new_value: usize) -> SCResult<()> {
-        require!(new_value != 0, "max actions per proposal can't be set to 0");
+        require!(new_value != 0, "max actions per proposal can not be 0");
         self.max_actions_per_proposal().set(&new_value);
 
         Ok(())
     }
 
     fn try_change_voting_delay_in_blocks(&self, new_value: u64) -> SCResult<()> {
-        require!(new_value != 0, "voting delay in blocks can't be set to 0");
+        require!(new_value != 0, "voting delay in blocks can not be 0");
         self.voting_delay_in_blocks().set(&new_value);
 
         Ok(())
     }
 
     fn try_change_voting_period_in_blocks(&self, new_value: u64) -> SCResult<()> {
-        require!(new_value != 0, "voting period (in blocks) can't be set to 0");
+        require!(new_value != 0, "voting period (in blocks) can not be 0");
         self.voting_period_in_blocks().set(&new_value);
 
         Ok(())
     }
 
     fn try_change_lock_time_after_voting_ends_in_blocks(&self, new_value: u64) -> SCResult<()> {
-        require!(new_value != 0, "lock time after voting ends (in blocks) can't be set to 0");
+        require!(new_value != 0, "lock time after voting ends (in blocks) can not be 0");
         self.lock_time_after_voting_ends_in_blocks().set(&new_value);
 
         Ok(())

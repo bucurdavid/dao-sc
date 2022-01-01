@@ -2,6 +2,7 @@
 
 elrond_wasm::imports!();
 
+mod config;
 mod esdt;
 mod features;
 mod governance;

@@ -7,13 +7,13 @@ pub mod types;
 
 use types::*;
 
-const MAX_GAS_LIMIT_PER_BLOCK: u64 = 1_500_000_000;
+const MAX_BLOCK_GAS_LIMIT: u64 = 1_500_000_000;
 
 #[elrond_wasm::module]
 pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovStorageModule + events::GovEventsModule {
     #[payable("*")]
     #[endpoint(depositTokensForAction)]
-    fn deposit_tokens_for_action(
+    fn deposit_tokens_for_action_endpoint(
         &self,
         #[payment_token] payment_token: TokenIdentifier,
         #[payment_nonce] payment_nonce: u64,
@@ -26,9 +26,9 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
 
     // Used to withdraw the tokens after the action was executed or cancelled
     #[endpoint(withdrawGovernanceTokens)]
-    fn withdraw_governance_tokens(&self, proposal_id: usize) -> SCResult<()> {
+    fn withdraw_governance_tokens_endpoint(&self, proposal_id: usize) -> SCResult<()> {
         self.require_valid_proposal_id(proposal_id)?;
-        require!(self.get_proposal_status(proposal_id) == ProposalStatus::None, "proposal is still active");
+        require!(self.get_proposal_status_view(proposal_id) == ProposalStatus::None, "proposal is still active");
 
         let caller = self.blockchain().get_caller();
         let governance_token_id = self.governance_token_id().get();
@@ -47,8 +47,8 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
     }
 
     #[payable("*")]
-    #[endpoint]
-    fn propose(
+    #[endpoint(propose)]
+    fn propose_endpoint(
         &self,
         #[payment_amount] payment_amount: BigUint,
         description: BoxedBytes,
@@ -72,16 +72,13 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
                 arguments,
             };
 
-            require!(
-                gas_limit < MAX_GAS_LIMIT_PER_BLOCK,
-                "single action exceeds max block gas limit"
-            );
+            require!(gas_limit < MAX_BLOCK_GAS_LIMIT, "single action exceeds max block gas limit");
 
             gov_actions.push(gov_action);
         }
 
         require!(
-            self.total_gas_needed(&gov_actions) < MAX_GAS_LIMIT_PER_BLOCK,
+            self.total_gas_needed(&gov_actions) < MAX_BLOCK_GAS_LIMIT,
             "actions require too much gas"
         );
 
@@ -107,61 +104,62 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
     }
 
     #[payable("*")]
-    #[endpoint]
-    fn upvote(&self, #[payment_amount] payment_amount: BigUint, proposal_id: usize) -> SCResult<()> {
+    #[endpoint(voteFor)]
+    fn vote_for_endpoint(&self, #[payment_amount] payment_amount: BigUint, proposal_id: usize) -> SCResult<()> {
         self.require_payment_token_governance_token()?;
         self.require_valid_proposal_id(proposal_id)?;
-        require!(self.get_proposal_status(proposal_id) == ProposalStatus::Active, "proposal not active");
+        require!(self.get_proposal_status_view(proposal_id) == ProposalStatus::Active, "proposal not active");
 
         let voter = self.blockchain().get_caller();
 
         self.vote_cast_event(&voter, proposal_id, &payment_amount);
 
-        self.total_upvotes(proposal_id).update(|total_votes| *total_votes += &payment_amount);
+        self.total_upvotes(proposal_id).update(|current| *current += &payment_amount);
         self.upvotes(proposal_id)
             .entry(voter)
-            .and_modify(|nr_votes| *nr_votes += &payment_amount)
+            .and_modify(|current| *current += &payment_amount)
             .or_insert(payment_amount);
 
         Ok(())
     }
 
     #[payable("*")]
-    #[endpoint]
-    fn downvote(&self, #[payment_amount] payment_amount: BigUint, proposal_id: usize) -> SCResult<()> {
+    #[endpoint(voteAgainst)]
+    fn vote_against_endpoint(&self, #[payment_amount] payment_amount: BigUint, proposal_id: usize) -> SCResult<()> {
         self.require_payment_token_governance_token()?;
         self.require_valid_proposal_id(proposal_id)?;
-        require!(self.get_proposal_status(proposal_id) == ProposalStatus::Active, "proposal not active");
+        require!(self.get_proposal_status_view(proposal_id) == ProposalStatus::Active, "proposal not active");
 
         let downvoter = self.blockchain().get_caller();
 
         self.downvote_cast_event(&downvoter, proposal_id, &payment_amount);
 
         self.total_downvotes(proposal_id)
-            .update(|total_downvotes| *total_downvotes += &payment_amount);
+            .update(|current| *current += &payment_amount);
+
         self.downvotes(proposal_id)
             .entry(downvoter)
-            .and_modify(|nr_downvotes| *nr_downvotes += &payment_amount)
+            .and_modify(|current| *current += &payment_amount)
             .or_insert(payment_amount);
 
         Ok(())
     }
 
-    #[endpoint]
-    fn queue(&self, proposal_id: usize) -> SCResult<()> {
-        require!(self.get_proposal_status(proposal_id) == ProposalStatus::Succeeded, "not ready to queue");
+    #[endpoint(queue)]
+    fn queue_endpoint(&self, proposal_id: usize) -> SCResult<()> {
+        require!(self.get_proposal_status_view(proposal_id) == ProposalStatus::Succeeded, "not ready to queue");
 
         let current_block = self.blockchain().get_block_nonce();
-        self.proposal_queue_block(proposal_id).set(&current_block);
 
+        self.proposal_queue_block(proposal_id).set(&current_block);
         self.proposal_queued_event(proposal_id, current_block);
 
         Ok(())
     }
 
-    #[endpoint]
-    fn execute(&self, proposal_id: usize) -> SCResult<()> {
-        require!(self.get_proposal_status(proposal_id) == ProposalStatus::Queued, "not ready to execute");
+    #[endpoint(execute)]
+    fn execute_endpoint(&self, proposal_id: usize) -> SCResult<()> {
+        require!(self.get_proposal_status_view(proposal_id) == ProposalStatus::Queued, "not ready to execute");
 
         let current_block = self.blockchain().get_block_nonce();
         let lock_blocks = self.lock_time_after_voting_ends_in_blocks().get();
@@ -201,9 +199,9 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
         Ok(())
     }
 
-    #[endpoint]
-    fn cancel(&self, proposal_id: usize) -> SCResult<()> {
-        match self.get_proposal_status(proposal_id) {
+    #[endpoint(cancel)]
+    fn cancel_endpoint(&self, proposal_id: usize) -> SCResult<()> {
+        match self.get_proposal_status_view(proposal_id) {
             ProposalStatus::None => {
                 return sc_error!("proposal does not exist");
             },
@@ -224,13 +222,12 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
     }
 
     #[view(getProposalStatus)]
-    fn get_proposal_status(&self, proposal_id: usize) -> ProposalStatus {
+    fn get_proposal_status_view(&self, proposal_id: usize) -> ProposalStatus {
         if !self.proposal_exists(proposal_id) {
             return ProposalStatus::None;
         }
 
-        let queue_block = self.proposal_queue_block(proposal_id).get();
-        if queue_block > 0 {
+        if self.proposal_queue_block(proposal_id).get() > 0 {
             return ProposalStatus::Queued;
         }
 
@@ -249,11 +246,11 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
             return ProposalStatus::Active;
         }
 
-        let total_upvotes = self.total_upvotes(proposal_id).get();
-        let total_downvotes = self.total_downvotes(proposal_id).get();
+        let total_for_votes = self.total_upvotes(proposal_id).get();
+        let total_against_votes = self.total_downvotes(proposal_id).get();
         let quorum = self.quorum().get();
 
-        if total_upvotes > total_downvotes && total_upvotes - total_downvotes >= quorum {
+        if total_for_votes > total_against_votes && total_for_votes - total_against_votes >= quorum {
             ProposalStatus::Succeeded
         } else {
             ProposalStatus::Defeated
@@ -261,7 +258,7 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
     }
 
     #[view(getProposer)]
-    fn get_proposer(&self, proposal_id: usize) -> OptionalArg<ManagedAddress> {
+    fn get_proposer_view(&self, proposal_id: usize) -> OptionalArg<ManagedAddress> {
         if !self.proposal_exists(proposal_id) {
             OptionalArg::None
         } else {
@@ -270,7 +267,7 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
     }
 
     #[view(getProposalDescription)]
-    fn get_proposal_description(&self, proposal_id: usize) -> OptionalArg<BoxedBytes> {
+    fn get_proposal_description_view(&self, proposal_id: usize) -> OptionalArg<BoxedBytes> {
         if !self.proposal_exists(proposal_id) {
             OptionalArg::None
         } else {
@@ -279,7 +276,7 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
     }
 
     #[view(getProposalActions)]
-    fn get_proposal_actions(&self, proposal_id: usize) -> MultiResultVec<ActionAsMultiArg<Self::Api>> {
+    fn get_proposal_actions_view(&self, proposal_id: usize) -> MultiResultVec<ActionAsMultiArg<Self::Api>> {
         if !self.proposal_exists(proposal_id) {
             return MultiResultVec::new();
         }
