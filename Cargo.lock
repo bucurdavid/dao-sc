@@ -158,6 +158,9 @@ version = "0.1.0"
 dependencies = [
  "elrond-wasm",
  "elrond-wasm-debug",
+ "hex",
+ "num-bigint",
+ "num-traits",
 ]
 
 [[package]]
@@ -236,6 +239,9 @@ dependencies = [
  "elrond-wasm",
  "elrond-wasm-debug",
  "entity",
+ "hex",
+ "num-bigint",
+ "num-traits",
 ]
 
 [[package]]

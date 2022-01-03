@@ -11,8 +11,13 @@ path = "src/lib.rs"
 [dependencies.elrond-wasm]
 version = "0.25.0"
 
+[dependencies.entity]
+path = "../entity"
+
 [dev-dependencies.elrond-wasm-debug]
 version = "0.25.0"
 
-[dependencies.entity]
-path = "../entity"
+[dev-dependencies]
+num-bigint = "0.4.2"
+num-traits = "0.2"
+hex = "0.4"

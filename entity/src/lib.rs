@@ -2,15 +2,22 @@
 
 elrond_wasm::imports!();
 
-mod config;
-mod esdt;
-mod features;
-mod governance;
+pub mod config;
+pub mod esdt;
+pub mod features;
+pub mod governance;
 
 use features::{FeatureName, FEATURE_ON};
 
 #[elrond_wasm::contract]
-pub trait Entity: features::FeaturesModule + esdt::EsdtModule + governance::GovernanceModule + governance::configurable::GovConfigurableModule + governance::storage::GovStorageModule  + governance::events::GovEventsModule {
+pub trait Entity:
+    features::FeaturesModule
+    + esdt::EsdtModule
+    + governance::GovernanceModule
+    + governance::configurable::GovConfigurableModule
+    + governance::storage::GovStorageModule
+    + governance::events::GovEventsModule
+{
     #[init]
     fn init(&self, #[var_args] opt_token_id: OptionalArg<TokenIdentifier>) {
         if let OptionalArg::Some(token_id) = opt_token_id {
