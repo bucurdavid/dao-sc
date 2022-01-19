@@ -3,11 +3,11 @@
 elrond_wasm::imports!();
 
 mod cost;
-mod edst;
+mod esdt;
 mod factory;
 
 #[elrond_wasm::contract]
-pub trait Manager: factory::FactoryModule + edst::EdstModule + cost::CostModule {
+pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule {
     #[init]
     fn init(&self, entity_template_address: ManagedAddress, cost_token: TokenIdentifier, cost_entity_creation: BigUint) {
         self.init_factory_module(entity_template_address);
@@ -20,14 +20,14 @@ pub trait Manager: factory::FactoryModule + edst::EdstModule + cost::CostModule 
         &self,
         token_name: ManagedBuffer,
         token_ticker: ManagedBuffer,
-        dec_amount: usize,
+        num_decimals: usize,
         #[payment] issue_cost: BigUint,
     ) -> SCResult<AsyncCall> {
-        require!(dec_amount <= 18 as usize, "invalid token decimals");
+        require!(num_decimals <= 18 as usize, "invalid token decimals");
         let initial_caller = self.blockchain().get_caller();
 
         Ok(self
-            .issue_token(token_name, token_ticker, dec_amount, issue_cost)
+            .issue_token(token_name, token_ticker, num_decimals, issue_cost)
             .with_callback(self.callbacks().token_issue_callback(&initial_caller)))
     }
 

@@ -1,10 +1,10 @@
 elrond_wasm::imports!();
 
 #[elrond_wasm::module]
-pub trait EdstModule {
-    fn issue_token(&self, name: ManagedBuffer, ticker: ManagedBuffer, dec_amount: usize, cost: BigUint) -> AsyncCall {
+pub trait EsdtModule {
+    fn issue_token(&self, name: ManagedBuffer, ticker: ManagedBuffer, num_decimals: usize, cost: BigUint) -> AsyncCall {
         let properties = FungibleTokenProperties {
-            num_decimals: dec_amount,
+            num_decimals,
             can_burn: false,
             can_mint: false,
             can_freeze: true,
