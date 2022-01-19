@@ -16,6 +16,9 @@ COST_TOKEN_ID_HEX="0x$(echo -n ${COST_TOKEN_ID} | xxd -p -u | tr -d '\n')"
 COST_ENTITY_CREATION_AMOUNT=$(erdpy data load --partition ${NETWORK_NAME} --key=cost-entity-creation-amount)
 
 deploy() {
+    echo "accidental deploy protection is activated."
+    exit 1;
+
     echo ">> building ENTITY contract for deployment ..."
     erdpy --verbose contract build entity || return
 
