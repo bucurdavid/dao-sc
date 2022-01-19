@@ -7,14 +7,13 @@
 elrond_wasm_node::wasm_endpoints! {
     manager
     (
-        init
         callBack
         createEntity
+        createEntityToken
         createEntityWithToken
         finalizeEntity
         getEntityAddress
         getSetupOwnerToken
-        setupEntity
         upgradeEntity
     )
 }

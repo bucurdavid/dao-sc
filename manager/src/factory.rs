@@ -1,5 +1,7 @@
 elrond_wasm::imports!();
 
+use entity::governance::configurable::ProxyTrait as _;
+
 #[elrond_wasm::module]
 pub trait FactoryModule {
     fn init_factory_module(&self, entity_template_address: ManagedAddress) {
@@ -11,7 +13,7 @@ pub trait FactoryModule {
 
         let (address, _) = self
             .entity_contract_proxy(ManagedAddress::zero())
-            .init(OptionalArg::Some(&token_id.clone()))
+            .init(OptionalArg::Some(token_id.clone()))
             .deploy_from_source(&template_contract, CodeMetadata::UPGRADEABLE);
 
         require!(!address.is_zero(), "address is zero");
@@ -36,9 +38,11 @@ pub trait FactoryModule {
     }
 
     fn init_governance(&self, address: &ManagedAddress, token_id: &TokenIdentifier) {
-        // self.entity_contract_proxy(address.clone())
-        //     .init_governance_module(token_id)
-        //     .execute_on_dest_context();
+        let TODO = BigUint::from(5u32);
+
+        self.entity_contract_proxy(address.clone())
+            .init_governance_module(token_id.clone(), TODO)
+            .execute_on_dest_context();
     }
 
     fn get_template_address(&self) -> SCResult<ManagedAddress> {

@@ -7,7 +7,6 @@
 elrond_wasm_node::wasm_endpoints! {
     entity
     (
-        init
         cancel
         changeLockTimeAfterVotingEndsInBlocks
         changeMaxActionsPerProposal
@@ -16,7 +15,6 @@ elrond_wasm_node::wasm_endpoints! {
         changeVotingDelayInBlocks
         changeVotingPeriodInBlocks
         depositTokensForAction
-        downvote
         enableFeatures
         execute
         getGovernanceTokenId
@@ -36,7 +34,8 @@ elrond_wasm_node::wasm_endpoints! {
         propose
         queue
         setFeatureFlag
-        upvote
+        voteAgainst
+        voteFor
         withdrawGovernanceTokens
     )
 }
