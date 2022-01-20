@@ -1,7 +1,5 @@
 elrond_wasm::imports!();
 
-use entity::governance::configurable::ProxyTrait as _;
-
 #[elrond_wasm::module]
 pub trait FactoryModule {
     fn init_factory_module(&self, entity_template_address: ManagedAddress) {
@@ -34,14 +32,6 @@ pub trait FactoryModule {
     fn enable_entity_features(&self, address: &ManagedAddress, features_names: VarArgs<ManagedBuffer>) {
         self.entity_contract_proxy(address.clone())
             .enable_features(features_names)
-            .execute_on_dest_context();
-    }
-
-    fn init_governance(&self, address: &ManagedAddress, token_id: &TokenIdentifier) {
-        let TODO = BigUint::from(5u32);
-
-        self.entity_contract_proxy(address.clone())
-            .init_governance_module(token_id.clone(), TODO)
             .execute_on_dest_context();
     }
 

@@ -22,6 +22,7 @@ pub trait Entity:
     fn init(&self, #[var_args] opt_token_id: OptionalArg<TokenIdentifier>) {
         if let OptionalArg::Some(token_id) = opt_token_id {
             self.token_id().set_if_empty(&token_id);
+            self.init_governance_module(&token_id);
         }
     }
 

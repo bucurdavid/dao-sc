@@ -30,7 +30,6 @@ elrond_wasm_node::wasm_endpoints! {
         getTotalVotes
         getVotingDelayInBlocks
         getVotingPeriodInBlocks
-        initGovernanceModule
         propose
         queue
         setFeatureFlag

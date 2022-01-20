@@ -1,27 +1,13 @@
 elrond_wasm::imports!();
 
-use crate::config::{DEFAULT_VOTING_MAX_ACTIONS, DEFAULT_VOTING_DELAY, DEFAULT_VOTING_PERIOD, DEFAULT_VOTING_LOCKTIME, DEFAULT_PROPOSAL_MIN_TOKENS};
 use super::storage;
+use crate::config::{
+    DEFAULT_PROPOSAL_MIN_TOKENS, DEFAULT_VOTING_DELAY, DEFAULT_VOTING_LOCKTIME, DEFAULT_VOTING_MAX_ACTIONS, DEFAULT_VOTING_PERIOD,
+    DEFAULT_VOTING_QUORUM,
+};
 
 #[elrond_wasm::module]
 pub trait GovConfigurableModule: storage::GovStorageModule {
-    #[only_owner]
-    #[endpoint(initGovernanceModule)]
-    fn init_governance_module(&self, governance_token_id: TokenIdentifier, quorum: BigUint) -> SCResult<()> {
-        require!(governance_token_id.is_valid_esdt_identifier(), "invalid edst");
-
-        self.governance_token_id().set_if_empty(&governance_token_id);
-
-        self.try_change_quorum(quorum)?;
-        self.try_change_min_token_balance_for_proposing(BigUint::from(DEFAULT_PROPOSAL_MIN_TOKENS))?;
-        self.try_change_max_actions_per_proposal(DEFAULT_VOTING_MAX_ACTIONS)?;
-        self.try_change_voting_delay_in_blocks(DEFAULT_VOTING_DELAY)?;
-        self.try_change_voting_period_in_blocks(DEFAULT_VOTING_PERIOD)?;
-        self.try_change_lock_time_after_voting_ends_in_blocks(DEFAULT_VOTING_LOCKTIME)?;
-
-        Ok(())
-    }
-
     #[endpoint(changeQuorum)]
     fn change_quorum(&self, new_value: BigUint) -> SCResult<()> {
         self.require_caller_self()?;
@@ -66,6 +52,21 @@ pub trait GovConfigurableModule: storage::GovStorageModule {
     fn change_lock_time_after_voting_ends_in_blocks(&self, new_value: u64) -> SCResult<()> {
         self.require_caller_self()?;
         self.try_change_lock_time_after_voting_ends_in_blocks(new_value)?;
+
+        Ok(())
+    }
+
+    fn init_governance_module(&self, governance_token_id: &TokenIdentifier) -> SCResult<()> {
+        require!(governance_token_id.is_valid_esdt_identifier(), "invalid edst");
+
+        self.governance_token_id().set_if_empty(&governance_token_id);
+
+        self.try_change_quorum(BigUint::from(DEFAULT_VOTING_QUORUM))?;
+        self.try_change_min_token_balance_for_proposing(BigUint::from(DEFAULT_PROPOSAL_MIN_TOKENS))?;
+        self.try_change_max_actions_per_proposal(DEFAULT_VOTING_MAX_ACTIONS)?;
+        self.try_change_voting_delay_in_blocks(DEFAULT_VOTING_DELAY)?;
+        self.try_change_voting_period_in_blocks(DEFAULT_VOTING_PERIOD)?;
+        self.try_change_lock_time_after_voting_ends_in_blocks(DEFAULT_VOTING_LOCKTIME)?;
 
         Ok(())
     }
