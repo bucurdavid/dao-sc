@@ -58,14 +58,14 @@ deploy() {
 
     sleep 10
 
-    addManagerCostTokenBurnRole()
+    setCostTokenBurnRole()
 
     echo ""
     echo "deployed ENTITY smart contract address: ${ENTITY_ADDRESS}"
     echo "deployed MANAGER smart contract address: ${MANAGER_ADDRESS}"
 }
 
-upgradeManager() {
+upgrade() {
     entity_template_address_hex="0x$(erdpy wallet bech32 --decode ${ENTITY_ADDRESS})"
 
     echo "building contract for upgrade ..."
@@ -96,7 +96,7 @@ upgradeEntityTemplate() {
     echo "upgraded ENTITY template smart contract"
 }
 
-addManagerCostTokenBurnRole() {
+setCostTokenBurnRole() {
     echo ">> adding ESDTLocalBurn role for ${MANAGER_ADDRESS} ..."
 
     manager_template_address_hex="0x$(erdpy wallet bech32 --decode ${MANAGER_ADDRESS})"
@@ -116,8 +116,6 @@ addManagerCostTokenBurnRole() {
     echo ">> local burn role added!"
 }
 
-# params:
-#   $1 = token amount
 createEntityToken() {
     token_name="0x$(echo -n 'test' | xxd -p -u | tr -d '\n')"
     token_ticker="0x$(echo -n 'TEST' | xxd -p -u | tr -d '\n')"
@@ -146,6 +144,20 @@ createEntity() {
     erdpy contract call ${MANAGER_ADDRESS} \
         --function="ESDTTransfer" \
         --arguments ${COST_TOKEN_ID_HEX} ${COST_ENTITY_CREATION_AMOUNT} $function $token_id $feature1 $feature2 \
+        --pem=${DEPLOYER} \
+        --recall-nonce --gas-limit=80000000 \
+        --proxy=${PROXY} --chain=${CHAIN_ID} \
+        --send || return
+}
+
+# params:
+#   $1 = token id
+finalizeEntity() {
+    token_id="0x$(echo -n $1 | xxd -p -u | tr -d '\n')"
+
+    erdpy contract call ${MANAGER_ADDRESS} \
+        --function="finalizeEntity" \
+        --arguments $token_id \
         --pem=${DEPLOYER} \
         --recall-nonce --gas-limit=80000000 \
         --proxy=${PROXY} --chain=${CHAIN_ID} \
