@@ -134,6 +134,8 @@ createEntityToken() {
 
 # params:
 #   $1 = token id
+#   $2 = feature1
+#   $3 = feature2
 createEntity() {
     function="0x$(echo -n 'createEntity' | xxd -p -u | tr -d '\n')"
     token_id="0x$(echo -n $1 | xxd -p -u | tr -d '\n')"

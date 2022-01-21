@@ -61,6 +61,8 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
 
         self.burn_entity_creation_cost_tokens(cost_token_id, cost_amount)?;
 
+        self.send_control_token(&token_id);
+
         Ok(self.set_entity_edst_roles(&token_id, &entity_address))
     }
 
@@ -68,20 +70,26 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
     fn finalize_entity_endpoint(&self, token_id: TokenIdentifier) -> SCResult<AsyncCall> {
         self.require_caller_is_temp_owner(&token_id)?;
 
-        let entity_address = self.get_entity_address(&token_id)?;
         let caller = self.blockchain().get_caller();
+        let entity_address = self.get_entity_address(&token_id)?;
 
         self.setup_owner_token(&caller).clear();
 
-        Ok(self.transfer_entity_edst_ownership(&token_id, &entity_address))
+        Ok(self.transfer_entity_esdt_ownership(&token_id, &entity_address))
     }
 
+    #[payable("*")]
     #[callback]
-    fn token_issue_callback(&self, initial_caller: &ManagedAddress, #[call_result] result: ManagedAsyncCallResult<TokenIdentifier>) {
+    fn token_issue_callback(
+        &self,
+        initial_caller: &ManagedAddress,
+        #[payment_token] payment_token: TokenIdentifier,
+        #[call_result] result: ManagedAsyncCallResult<()>,
+    ) {
         match result {
-            ManagedAsyncCallResult::Ok(token_id) => self.setup_owner_token(&initial_caller).set(&token_id),
+            ManagedAsyncCallResult::Ok(_) => self.setup_owner_token(&initial_caller).set(&payment_token),
             ManagedAsyncCallResult::Err(_) => self.send_back_egld(&initial_caller),
-        };
+        }
     }
 
     #[endpoint(upgradeEntity)]

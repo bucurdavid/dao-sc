@@ -19,11 +19,13 @@ pub trait Entity:
     + governance::events::GovEventsModule
 {
     #[init]
-    fn init(&self, #[var_args] opt_token_id: OptionalArg<TokenIdentifier>) {
+    fn init(&self, #[var_args] opt_token_id: OptionalArg<TokenIdentifier>) -> SCResult<()> {
         if let OptionalArg::Some(token_id) = opt_token_id {
             self.token_id().set_if_empty(&token_id);
-            self.init_governance_module(&token_id);
+            self.init_governance_module(&token_id)?;
         }
+
+        Ok(())
     }
 
     #[endpoint(enableFeatures)]
