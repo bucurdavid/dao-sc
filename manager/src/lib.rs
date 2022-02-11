@@ -31,7 +31,6 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
             .with_callback(self.callbacks().token_issue_callback(&initial_caller)))
     }
 
-    #[only_owner]
     #[endpoint(createEntityWithToken)]
     fn create_entity_with_token_endpoint(&self, token_id: TokenIdentifier) -> SCResult<()> {
         require!(token_id.is_valid_esdt_identifier(), "not an esdt");
