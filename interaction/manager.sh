@@ -19,13 +19,19 @@ deploy() {
     echo "accidental deploy protection is activated."
     exit 1;
 
-    echo ">> building ENTITY contract for deployment ..."
+    echo "building ENTITY contract for deployment ..."
     erdpy --verbose contract build entity || return
 
-    echo ">> building MANAGER contract for deployment ..."
+    echo "building MANAGER contract for deployment ..."
     erdpy --verbose contract build manager || return
 
-    echo ">> deploying ENTITY to ${NETWORK_NAME} ..."
+    echo "running ENTITY tests ..."
+    erdpy --verbose contract test entity || return
+
+    echo "running MANAGER tests ..."
+    erdpy --verbose contract test manager || return
+
+    echo "deploying ENTITY to ${NETWORK_NAME} ..."
     erdpy --verbose contract deploy --project entity \
         --recall-nonce --gas-limit=80000000 \
         --pem=${DEPLOYER} --outfile="deploy-${NETWORK_NAME}-entity.interaction.json" \
@@ -42,7 +48,7 @@ deploy() {
 
     sleep 10
 
-    echo ">> deploying MANAGER to ${NETWORK_NAME} ..."
+    echo "deploying MANAGER to ${NETWORK_NAME} ..."
     erdpy --verbose contract deploy --project manager \
         --arguments $entity_template_address_hex ${COST_TOKEN_ID_HEX} ${COST_ENTITY_CREATION_AMOUNT} \
         --recall-nonce --gas-limit=80000000 \
@@ -71,6 +77,9 @@ upgrade() {
     echo "building contract for upgrade ..."
     erdpy --verbose contract build manager || return
 
+    echo "running MANAGER tests ..."
+    erdpy --verbose contract test manager || return
+
     echo "upgrading MANAGER contract ${MANAGER_ADDRESS} on ${NETWORK_NAME} ..."
     erdpy --verbose contract upgrade ${MANAGER_ADDRESS} --project manager \
         --arguments $entity_template_address_hex ${COST_TOKEN_ID_HEX} ${COST_ENTITY_CREATION_AMOUNT} \
@@ -86,6 +95,9 @@ upgradeEntityTemplate() {
     echo "building contract for upgrade ..."
     erdpy --verbose contract build entity || return
 
+    echo "running ENTITY tests ..."
+    erdpy --verbose contract test entity || return
+
     echo "upgrading ENTITY template contract ${ENTITY_ADDRESS} on ${NETWORK_NAME} ..."
     erdpy --verbose contract upgrade ${ENTITY_ADDRESS} --project entity \
         --recall-nonce --gas-limit=150000000 \
@@ -97,7 +109,7 @@ upgradeEntityTemplate() {
 }
 
 setCostTokenBurnRole() {
-    echo ">> adding ESDTLocalBurn role for ${MANAGER_ADDRESS} ..."
+    echo "adding ESDTLocalBurn role for ${MANAGER_ADDRESS} ..."
 
     manager_template_address_hex="0x$(erdpy wallet bech32 --decode ${MANAGER_ADDRESS})"
     burn_role_hex="0x$(echo -n 'ESDTRoleLocalBurn' | xxd -p -u | tr -d '\n')"
@@ -113,7 +125,7 @@ setCostTokenBurnRole() {
         --send || return
 
     echo ""
-    echo ">> local burn role added!"
+    echo "local burn role added!"
 }
 
 createEntityToken() {
