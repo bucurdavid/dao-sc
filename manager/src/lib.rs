@@ -15,6 +15,12 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
     }
 
     #[payable("EGLD")]
+    #[endpoint(deposit)]
+    fn deposit_endpoint(&self) -> SCResult<()> {
+        Ok(())
+    }
+
+    #[payable("EGLD")]
     #[endpoint(createEntityToken)]
     fn create_entity_token_endpoint(
         &self,

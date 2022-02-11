@@ -11,6 +11,7 @@ elrond_wasm_node::wasm_endpoints! {
         createEntity
         createEntityToken
         createEntityWithToken
+        deposit
         finalizeEntity
         getEntityAddress
         getSetupOwnerToken
