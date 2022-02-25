@@ -1,7 +1,7 @@
 {
   "devnet": {
-    "cost-token-id": "XSUPER-d0da40",
-    "cost-entity-creation-amount": 2500,
+    "cost-token-id": "XSUPER-5ef129",
+    "cost-entity-creation-amount": 1000,
     "entity--address": "erd1qqqqqqqqqqqqqpgqe4njen7l3zu23eetmzl7jwhcfs57uka2yt2s9qn23r",
     "entity--deploy-transaction": "8a2210989ed58ea30a00c7738d80bc3cbc6da955fa5b76ddcac6ebf18c07f79c",
     "manager--address": "erd1qqqqqqqqqqqqqpgqd73yf9uskf53635gy4gg73ldf50gvntwyt2sjps3e9",
