@@ -28,13 +28,13 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
         token_ticker: ManagedBuffer,
         num_decimals: usize,
         #[payment] issue_cost: BigUint,
-    ) -> SCResult<AsyncCall> {
+    ) {
         require!(num_decimals <= 18 as usize, "invalid token decimals");
         let initial_caller = self.blockchain().get_caller();
 
-        Ok(self
-            .issue_token(token_name, token_ticker, num_decimals, issue_cost)
-            .with_callback(self.callbacks().token_issue_callback(&initial_caller)))
+        self.issue_token(token_name, token_ticker, num_decimals, issue_cost)
+            .with_callback(self.callbacks().token_issue_callback(&initial_caller))
+            .call_and_exit()
     }
 
     #[endpoint(createEntityWithToken)]
@@ -44,6 +44,7 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
         let caller = self.blockchain().get_caller();
 
         self.setup_owner_token(&caller).set(&token_id);
+
         Ok(())
     }
 
@@ -54,33 +55,33 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
         #[payment_token] cost_token_id: TokenIdentifier,
         #[payment_amount] cost_amount: BigUint,
         token_id: TokenIdentifier,
-        #[var_args] feature_names: VarArgs<ManagedBuffer>,
-    ) -> SCResult<AsyncCall> {
-        self.require_caller_is_temp_owner(&token_id)?;
+        #[var_args] feature_names: ManagedVarArgs<ManagedBuffer>,
+    ) {
+        self.require_caller_is_temp_owner(&token_id);
 
-        let entity_address = self.create_entity(&token_id)?;
+        let entity_address = self.create_entity(&token_id);
 
         self.entities_map().insert(token_id.clone(), entity_address.clone());
 
         self.enable_entity_features(&entity_address, feature_names);
 
-        self.burn_entity_creation_cost_tokens(cost_token_id, cost_amount)?;
+        self.burn_entity_creation_cost_tokens(cost_token_id, cost_amount);
 
         self.send_control_token(&token_id);
 
-        Ok(self.set_entity_edst_roles(&token_id, &entity_address))
+        self.set_entity_edst_roles(&token_id, &entity_address).call_and_exit()
     }
 
     #[endpoint(finalizeEntity)]
-    fn finalize_entity_endpoint(&self, token_id: TokenIdentifier) -> SCResult<AsyncCall> {
-        self.require_caller_is_temp_owner(&token_id)?;
+    fn finalize_entity_endpoint(&self, token_id: TokenIdentifier) {
+        self.require_caller_is_temp_owner(&token_id);
 
         let caller = self.blockchain().get_caller();
-        let entity_address = self.get_entity_address(&token_id)?;
+        let entity_address = self.get_entity_address(&token_id);
 
         self.setup_owner_token(&caller).clear();
 
-        Ok(self.transfer_entity_esdt_ownership(&token_id, &entity_address))
+        self.transfer_entity_esdt_ownership(&token_id, &entity_address).call_and_exit()
     }
 
     #[payable("*")]
@@ -99,9 +100,9 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
 
     #[endpoint(upgradeEntity)]
     fn upgrade_entity_endpoint(&self, token_id: TokenIdentifier) -> SCResult<()> {
-        let entity_address = self.get_entity_address(&token_id)?;
+        let entity_address = self.get_entity_address(&token_id);
 
-        self.upgrade_entity(&entity_address)?;
+        self.upgrade_entity(&entity_address);
 
         Ok(())
     }
@@ -111,9 +112,10 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
         self.entities_map().get(&token_id).unwrap_or_default()
     }
 
-    fn get_entity_address(&self, token_id: &TokenIdentifier) -> SCResult<ManagedAddress> {
+    fn get_entity_address(&self, token_id: &TokenIdentifier) -> ManagedAddress {
         require!(self.entities_map().contains_key(&token_id), "entity does not exist");
-        Ok(self.entities_map().get(&token_id).unwrap())
+
+        self.entities_map().get(&token_id).unwrap()
     }
 
     fn send_back_egld(&self, initial_caller: &ManagedAddress) {
@@ -123,11 +125,10 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
         }
     }
 
-    fn require_caller_is_temp_owner(&self, token_id: &TokenIdentifier) -> SCResult<()> {
+    fn require_caller_is_temp_owner(&self, token_id: &TokenIdentifier) {
         let caller = self.blockchain().get_caller();
         let temp_owner_token_id = self.setup_owner_token(&caller).get();
         require!(&temp_owner_token_id == token_id, "token not in setup");
-        Ok(())
     }
 
     #[storage_mapper("entities")]

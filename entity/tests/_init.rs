@@ -37,7 +37,7 @@ where
     blockchain.execute_tx(&owner_address, &contract, &rust_zero, |sc| {
         let entity_token_id = managed_token_id!(ENTITY_TOKEN_ID);
 
-        sc.init(OptionalArg::Some(entity_token_id));
+        sc.init(OptionalValue::Some(entity_token_id));
 
         StateChange::Commit
     });

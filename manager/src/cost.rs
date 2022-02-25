@@ -7,13 +7,11 @@ pub trait CostModule {
         self.cost_creation_amount().set_if_empty(&creation_cost);
     }
 
-    fn burn_entity_creation_cost_tokens(&self, cost_token_id: TokenIdentifier, amount: BigUint) -> SCResult<()> {
+    fn burn_entity_creation_cost_tokens(&self, cost_token_id: TokenIdentifier, amount: BigUint) {
         require!(cost_token_id == self.cost_token_id().get(), "invalid cost token");
         require!(amount >= self.cost_creation_amount().get(), "invalid cost amount");
 
         self.send().esdt_local_burn(&cost_token_id, 0, &amount);
-
-        Ok(())
     }
 
     #[storage_mapper("currency_token")]

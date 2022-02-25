@@ -32,7 +32,6 @@ elrond_wasm_node::wasm_endpoints! {
         getVotingPeriodInBlocks
         propose
         queue
-        setFeatureFlag
         voteAgainst
         voteFor
         withdrawGovernanceTokens

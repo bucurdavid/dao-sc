@@ -1,12 +1,13 @@
 use elrond_wasm::{
     api::ManagedTypeApi,
-    types::{BigUint, BoxedBytes, ManagedAddress, ManagedBuffer, MultiArg7, TokenIdentifier},
+    elrond_codec::multi_types::MultiValue7,
+    types::{BigUint, ManagedAddress, ManagedBuffer, TokenIdentifier},
     Vec,
 };
 
 elrond_wasm::derive_imports!();
 
-pub type ActionAsMultiArg<M> = MultiArg7<u64, ManagedAddress<M>, TokenIdentifier<M>, u64, BigUint<M>, ManagedBuffer<M>, Vec<BoxedBytes>>;
+pub type ActionAsMultiArg<M> = MultiValue7<u64, ManagedAddress<M>, TokenIdentifier<M>, u64, BigUint<M>, ManagedBuffer<M>, Vec<ManagedBuffer<M>>>;
 
 #[derive(TypeAbi, TopEncode, TopDecode, PartialEq)]
 pub enum ProposalStatus {
@@ -26,7 +27,7 @@ pub struct Action<M: ManagedTypeApi> {
     pub token_nonce: u64,
     pub amount: BigUint<M>,
     pub function_name: ManagedBuffer<M>,
-    pub arguments: Vec<BoxedBytes>,
+    pub arguments: Vec<ManagedBuffer<M>>,
 }
 
 impl<M: ManagedTypeApi> Action<M> {
@@ -48,5 +49,6 @@ impl<M: ManagedTypeApi> Action<M> {
 pub struct Proposal<M: ManagedTypeApi> {
     pub proposer: ManagedAddress<M>,
     pub actions: Vec<Action<M>>,
-    pub description: BoxedBytes,
+    pub title: ManagedBuffer<M>,
+    pub description: ManagedBuffer<M>,
 }

@@ -7,8 +7,6 @@ pub mod esdt;
 pub mod features;
 pub mod governance;
 
-use features::{FeatureName, FEATURE_ON};
-
 #[elrond_wasm::contract]
 pub trait Entity:
     features::FeaturesModule
@@ -19,8 +17,8 @@ pub trait Entity:
     + governance::events::GovEventsModule
 {
     #[init]
-    fn init(&self, #[var_args] opt_token_id: OptionalArg<TokenIdentifier>) -> SCResult<()> {
-        if let OptionalArg::Some(token_id) = opt_token_id {
+    fn init(&self, #[var_args] opt_token_id: OptionalValue<TokenIdentifier>) -> SCResult<()> {
+        if let OptionalValue::Some(token_id) = opt_token_id {
             self.token_id().set_if_empty(&token_id);
             self.init_governance_module(&token_id)?;
         }
@@ -29,9 +27,9 @@ pub trait Entity:
     }
 
     #[endpoint(enableFeatures)]
-    fn enable_features(&self, #[var_args] features: VarArgs<ManagedBuffer>) -> SCResult<()> {
-        for feature in features.iter() {
-            self.set_feature_flag(FeatureName(feature.to_boxed_bytes().as_slice()), FEATURE_ON);
+    fn enable_features(&self, #[var_args] features: ManagedVarArgs<ManagedBuffer>) -> SCResult<()> {
+        for feature in &features.to_vec() {
+            self.set_feature_flag(feature, true);
         }
 
         Ok(())
