@@ -6,5 +6,13 @@
     "entity--deploy-transaction": "8a2210989ed58ea30a00c7738d80bc3cbc6da955fa5b76ddcac6ebf18c07f79c",
     "manager--address": "erd1qqqqqqqqqqqqqpgqd73yf9uskf53635gy4gg73ldf50gvntwyt2sjps3e9",
     "manager--deploy-transaction": "52ac8ce72b9620b730da341c6c54af6f6fcae3e1b50eb93c4dd7b73fa5ca778e"
+  },
+  "testnet": {
+    "cost-token-id": "XSUPER-4abae3",
+    "cost-entity-creation-amount": 1000,
+    "entity--address": "erd1qqqqqqqqqqqqqpgqlw9zkyn0hhg3kxmej8mnwuewc6kqt8h7yt2sv2qc2k",
+    "entity--deploy-transaction": "234a0bf8fb5e8508eb5a56d7ac366023d69afc2dbf601b05a8d7c0f60da66f05",
+    "manager--address": "erd1qqqqqqqqqqqqqpgqw9vd82grd7pne7nd5yx4y45pe4vp53rryt2s6spvny",
+    "manager--deploy-transaction": "b7e34308c14bd1390435a2a3ebbfce7fe158a533819296c786a072afffe55ce1"
   }
 }
