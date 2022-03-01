@@ -23,17 +23,11 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
 
     #[payable("EGLD")]
     #[endpoint(createEntityToken)]
-    fn create_entity_token_endpoint(
-        &self,
-        token_name: ManagedBuffer,
-        token_ticker: ManagedBuffer,
-        num_decimals: usize,
-        #[payment] issue_cost: BigUint,
-    ) {
-        require!(num_decimals <= 18 as usize, "invalid token decimals");
+    fn create_entity_token_endpoint(&self, token_name: ManagedBuffer, token_ticker: ManagedBuffer, amount: BigUint, #[payment] issue_cost: BigUint) {
+        require!(amount > 0, "amount must be greater than zero");
         let initial_caller = self.blockchain().get_caller();
 
-        self.issue_token(token_name, token_ticker, num_decimals, issue_cost)
+        self.issue_token(&token_name, &token_ticker, &amount, &issue_cost)
             .with_callback(self.callbacks().token_issue_callback(&initial_caller))
             .call_and_exit()
     }
@@ -68,8 +62,6 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
 
         self.burn_entity_creation_cost_tokens(cost_token_id, cost_amount);
 
-        self.send_control_token(&token_id);
-
         self.set_entity_edst_roles(&token_id, &entity_address).call_and_exit()
     }
 
@@ -91,10 +83,14 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
         &self,
         initial_caller: &ManagedAddress,
         #[payment_token] payment_token: TokenIdentifier,
+        #[payment_amount] payment_amount: BigUint,
         #[call_result] result: ManagedAsyncCallResult<()>,
     ) {
         match result {
-            ManagedAsyncCallResult::Ok(_) => self.setup_owner_token(&initial_caller).set(&payment_token),
+            ManagedAsyncCallResult::Ok(_) => {
+                self.setup_owner_token(&initial_caller).set(&payment_token);
+                self.send().direct(&initial_caller, &payment_token, 0, &payment_amount, &[]);
+            }
             ManagedAsyncCallResult::Err(_) => self.send_back_egld(&initial_caller),
         }
     }
