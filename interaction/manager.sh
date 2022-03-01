@@ -128,16 +128,19 @@ setCostTokenBurnRole() {
     echo "local burn role added!"
 }
 
+# params:
+#   $1 = token id
+#   $2 = token ticker
 createEntityToken() {
-    token_name="0x$(echo -n 'test' | xxd -p -u | tr -d '\n')"
-    token_ticker="0x$(echo -n 'TEST' | xxd -p -u | tr -d '\n')"
+    token_name="0x$(echo -n $1 | xxd -p -u | tr -d '\n')"
+    token_ticker="0x$(echo -n $2 | xxd -p -u | tr -d '\n')"
 
     erdpy --verbose contract call ${MANAGER_ADDRESS} \
         --recall-nonce \
         --pem=${DEPLOYER} \
-        --gas-limit=100000000 \
+        --gas-limit=10000000 \
         --function="createEntityToken" \
-        --arguments $token_name $token_ticker 0 \
+        --arguments $token_name $token_ticker 18 \
         --value=50000000000000000 \
         --proxy=${PROXY} \
         --chain=${CHAIN_ID} \
