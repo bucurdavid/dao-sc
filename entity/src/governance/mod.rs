@@ -60,7 +60,6 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
     ) -> SCResult<usize> {
         self.require_payment_token_governance_token()?;
         require!(payment_amount >= self.min_token_balance_for_proposing().get(), "not enough tokens");
-        require!(!actions.is_empty(), "proposal has no actions");
         require!(actions.len() <= self.max_actions_per_proposal().get(), "exceeded max actions");
 
         let mut gov_actions = ManagedVec::new();
