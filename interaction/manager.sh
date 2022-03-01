@@ -108,6 +108,22 @@ upgradeEntityTemplate() {
     echo "upgraded ENTITY template smart contract"
 }
 
+# params:
+#   $1 = token id
+upgradeEntity() {
+    token_id="0x$(echo -n $1 | xxd -p -u | tr -d '\n')"
+
+    erdpy --verbose contract call ${MANAGER_ADDRESS} \
+        --recall-nonce \
+        --pem=${DEPLOYER} \
+        --gas-limit=100000000 \
+        --function="upgradeEntity" \
+        --arguments $token_id \
+        --proxy=${PROXY} \
+        --chain=${CHAIN_ID} \
+        --send || return
+}
+
 setCostTokenBurnRole() {
     echo "adding ESDTLocalBurn role for ${MANAGER_ADDRESS} ..."
 
