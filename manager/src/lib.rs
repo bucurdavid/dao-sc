@@ -1,4 +1,5 @@
 #![no_std]
+#![feature(generic_associated_types)]
 
 elrond_wasm::imports!();
 
@@ -55,7 +56,7 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
         #[payment_token] cost_token_id: TokenIdentifier,
         #[payment_amount] cost_amount: BigUint,
         token_id: TokenIdentifier,
-        #[var_args] feature_names: ManagedVarArgs<ManagedBuffer>,
+        #[var_args] feature_names: MultiValueEncoded<ManagedBuffer>,
     ) {
         self.require_caller_is_temp_owner(&token_id);
 

@@ -1,4 +1,5 @@
 #![no_std]
+#![feature(generic_associated_types)]
 
 elrond_wasm::imports!();
 
@@ -27,7 +28,7 @@ pub trait Entity:
     }
 
     #[endpoint(enableFeatures)]
-    fn enable_features(&self, #[var_args] features: ManagedVarArgs<ManagedBuffer>) -> SCResult<()> {
+    fn enable_features(&self, #[var_args] features: MultiValueEncoded<ManagedBuffer>) -> SCResult<()> {
         for feature in &features.to_vec() {
             self.set_feature_flag(feature, true);
         }

@@ -27,7 +27,7 @@ pub trait FactoryModule {
             .upgrade_from_source(&template_contract, CodeMetadata::UPGRADEABLE);
     }
 
-    fn enable_entity_features(&self, address: &ManagedAddress, features_names: ManagedVarArgs<ManagedBuffer>) {
+    fn enable_entity_features(&self, address: &ManagedAddress, features_names: MultiValueEncoded<ManagedBuffer>) {
         self.entity_contract_proxy(address.clone())
             .enable_features(features_names)
             .execute_on_dest_context();

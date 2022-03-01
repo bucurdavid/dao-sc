@@ -11,7 +11,7 @@ pub trait GovEventsModule {
         #[indexed] proposer: &ManagedAddress,
         #[indexed] start_block: u64,
         #[indexed] description: &ManagedBuffer,
-        actions: &[Action<Self::Api>],
+        actions: &ManagedVec<Action<Self::Api>>,
     );
 
     #[event("voteCast")]

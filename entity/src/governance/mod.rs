@@ -63,7 +63,7 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
         require!(!actions.is_empty(), "proposal has no actions");
         require!(actions.len() <= self.max_actions_per_proposal().get(), "exceeded max actions");
 
-        let mut gov_actions = Vec::with_capacity(actions.len());
+        let mut gov_actions = ManagedVec::new();
         for action in actions.into_vec() {
             let (gas_limit, dest_address, token_id, token_nonce, amount, function_name, arguments) = action.into_tuple();
             let gov_action = Action {
@@ -187,7 +187,7 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
 
         require!(gas_left > total_gas_needed, "not enough gas to execute");
 
-        for action in proposal.actions {
+        for action in proposal.actions.iter() {
             let mut contract_call = self
                 .send()
                 .contract_call::<()>(action.dest_address, action.function_name)
@@ -197,7 +197,7 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
                 contract_call = contract_call.add_token_transfer(action.token_id, action.token_nonce, action.amount);
             }
 
-            for arg in action.arguments {
+            for arg in action.arguments.iter() {
                 contract_call.push_argument_raw_bytes(arg.to_boxed_bytes().as_slice());
             }
 
@@ -296,7 +296,7 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
         let actions = self.proposals().get(proposal_id).actions;
         let mut actions_as_multiarg = Vec::with_capacity(actions.len());
 
-        for action in actions {
+        for action in actions.iter() {
             actions_as_multiarg.push(action.into_multiarg());
         }
 
@@ -321,7 +321,7 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
         self.is_valid_proposal_id(proposal_id) && !self.proposals().item_is_empty(proposal_id)
     }
 
-    fn total_gas_needed(&self, actions: &[Action<Self::Api>]) -> u64 {
+    fn total_gas_needed(&self, actions: &ManagedVec<Action<Self::Api>>) -> u64 {
         let mut total = 0;
         for action in actions {
             total += action.gas_limit;
@@ -336,7 +336,6 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
         self.proposals().clear_entry(proposal_id);
         self.proposal_start_block(proposal_id).clear();
         self.proposal_queue_block(proposal_id).clear();
-
         self.total_upvotes(proposal_id).clear();
         self.total_downvotes(proposal_id).clear();
     }
