@@ -277,6 +277,15 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
         }
     }
 
+    #[view(getProposalTitle)]
+    fn get_proposal_title_view(&self, proposal_id: usize) -> OptionalValue<ManagedBuffer> {
+        if !self.proposal_exists(proposal_id) {
+            OptionalValue::None
+        } else {
+            OptionalValue::Some(self.proposals().get(proposal_id).title)
+        }
+    }
+
     #[view(getProposalDescription)]
     fn get_proposal_description_view(&self, proposal_id: usize) -> OptionalValue<ManagedBuffer> {
         if !self.proposal_exists(proposal_id) {
