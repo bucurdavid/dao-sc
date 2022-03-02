@@ -203,7 +203,7 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
     fn cancel_endpoint(&self, proposal_id: usize) {
         match self.get_proposal_status_view(proposal_id) {
             ProposalStatus::None => {
-                return sc_panic!("proposal does not exist");
+                sc_panic!("proposal does not exist");
             }
             ProposalStatus::Defeated => {}
             _ => {
