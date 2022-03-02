@@ -26,8 +26,8 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
 
     // Used to withdraw the tokens after the action was executed or cancelled
     #[endpoint(withdrawGovernanceTokens)]
-    fn withdraw_governance_tokens_endpoint(&self, proposal_id: usize) -> SCResult<()> {
-        self.require_valid_proposal_id(proposal_id)?;
+    fn withdraw_governance_tokens_endpoint(&self, proposal_id: usize) {
+        self.require_valid_proposal_id(proposal_id);
         require!(
             self.get_proposal_status_view(proposal_id) == ProposalStatus::None,
             "proposal is still active"
@@ -45,8 +45,6 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
 
             self.send().direct(&caller, &governance_token_id, 0, &total_tokens, &[]);
         }
-
-        Ok(())
     }
 
     #[payable("*")]
@@ -57,8 +55,8 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
         title: ManagedBuffer,
         description: ManagedBuffer,
         #[var_args] actions: MultiValueVec<ActionAsMultiArg<Self::Api>>,
-    ) -> SCResult<usize> {
-        self.require_payment_token_governance_token()?;
+    ) -> usize {
+        self.require_payment_token_governance_token();
         require!(payment_amount >= self.min_token_balance_for_proposing().get(), "not enough tokens");
         require!(actions.len() <= self.max_actions_per_proposal().get(), "exceeded max actions");
 
@@ -100,14 +98,14 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
         self.total_upvotes(proposal_id).set(&payment_amount);
         self.upvotes(proposal_id).insert(proposer, payment_amount);
 
-        Ok(proposal_id)
+        proposal_id
     }
 
     #[payable("*")]
     #[endpoint(voteFor)]
-    fn vote_for_endpoint(&self, #[payment_amount] payment_amount: BigUint, proposal_id: usize) -> SCResult<()> {
-        self.require_payment_token_governance_token()?;
-        self.require_valid_proposal_id(proposal_id)?;
+    fn vote_for_endpoint(&self, #[payment_amount] payment_amount: BigUint, proposal_id: usize) {
+        self.require_payment_token_governance_token();
+        self.require_valid_proposal_id(proposal_id);
         require!(
             self.get_proposal_status_view(proposal_id) == ProposalStatus::Active,
             "proposal not active"
@@ -122,15 +120,13 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
             .entry(voter)
             .and_modify(|current| *current += &payment_amount)
             .or_insert(payment_amount);
-
-        Ok(())
     }
 
     #[payable("*")]
     #[endpoint(voteAgainst)]
-    fn vote_against_endpoint(&self, #[payment_amount] payment_amount: BigUint, proposal_id: usize) -> SCResult<()> {
-        self.require_payment_token_governance_token()?;
-        self.require_valid_proposal_id(proposal_id)?;
+    fn vote_against_endpoint(&self, #[payment_amount] payment_amount: BigUint, proposal_id: usize) {
+        self.require_payment_token_governance_token();
+        self.require_valid_proposal_id(proposal_id);
         require!(
             self.get_proposal_status_view(proposal_id) == ProposalStatus::Active,
             "proposal not active"
@@ -146,12 +142,10 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
             .entry(downvoter)
             .and_modify(|current| *current += &payment_amount)
             .or_insert(payment_amount);
-
-        Ok(())
     }
 
     #[endpoint(queue)]
-    fn queue_endpoint(&self, proposal_id: usize) -> SCResult<()> {
+    fn queue_endpoint(&self, proposal_id: usize) {
         require!(
             self.get_proposal_status_view(proposal_id) == ProposalStatus::Succeeded,
             "not ready to queue"
@@ -161,12 +155,10 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
 
         self.proposal_queue_block(proposal_id).set(&current_block);
         self.proposal_queued_event(proposal_id, current_block);
-
-        Ok(())
     }
 
     #[endpoint(execute)]
-    fn execute_endpoint(&self, proposal_id: usize) -> SCResult<()> {
+    fn execute_endpoint(&self, proposal_id: usize) {
         require!(
             self.get_proposal_status_view(proposal_id) == ProposalStatus::Queued,
             "not ready to execute"
@@ -204,17 +196,14 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
         }
 
         self.clear_proposal(proposal_id);
-
         self.proposal_executed_event(proposal_id);
-
-        Ok(())
     }
 
     #[endpoint(cancel)]
-    fn cancel_endpoint(&self, proposal_id: usize) -> SCResult<()> {
+    fn cancel_endpoint(&self, proposal_id: usize) {
         match self.get_proposal_status_view(proposal_id) {
             ProposalStatus::None => {
-                return sc_error!("proposal does not exist");
+                return sc_panic!("proposal does not exist");
             }
             ProposalStatus::Defeated => {}
             _ => {
@@ -226,10 +215,7 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
         }
 
         self.clear_proposal(proposal_id);
-
         self.proposal_canceled_event(proposal_id);
-
-        Ok(())
     }
 
     #[view(getProposalStatus)]
@@ -311,14 +297,12 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
         actions_as_multiarg.into()
     }
 
-    fn require_payment_token_governance_token(&self) -> SCResult<()> {
+    fn require_payment_token_governance_token(&self) {
         require!(self.call_value().token() == self.governance_token_id().get(), "invalid token");
-        Ok(())
     }
 
-    fn require_valid_proposal_id(&self, proposal_id: usize) -> SCResult<()> {
+    fn require_valid_proposal_id(&self, proposal_id: usize) {
         require!(self.is_valid_proposal_id(proposal_id), "invalid proposal id");
-        Ok(())
     }
 
     fn is_valid_proposal_id(&self, proposal_id: usize) -> bool {

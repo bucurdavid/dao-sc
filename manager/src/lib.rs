@@ -17,9 +17,7 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
 
     #[payable("EGLD")]
     #[endpoint(deposit)]
-    fn deposit_endpoint(&self) -> SCResult<()> {
-        Ok(())
-    }
+    fn deposit_endpoint(&self) {}
 
     #[payable("EGLD")]
     #[endpoint(createEntityToken)]
@@ -33,14 +31,12 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
     }
 
     #[endpoint(createEntityWithToken)]
-    fn create_entity_with_token_endpoint(&self, token_id: TokenIdentifier) -> SCResult<()> {
+    fn create_entity_with_token_endpoint(&self, token_id: TokenIdentifier) {
         require!(token_id.is_valid_esdt_identifier(), "not an esdt");
 
         let caller = self.blockchain().get_caller();
 
         self.setup_owner_token(&caller).set(&token_id);
-
-        Ok(())
     }
 
     #[payable("*")]
@@ -96,12 +92,10 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
     }
 
     #[endpoint(upgradeEntity)]
-    fn upgrade_entity_endpoint(&self, token_id: TokenIdentifier) -> SCResult<()> {
+    fn upgrade_entity_endpoint(&self, token_id: TokenIdentifier) {
         let entity_address = self.get_entity_address(&token_id);
 
         self.upgrade_entity(&entity_address);
-
-        Ok(())
     }
 
     #[view(getEntityAddress)]

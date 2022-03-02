@@ -18,21 +18,17 @@ pub trait Entity:
     + governance::events::GovEventsModule
 {
     #[init]
-    fn init(&self, #[var_args] opt_token_id: OptionalValue<TokenIdentifier>) -> SCResult<()> {
+    fn init(&self, #[var_args] opt_token_id: OptionalValue<TokenIdentifier>) {
         if let OptionalValue::Some(token_id) = opt_token_id {
             self.token_id().set_if_empty(&token_id);
-            self.init_governance_module(&token_id)?;
+            self.init_governance_module(&token_id);
         }
-
-        Ok(())
     }
 
     #[endpoint(enableFeatures)]
-    fn enable_features(&self, #[var_args] features: MultiValueEncoded<ManagedBuffer>) -> SCResult<()> {
+    fn enable_features(&self, #[var_args] features: MultiValueEncoded<ManagedBuffer>) {
         for feature in &features.to_vec() {
             self.set_feature_flag(feature, true);
         }
-
-        Ok(())
     }
 }
