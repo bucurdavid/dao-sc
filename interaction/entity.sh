@@ -16,3 +16,21 @@ getGovQuorum() {
         --function="getQuorum" \
         --proxy=${PROXY} || return
 }
+
+# params:
+#   $1 = proposal id
+getProposalTitle() {
+    erdpy contract query ${ADDRESS} \
+        --function="getProposalTitle" \
+        --arguments $1 \
+        --proxy=${PROXY} || return
+}
+
+# params:
+#   $1 = proposal id
+getProposalDescription() {
+    erdpy contract query ${ADDRESS} \
+        --function="getProposalDescription" \
+        --arguments $1 \
+        --proxy=${PROXY} || return
+}
