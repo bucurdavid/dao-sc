@@ -24,6 +24,7 @@ elrond_wasm_node::wasm_endpoints! {
         getProposalActions
         getProposalDescription
         getProposalStatus
+        getProposalTitle
         getProposer
         getQuorum
         getTotalDownvotes
