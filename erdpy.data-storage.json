@@ -4,19 +4,19 @@
     "chain-id": "D",
     "cost-token-id": "XSUPER-5ef129",
     "cost-entity-creation-amount": 250,
-    "entity--address": "erd1qqqqqqqqqqqqqpgqe4njen7l3zu23eetmzl7jwhcfs57uka2yt2s9qn23r",
-    "entity--deploy-transaction": "8a2210989ed58ea30a00c7738d80bc3cbc6da955fa5b76ddcac6ebf18c07f79c",
-    "manager--address": "erd1qqqqqqqqqqqqqpgqd73yf9uskf53635gy4gg73ldf50gvntwyt2sjps3e9",
-    "manager--deploy-transaction": "52ac8ce72b9620b730da341c6c54af6f6fcae3e1b50eb93c4dd7b73fa5ca778e"
+    "entity--address": "erd1qqqqqqqqqqqqqpgq5l0wr7gpfj5a49ytz3sk6ang28yq2cdl27rsm70k00",
+    "entity--deploy-transaction": "",
+    "manager--address": "erd1qqqqqqqqqqqqqpgqwmp22ugd56gsgud5urw5qy7dtqxaz6cn27rswpuzwp",
+    "manager--deploy-transaction": ""
   },
   "testnet": {
     "proxy": "https://testnet-gateway.elrond.com",
     "chain-id": "T",
-    "cost-token-id": "",
+    "cost-token-id": "XSUPER-da8349",
     "cost-entity-creation-amount": 250,
-    "entity--address": "erd1qqqqqqqqqqqqqpgqu7zyg6jmedv44tksxjzv9j6uhcrmzkvh27rsnxcrgs",
-    "entity--deploy-transaction": "b25bb47ce023103ff78d611b9d45d2847c388822c37275fc5270d4fa5d208cfc",
-    "manager--address": "erd1qqqqqqqqqqqqqpgqrzt446eajxu3m9g40vcu570kqr570ssw27rsey45u3",
-    "manager--deploy-transaction": "d9d8ded44a6e911457ee12338b8c42d518fdd1285010861599c2ece3dffe330f"
+    "entity--address": "erd1qqqqqqqqqqqqqpgqkvs5syrg8ylfl0uaj3gkwd5w0dul29ea27rsc7al69",
+    "entity--deploy-transaction": "",
+    "manager--address": "erd1qqqqqqqqqqqqqpgqsmztqv3aa72d66dsvvmj6ekgszwdhquk27rs952qyh",
+    "manager--deploy-transaction": ""
   }
 }

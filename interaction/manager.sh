@@ -26,8 +26,8 @@ deploy() {
         --pem=${DEPLOYER} \
         --send || return
 
-    ENTITY_ADDRESS=$(erdpy data parse --file="deploy-${NETWORK_NAME}-entity.interaction.json" --expression="data['emitted_tx']['address']")
-    ENTITY_TRANSACTION=$(erdpy data parse --file="deploy-${NETWORK_NAME}-entity.interaction.json" --expression="data['emitted_tx']['hash']")
+    ENTITY_ADDRESS=$(erdpy data parse --file="deploy-${NETWORK_NAME}-entity.interaction.json" --expression="data['contractAddress']")
+    ENTITY_TRANSACTION=$(erdpy data parse --file="deploy-${NETWORK_NAME}-entity.interaction.json" --expression="data['emittedTransaction']['hash']")
 
     erdpy data store --partition ${NETWORK_NAME} --key=entity--address --value=${ENTITY_ADDRESS}
     erdpy data store --partition ${NETWORK_NAME} --key=entity--deploy-transaction --value=${ENTITY_TRANSACTION}
@@ -42,8 +42,8 @@ deploy() {
         --pem=$DEPLOYER \
         --send || return
 
-    MANAGER_ADDRESS=$(erdpy data parse --file="deploy-$NETWORK_NAME-manager.interaction.json" --expression="data['emitted_tx']['address']")
-    MANAGER_TRANSACTION=$(erdpy data parse --file="deploy-$NETWORK_NAME-manager.interaction.json" --expression="data['emitted_tx']['hash']")
+    MANAGER_ADDRESS=$(erdpy data parse --file="deploy-$NETWORK_NAME-manager.interaction.json" --expression="data['contractAddress']")
+    MANAGER_TRANSACTION=$(erdpy data parse --file="deploy-$NETWORK_NAME-manager.interaction.json" --expression="data['emittedTransaction']['hash']")
 
     erdpy data store --partition $NETWORK_NAME --key=manager--address --value=$MANAGER_ADDRESS
     erdpy data store --partition $NETWORK_NAME --key=manager--deploy-transaction --value=$MANAGER_TRANSACTION
@@ -52,8 +52,8 @@ deploy() {
     setCostTokenBurnRole
 
     echo ""
-    echo "deployed ENTITY smart contract address: $ENTITY_ADDRESS"
-    echo "deployed MANAGER smart contract address: $MANAGER_ADDRESS"
+    echo "deployed ENTITY TEMPLATE: $ENTITY_ADDRESS"
+    echo "deployed MANAGER: $MANAGER_ADDRESS"
 }
 
 upgrade() {
