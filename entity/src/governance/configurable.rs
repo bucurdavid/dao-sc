@@ -1,10 +1,7 @@
 elrond_wasm::imports!();
 
 use super::storage;
-use crate::config::{
-    DEFAULT_PROPOSAL_MIN_TOKENS, DEFAULT_VOTING_DELAY, DEFAULT_VOTING_LOCKTIME, DEFAULT_VOTING_MAX_ACTIONS, DEFAULT_VOTING_PERIOD,
-    DEFAULT_VOTING_QUORUM,
-};
+use crate::config::{DEFAULT_PROPOSAL_MIN_TOKENS, DEFAULT_VOTING_DELAY, DEFAULT_VOTING_LOCKTIME, DEFAULT_VOTING_PERIOD, DEFAULT_VOTING_QUORUM};
 
 #[elrond_wasm::module]
 pub trait GovConfigurableModule: storage::GovStorageModule {
@@ -18,12 +15,6 @@ pub trait GovConfigurableModule: storage::GovStorageModule {
     fn change_min_token_balance_for_proposing(&self, new_value: BigUint) {
         self.require_caller_self();
         self.try_change_min_token_balance_for_proposing(new_value);
-    }
-
-    #[endpoint(changeMaxActionsPerProposal)]
-    fn change_max_actions_per_proposal(&self, new_value: usize) {
-        self.require_caller_self();
-        self.try_change_max_actions_per_proposal(new_value);
     }
 
     #[endpoint(changeVotingDelayInBlocks)]
@@ -51,7 +42,6 @@ pub trait GovConfigurableModule: storage::GovStorageModule {
 
         self.try_change_quorum(BigUint::from(DEFAULT_VOTING_QUORUM));
         self.try_change_min_token_balance_for_proposing(BigUint::from(DEFAULT_PROPOSAL_MIN_TOKENS));
-        self.try_change_max_actions_per_proposal(DEFAULT_VOTING_MAX_ACTIONS);
         self.try_change_voting_delay_in_blocks(DEFAULT_VOTING_DELAY);
         self.try_change_voting_period_in_blocks(DEFAULT_VOTING_PERIOD);
         self.try_change_lock_time_after_voting_ends_in_blocks(DEFAULT_VOTING_LOCKTIME);
@@ -72,11 +62,6 @@ pub trait GovConfigurableModule: storage::GovStorageModule {
     fn try_change_min_token_balance_for_proposing(&self, new_value: BigUint) {
         require!(new_value != 0, "min token balance for proposing can not be 0");
         self.min_token_balance_for_proposing().set(&new_value);
-    }
-
-    fn try_change_max_actions_per_proposal(&self, new_value: usize) {
-        require!(new_value != 0, "max actions per proposal can not be 0");
-        self.max_actions_per_proposal().set(&new_value);
     }
 
     fn try_change_voting_delay_in_blocks(&self, new_value: u64) {
