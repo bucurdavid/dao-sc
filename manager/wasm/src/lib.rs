@@ -14,6 +14,7 @@ elrond_wasm_node::wasm_endpoints! {
         deposit
         finalizeEntity
         getEntityAddress
+        getEntityTemplateAddress
         getSetupOwnerToken
         upgradeEntity
     )

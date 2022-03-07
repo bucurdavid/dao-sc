@@ -39,6 +39,7 @@ pub trait FactoryModule {
         self.entity_templ_address().get()
     }
 
+    #[view(getEntityTemplateAddress)]
     #[storage_mapper("entity_templ_addr")]
     fn entity_templ_address(&self) -> SingleValueMapper<ManagedAddress>;
 
