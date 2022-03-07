@@ -13,11 +13,9 @@ pub trait GovStorageModule {
     #[storage_mapper("gov:proposal_queue_block")]
     fn proposal_queue_block(&self, proposal_id: usize) -> SingleValueMapper<u64>;
 
-    #[view(getUpvotes)]
     #[storage_mapper("gov:upvotes")]
     fn upvotes(&self, proposal_id: usize) -> MapMapper<ManagedAddress, BigUint>;
 
-    #[view(getDownvotes)]
     #[storage_mapper("gov:downvotes")]
     fn downvotes(&self, proposal_id: usize) -> MapMapper<ManagedAddress, BigUint>;
 

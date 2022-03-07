@@ -24,7 +24,6 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
         self.user_deposit_event(&caller, &payment_token, payment_nonce, &payment_amount);
     }
 
-    // Used to withdraw the tokens after the action was executed or cancelled
     #[endpoint(withdrawVoteTokens)]
     fn withdraw_gov_tokens_endpoint(&self, proposal_id: usize) {
         self.require_valid_proposal_id(proposal_id);
@@ -39,7 +38,7 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
         if total_tokens > 0 {
             self.upvotes(proposal_id).remove(&caller);
             self.downvotes(proposal_id).remove(&caller);
-            self.send().direct(&caller, &governance_token_id, 0, &total_tokens, &[]);
+            self.send().direct(&caller, &gov_token_id, 0, &total_tokens, &[]);
         }
     }
 
