@@ -7,11 +7,9 @@ pub type ActionAsMultiArg<M> =
 #[derive(TypeAbi, TopEncode, TopDecode, PartialEq)]
 pub enum ProposalStatus {
     None,
-    Pending,
     Active,
     Defeated,
     Succeeded,
-    Queued,
 }
 
 #[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, ManagedVecItem)]

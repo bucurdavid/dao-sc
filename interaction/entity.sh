@@ -1,4 +1,4 @@
-NETWORK_NAME="testnet" # devnet, testnet, mainnet
+NETWORK_NAME="devnet" # devnet, testnet, mainnet
 DEPLOYER="./deployer.pem"
 ADDRESS="erd1qqqqqqqqqqqqqpgq90nl5ta7nwcqv5uqf33xsdh67et544xeyt2s0u8sp3"
 TOKEN_ID="ONE-8602e1"

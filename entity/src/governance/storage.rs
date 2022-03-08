@@ -10,9 +10,6 @@ pub trait GovStorageModule {
     #[storage_mapper("gov:proposal_start_block")]
     fn proposal_start_block(&self, proposal_id: usize) -> SingleValueMapper<u64>;
 
-    #[storage_mapper("gov:proposal_queue_block")]
-    fn proposal_queue_block(&self, proposal_id: usize) -> SingleValueMapper<u64>;
-
     #[storage_mapper("gov:upvotes")]
     fn upvotes(&self, proposal_id: usize) -> MapMapper<ManagedAddress, BigUint>;
 
@@ -41,19 +38,7 @@ pub trait GovStorageModule {
     #[storage_mapper("gov:min_token_balance_propose")]
     fn min_token_balance_for_proposing(&self) -> SingleValueMapper<BigUint>;
 
-    #[view(getMaxActionsPerProposal)]
-    #[storage_mapper("gov:max_actions_proposal")]
-    fn max_actions_per_proposal(&self) -> SingleValueMapper<usize>;
-
-    #[view(getVotingDelayInBlocks)]
-    #[storage_mapper("gov:voting_delay_blocks")]
-    fn voting_delay_in_blocks(&self) -> SingleValueMapper<u64>;
-
     #[view(getVotingPeriodInBlocks)]
     #[storage_mapper("gov:voting_period_blocks")]
     fn voting_period_in_blocks(&self) -> SingleValueMapper<u64>;
-
-    #[view(getLockTimeAfterVotingEndsInBlocks)]
-    #[storage_mapper("gov:lock_time_after_voting_ends_blocks")]
-    fn lock_time_after_voting_ends_in_blocks(&self) -> SingleValueMapper<u64>;
 }

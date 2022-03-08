@@ -1,7 +1,7 @@
 elrond_wasm::imports!();
 
 use super::storage;
-use crate::config::{DEFAULT_PROPOSAL_MIN_TOKENS, DEFAULT_VOTING_DELAY, DEFAULT_VOTING_LOCKTIME, DEFAULT_VOTING_PERIOD, DEFAULT_VOTING_QUORUM};
+use crate::config::{DEFAULT_PROPOSAL_MIN_TOKENS, DEFAULT_VOTING_PERIOD, DEFAULT_VOTING_QUORUM};
 
 #[elrond_wasm::module]
 pub trait GovConfigurableModule: storage::GovStorageModule {
@@ -17,22 +17,10 @@ pub trait GovConfigurableModule: storage::GovStorageModule {
         self.try_change_min_token_balance_for_proposing(new_value);
     }
 
-    #[endpoint(changeVotingDelayInBlocks)]
-    fn change_voting_delay_in_blocks(&self, new_value: u64) {
-        self.require_caller_self();
-        self.try_change_voting_delay_in_blocks(new_value);
-    }
-
     #[endpoint(changeVotingPeriodInBlocks)]
     fn change_voting_period_in_blocks(&self, new_value: u64) {
         self.require_caller_self();
         self.try_change_voting_period_in_blocks(new_value);
-    }
-
-    #[endpoint(changeLockTimeAfterVotingEndsInBlocks)]
-    fn change_lock_time_after_voting_ends_in_blocks(&self, new_value: u64) {
-        self.require_caller_self();
-        self.try_change_lock_time_after_voting_ends_in_blocks(new_value);
     }
 
     fn init_governance_module(&self, governance_token_id: &TokenIdentifier) {
@@ -42,9 +30,7 @@ pub trait GovConfigurableModule: storage::GovStorageModule {
 
         self.try_change_quorum(BigUint::from(DEFAULT_VOTING_QUORUM));
         self.try_change_min_token_balance_for_proposing(BigUint::from(DEFAULT_PROPOSAL_MIN_TOKENS));
-        self.try_change_voting_delay_in_blocks(DEFAULT_VOTING_DELAY);
         self.try_change_voting_period_in_blocks(DEFAULT_VOTING_PERIOD);
-        self.try_change_lock_time_after_voting_ends_in_blocks(DEFAULT_VOTING_LOCKTIME);
     }
 
     fn require_caller_self(&self) {
@@ -64,18 +50,8 @@ pub trait GovConfigurableModule: storage::GovStorageModule {
         self.min_token_balance_for_proposing().set(&new_value);
     }
 
-    fn try_change_voting_delay_in_blocks(&self, new_value: u64) {
-        require!(new_value != 0, "voting delay in blocks can not be 0");
-        self.voting_delay_in_blocks().set(&new_value);
-    }
-
     fn try_change_voting_period_in_blocks(&self, new_value: u64) {
         require!(new_value != 0, "voting period (in blocks) can not be 0");
         self.voting_period_in_blocks().set(&new_value);
-    }
-
-    fn try_change_lock_time_after_voting_ends_in_blocks(&self, new_value: u64) {
-        require!(new_value != 0, "lock time after voting ends (in blocks) can not be 0");
-        self.lock_time_after_voting_ends_in_blocks().set(&new_value);
     }
 }

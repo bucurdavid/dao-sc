@@ -10,6 +10,7 @@ pub trait GovEventsModule {
         #[indexed] proposal_id: usize,
         #[indexed] proposer: &ManagedAddress,
         #[indexed] start_block: u64,
+        #[indexed] title: &ManagedBuffer,
         #[indexed] description: &ManagedBuffer,
         actions: &ManagedVec<Action<Self::Api>>,
     );
@@ -22,9 +23,6 @@ pub trait GovEventsModule {
 
     #[event("proposalCanceled")]
     fn proposal_canceled_event(&self, #[indexed] proposal_id: usize);
-
-    #[event("proposalQueued")]
-    fn proposal_queued_event(&self, #[indexed] proposal_id: usize, #[indexed] queued_block: u64);
 
     #[event("proposalExecuted")]
     fn proposal_executed_event(&self, #[indexed] proposal_id: usize);

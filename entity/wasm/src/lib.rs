@@ -8,34 +8,26 @@ elrond_wasm_node::wasm_endpoints! {
     entity
     (
         cancel
-        changeLockTimeAfterVotingEndsInBlocks
-        changeMaxActionsPerProposal
         changeMinTokenBalanceForProposing
         changeQuorum
-        changeVotingDelayInBlocks
         changeVotingPeriodInBlocks
         depositTokensForAction
         enableFeatures
         execute
-        getGovernanceTokenId
-        getLockTimeAfterVotingEndsInBlocks
-        getMaxActionsPerProposal
-        getMinTokenBalanceForProposing
-        getProposalActions
+        getGovQuorum
+        getGovTokenId
+        getMinTokensForProposing
         getProposalDescription
         getProposalStatus
         getProposalTitle
         getProposer
-        getQuorum
         getTotalDownvotes
-        getTotalVotes
-        getVotingDelayInBlocks
+        getTotalUpvotes
         getVotingPeriodInBlocks
         propose
-        queue
         voteAgainst
         voteFor
-        withdrawGovernanceTokens
+        withdrawVoteTokens
     )
 }
 
