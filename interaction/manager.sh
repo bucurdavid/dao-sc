@@ -61,7 +61,7 @@ upgrade() {
     erdpy --verbose contract test manager || return
 
     erdpy --verbose contract upgrade $MANAGER_ADDRESS --project manager \
-        --arguments $ENTITY_ADDRESS $COST_TOKEN_ID_HEX $COST_ENTITY_CREATION_AMOUNT \
+        --arguments $ENTITY_ADDRESS "str:$COST_TOKEN_ID" $COST_ENTITY_CREATION_AMOUNT \
         --recall-nonce --gas-limit=80000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --keyfile="key.json" \
