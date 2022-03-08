@@ -93,9 +93,7 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
 
     #[endpoint(upgradeEntity)]
     fn upgrade_entity_endpoint(&self, token_id: TokenIdentifier) {
-        let entity_address = self.get_entity_address(&token_id);
-
-        self.upgrade_entity(&entity_address);
+        self.upgrade_entity(self.get_entity_address(&token_id));
     }
 
     #[view(getEntityAddress)]
@@ -125,7 +123,7 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
     #[storage_mapper("entities")]
     fn entities_map(&self) -> MapMapper<TokenIdentifier, ManagedAddress>;
 
-    #[view(getSetupOwnerToken)]
+    #[view(getSetupToken)]
     #[storage_mapper("setup_owner_token")]
     fn setup_owner_token(&self, owner: &ManagedAddress) -> SingleValueMapper<TokenIdentifier>;
 }

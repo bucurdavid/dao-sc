@@ -74,7 +74,7 @@ upgradeEntityTemplate() {
     erdpy --verbose contract test entity || return
 
     erdpy --verbose contract upgrade $ENTITY_ADDRESS --project entity \
-        --recall-nonce --gas-limit=250000000 \
+        --recall-nonce --gas-limit=100000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --pem=$DEPLOYER \
         --send || return
@@ -160,9 +160,9 @@ getEntityAddress() {
 
 # params:
 #   $1 = address
-getSetupOwnerToken() {
+getSetupToken() {
     erdpy contract query $MANAGER_ADDRESS \
-        --function="getSetupOwnerToken" \
+        --function="getSetupToken" \
         --arguments $1 \
         --proxy=$PROXY || return
 }

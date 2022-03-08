@@ -29,27 +29,28 @@ getGovQuorum() {
 
 # params:
 #   $1 = proposal id
-getProposalTitle() {
+getProposal() {
     erdpy contract query ${ADDRESS} \
-        --function="getProposalTitle" \
+        --function="getProposal" \
         --arguments $1 \
         --proxy=${PROXY} || return
 }
 
 # params:
 #   $1 = proposal id
-getProposalDescription() {
+getProposalVotes() {
     erdpy contract query ${ADDRESS} \
-        --function="getProposalDescription" \
+        --function="getProposalVotes" \
         --arguments $1 \
         --proxy=${PROXY} || return
 }
 
 # params:
 #   $1 = proposal id
-getProposalUpvotes() {
+#   $2 = address
+getProposalAddressVotes() {
     erdpy contract query ${ADDRESS} \
-        --function="getTotalUpvotes" \
-        --arguments $1 \
+        --function="getProposalAddressVotes" \
+        --arguments $1 $2 \
         --proxy=${PROXY} || return
 }

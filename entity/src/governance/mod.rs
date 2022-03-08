@@ -202,31 +202,30 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
         }
     }
 
-    #[view(getProposer)]
-    fn get_proposer_view(&self, proposal_id: usize) -> OptionalValue<ManagedAddress> {
+    #[view(getProposal)]
+    fn get_proposal_view(&self, proposal_id: usize) -> OptionalValue<MultiValue3<ManagedBuffer, ManagedBuffer, ManagedAddress>> {
         if !self.proposal_exists(proposal_id) {
             OptionalValue::None
         } else {
-            OptionalValue::Some(self.proposals().get(proposal_id).proposer)
+            let proposal = self.proposals().get(proposal_id);
+            OptionalValue::Some((proposal.title, proposal.description, proposal.proposer).into())
         }
     }
 
-    #[view(getProposalTitle)]
-    fn get_proposal_title_view(&self, proposal_id: usize) -> OptionalValue<ManagedBuffer> {
-        if !self.proposal_exists(proposal_id) {
-            OptionalValue::None
-        } else {
-            OptionalValue::Some(self.proposals().get(proposal_id).title)
-        }
+    #[view(getProposalVotes)]
+    fn get_proposal_votes_view(&self, proposal_id: usize) -> MultiValue2<BigUint, BigUint> {
+        let upvotes = self.total_upvotes(proposal_id).get();
+        let downvotes = self.total_downvotes(proposal_id).get();
+
+        (upvotes, downvotes).into()
     }
 
-    #[view(getProposalDescription)]
-    fn get_proposal_description_view(&self, proposal_id: usize) -> OptionalValue<ManagedBuffer> {
-        if !self.proposal_exists(proposal_id) {
-            OptionalValue::None
-        } else {
-            OptionalValue::Some(self.proposals().get(proposal_id).description)
-        }
+    #[view(getProposalAddressVotes)]
+    fn get_proposal_address_votes_view(&self, proposal_id: usize, address: ManagedAddress) -> MultiValue2<BigUint, BigUint> {
+        let upvotes = self.upvotes(proposal_id).get(&address).unwrap_or_default();
+        let downvotes = self.downvotes(proposal_id).get(&address).unwrap_or_default();
+
+        (upvotes, downvotes).into()
     }
 
     // #[view(getProposalActions)]

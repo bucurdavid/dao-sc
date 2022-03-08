@@ -17,12 +17,10 @@ elrond_wasm_node::wasm_endpoints! {
         getGovQuorum
         getGovTokenId
         getMinTokensForProposing
-        getProposalDescription
+        getProposal
+        getProposalAddressVotes
         getProposalStatus
-        getProposalTitle
-        getProposer
-        getTotalDownvotes
-        getTotalUpvotes
+        getProposalVotes
         getVotingPeriodInBlocks
         propose
         voteAgainst

@@ -19,10 +19,10 @@ pub trait FactoryModule {
         address
     }
 
-    fn upgrade_entity(&self, address: &ManagedAddress) {
+    fn upgrade_entity(&self, address: ManagedAddress) {
         let template_contract = self.get_template_address();
 
-        self.entity_contract_proxy(address.clone())
+        self.entity_contract_proxy(address)
             .init(OptionalValue::None)
             .upgrade_from_source(&template_contract, CodeMetadata::UPGRADEABLE);
     }
