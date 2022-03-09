@@ -21,9 +21,6 @@ pub trait GovEventsModule {
     #[event("downvoteCast")]
     fn downvote_cast_event(&self, #[indexed] downvoter: &ManagedAddress, #[indexed] proposal_id: usize, nr_downvotes: &BigUint);
 
-    #[event("proposalCanceled")]
-    fn proposal_canceled_event(&self, #[indexed] proposal_id: usize);
-
     #[event("proposalExecuted")]
     fn proposal_executed_event(&self, #[indexed] proposal_id: usize);
 

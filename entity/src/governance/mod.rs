@@ -158,24 +158,6 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
         self.proposal_executed_event(proposal_id);
     }
 
-    #[endpoint(cancel)]
-    fn cancel_endpoint(&self, proposal_id: usize) {
-        match self.get_proposal_status(proposal_id) {
-            ProposalStatus::None => {
-                sc_panic!("proposal does not exist");
-            }
-            ProposalStatus::Defeated => {}
-            _ => {
-                let proposal = self.proposals().get(proposal_id);
-                let caller = self.blockchain().get_caller();
-                require!(caller == proposal.proposer, "action only allowed for proposer");
-            }
-        }
-
-        self.clear_proposal(proposal_id);
-        self.proposal_canceled_event(proposal_id);
-    }
-
     #[view(getProposalStatus)]
     fn get_proposal_status(&self, proposal_id: usize) -> ProposalStatus {
         if !self.proposal_exists(proposal_id) {
