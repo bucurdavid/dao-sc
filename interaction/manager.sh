@@ -1,14 +1,14 @@
 NETWORK_NAME="devnet" # devnet, testnet, mainnet
 DEPLOYER="./deployer.pem"
 
-ENTITY_ADDRESS=$(erdpy data load --partition ${NETWORK_NAME} --key=entity--address)
-ENTITY_DEPLOY_TRANSACTION=$(erdpy data load --partition ${NETWORK_NAME} --key=entity--deploy-transaction)
-MANAGER_ADDRESS=$(erdpy data load --partition ${NETWORK_NAME} --key=manager--address)
-MANAGER_DEPLOY_TRANSACTION=$(erdpy data load --partition ${NETWORK_NAME} --key=manager--deploy-transaction)
-PROXY=$(erdpy data load --partition ${NETWORK_NAME} --key=proxy)
-CHAIN_ID=$(erdpy data load --partition ${NETWORK_NAME} --key=chain-id)
-COST_TOKEN_ID=$(erdpy data load --partition ${NETWORK_NAME} --key=cost-token-id)
-COST_ENTITY_CREATION_AMOUNT=$(erdpy data load --partition ${NETWORK_NAME} --key=cost-entity-creation-amount)
+ENTITY_ADDRESS=$(erdpy data load --partition $NETWORK_NAME --key=entity--address)
+ENTITY_DEPLOY_TRANSACTION=$(erdpy data load --partition $NETWORK_NAME --key=entity--deploy-transaction)
+MANAGER_ADDRESS=$(erdpy data load --partition $NETWORK_NAME} --key=manager--address)
+MANAGER_DEPLOY_TRANSACTION=$(erdpy data load --partition $NETWORK_NAME --key=manager--deploy-transaction)
+PROXY=$(erdpy data load --partition $NETWORK_NAME --key=proxy)
+CHAIN_ID=$(erdpy data load --partition $NETWORK_NAME --key=chain-id)
+COST_TOKEN_ID=$(erdpy data load --partition $NETWORK_NAME --key=cost-token-id)
+COST_ENTITY_CREATION_AMOUNT=$(erdpy data load --partition $NETWORK_NAME --key=cost-entity-creation-amount)
 
 deploy() {
     echo "accidental deploy protection is activated."
@@ -21,16 +21,16 @@ deploy() {
 
     erdpy --verbose contract deploy --project entity \
         --recall-nonce --gas-limit=200000000 \
-        --outfile="deploy-${NETWORK_NAME}-entity.interaction.json" \
-        --proxy=${PROXY} --chain=${CHAIN_ID} \
-        --pem=${DEPLOYER} \
+        --outfile="deploy-$NETWORK_NAME-entity.interaction.json" \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --pem=$DEPLOYER \
         --send || return
 
-    ENTITY_ADDRESS=$(erdpy data parse --file="deploy-${NETWORK_NAME}-entity.interaction.json" --expression="data['contractAddress']")
-    ENTITY_TRANSACTION=$(erdpy data parse --file="deploy-${NETWORK_NAME}-entity.interaction.json" --expression="data['emittedTransactionHash']")
+    ENTITY_ADDRESS=$(erdpy data parse --file="deploy-$NETWORK_NAME-entity.interaction.json" --expression="data['contractAddress']")
+    ENTITY_TRANSACTION=$(erdpy data parse --file="deploy-$NETWORK_NAME-entity.interaction.json" --expression="data['emittedTransactionHash']")
 
-    erdpy data store --partition ${NETWORK_NAME} --key=entity--address --value=${ENTITY_ADDRESS}
-    erdpy data store --partition ${NETWORK_NAME} --key=entity--deploy-transaction --value=${ENTITY_TRANSACTION}
+    erdpy data store --partition $NETWORK_NAME --key=entity--address --value=$ENTITY_ADDRESS
+    erdpy data store --partition $NETWORK_NAME --key=entity--deploy-transaction --value=$ENTITY_TRANSACTION
 
     sleep 6
 
@@ -64,8 +64,7 @@ upgrade() {
         --arguments $ENTITY_ADDRESS "str:$COST_TOKEN_ID" $COST_ENTITY_CREATION_AMOUNT \
         --recall-nonce --gas-limit=80000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --keyfile="key.json" \
-        --passfile="pass.txt" \
+        --pem=$DEPLOYER \
         --send || return
 }
 
@@ -136,9 +135,9 @@ finalizeEntity() {
     erdpy contract call $MANAGER_ADDRESS \
         --function="finalizeEntity" \
         --arguments "str:$1" \
-        --pem=$DEPLOYER \
         --recall-nonce --gas-limit=80000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
+        --pem=$DEPLOYER \
         --send || return
 }
 
