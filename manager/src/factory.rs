@@ -12,7 +12,7 @@ pub trait FactoryModule {
         let (address, _) = self
             .entity_contract_proxy(ManagedAddress::zero())
             .init(OptionalValue::Some(token_id.clone()))
-            .deploy_from_source(&template_contract, CodeMetadata::UPGRADEABLE);
+            .deploy_from_source(&template_contract, self.get_deploy_code_metadata());
 
         require!(!address.is_zero(), "address is zero");
 
@@ -24,7 +24,7 @@ pub trait FactoryModule {
 
         self.entity_contract_proxy(address)
             .init(OptionalValue::None)
-            .upgrade_from_source(&template_contract, CodeMetadata::UPGRADEABLE);
+            .upgrade_from_source(&template_contract, self.get_deploy_code_metadata());
     }
 
     fn enable_entity_features(&self, address: &ManagedAddress, features_names: MultiValueEncoded<ManagedBuffer>) {
@@ -37,6 +37,10 @@ pub trait FactoryModule {
         require!(!self.entity_templ_address().is_empty(), "no template set");
 
         self.entity_templ_address().get()
+    }
+
+    fn get_deploy_code_metadata(&self) -> CodeMetadata {
+        CodeMetadata::UPGRADEABLE | CodeMetadata::READABLE | CodeMetadata::PAYABLE | CodeMetadata::PAYABLE_BY_SC
     }
 
     #[view(getEntityTemplateAddress)]
