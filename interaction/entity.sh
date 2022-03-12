@@ -1,7 +1,7 @@
 NETWORK_NAME="devnet" # devnet, testnet, mainnet
 DEPLOYER="./deployer.pem"
 ADDRESS="erd1qqqqqqqqqqqqqpgqq2usalruzalugenl0pcngtlwf3pxk24t27rs8j66tv"
-TOKEN_ID="ONE-8602e1"
+TOKEN_ID="ONE-34c485"
 
 PROXY=$(erdpy data load --partition $NETWORK_NAME --key=proxy)
 CHAIN_ID=$(erdpy data load --partition $NETWORK_NAME --key=chain-id)

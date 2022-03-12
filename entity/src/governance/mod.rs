@@ -7,26 +7,15 @@ pub mod types;
 
 use types::*;
 
-const MAX_BLOCK_GAS_LIMIT: u64 = 1_500_000_000;
-
 #[elrond_wasm::module]
 pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovStorageModule + events::GovEventsModule {
-    #[payable("*")]
-    #[endpoint(depositTokensForAction)]
-    fn deposit_tokens_for_action_endpoint(
-        &self,
-        #[payment_token] payment_token: TokenIdentifier,
-        #[payment_nonce] payment_nonce: u64,
-        #[payment_amount] payment_amount: BigUint,
-    ) {
-        let caller = self.blockchain().get_caller();
-        self.user_deposit_event(&caller, &payment_token, payment_nonce, &payment_amount);
-    }
-
     #[endpoint(withdrawVoteTokens)]
     fn withdraw_gov_tokens_endpoint(&self, proposal_id: usize) {
         self.require_valid_proposal_id(proposal_id);
-        require!(self.get_proposal_status(proposal_id) == ProposalStatus::None, "proposal is still active");
+        require!(
+            self.get_proposal_status(proposal_id) != ProposalStatus::Active,
+            "proposal is still active"
+        );
 
         let caller = self.blockchain().get_caller();
         let gov_token_id = self.governance_token_id().get();
@@ -48,44 +37,26 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
         #[payment_amount] payment_amount: BigUint,
         title: ManagedBuffer,
         description: ManagedBuffer,
-        #[var_args] actions: MultiValueVec<ActionAsMultiArg<Self::Api>>,
+        #[var_args] actions: MultiValueManagedVec<Action<Self::Api>>,
     ) -> usize {
         self.require_payment_token_governance_token();
         require!(payment_amount >= self.min_token_balance_for_proposing().get(), "not enough tokens");
-
-        let mut gov_actions = ManagedVec::new();
-        for action in actions.into_vec() {
-            let (gas_limit, dest_address, token_id, token_nonce, amount, function_name, arguments) = action.into_tuple();
-            let gov_action = Action {
-                gas_limit,
-                dest_address,
-                token_id,
-                token_nonce,
-                amount,
-                function_name,
-                arguments,
-            };
-
-            gov_actions.push(gov_action);
-        }
-
-        require!(self.total_gas_needed(&gov_actions) < MAX_BLOCK_GAS_LIMIT, "actions require too much gas");
 
         let proposer = self.blockchain().get_caller();
         let current_block = self.blockchain().get_block_nonce();
         let proposal_id = self.proposals().len() + 1;
 
-        self.proposal_created_event(proposal_id, &proposer, current_block, &title, &description, &gov_actions);
+        self.emit_proposal_created_event(proposal_id, &proposer, current_block, &title, &description);
 
-        let proposal = Proposal {
+        let _ = self.proposals().push(&Proposal {
             proposer: proposer.clone(),
             title,
             description,
-            actions: gov_actions,
-        };
-        let _ = self.proposals().push(&proposal);
+            actions: actions.into_vec(),
+        });
 
         self.proposal_start_block(proposal_id).set(&current_block);
+        self.proposal_start_timestamp(proposal_id).set(&self.blockchain().get_block_timestamp());
         self.total_upvotes(proposal_id).set(&payment_amount);
         self.upvotes(proposal_id).insert(proposer, payment_amount);
 
@@ -101,7 +72,7 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
 
         let voter = self.blockchain().get_caller();
 
-        self.vote_cast_event(&voter, proposal_id, &payment_amount);
+        self.emit_vote_for_event(&voter, proposal_id, &payment_amount);
 
         self.total_upvotes(proposal_id).update(|current| *current += &payment_amount);
         self.upvotes(proposal_id)
@@ -118,7 +89,7 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
         require!(self.get_proposal_status(proposal_id) == ProposalStatus::Active, "proposal not active");
 
         let downvoter = self.blockchain().get_caller();
-        self.downvote_cast_event(&downvoter, proposal_id, &payment_amount);
+        self.emit_vote_against_event(&downvoter, proposal_id, &payment_amount);
         self.total_downvotes(proposal_id).update(|current| *current += &payment_amount);
 
         self.downvotes(proposal_id)
@@ -132,30 +103,18 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
         require!(self.get_proposal_status(proposal_id) == ProposalStatus::Succeeded, "not ready to execute");
 
         let proposal = self.proposals().get(proposal_id);
-        let total_gas_needed = self.total_gas_needed(&proposal.actions);
-        let gas_left = self.blockchain().get_gas_left();
-
-        require!(gas_left > total_gas_needed, "not enough gas to execute");
 
         for action in proposal.actions.iter() {
-            let mut contract_call = self
+            let call = self
                 .send()
-                .contract_call::<()>(action.dest_address, action.function_name)
+                .contract_call::<()>(action.address, action.endpoint)
                 .with_gas_limit(action.gas_limit);
 
-            if action.amount > 0 {
-                contract_call = contract_call.add_token_transfer(action.token_id, action.token_nonce, action.amount);
-            }
-
-            for arg in action.arguments.iter() {
-                contract_call.push_argument_raw_bytes(arg.to_boxed_bytes().as_slice());
-            }
-
-            contract_call.transfer_execute();
+            call.transfer_execute()
         }
 
         self.clear_proposal(proposal_id);
-        self.proposal_executed_event(proposal_id);
+        self.emit_proposal_executed_event(proposal_id);
     }
 
     #[view(getProposalStatus)]
@@ -185,12 +144,15 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
     }
 
     #[view(getProposal)]
-    fn get_proposal_view(&self, proposal_id: usize) -> OptionalValue<MultiValue3<ManagedBuffer, ManagedBuffer, ManagedAddress>> {
+    fn get_proposal_view(&self, proposal_id: usize) -> OptionalValue<MultiValue5<ManagedBuffer, ManagedBuffer, ManagedAddress, u64, u64>> {
         if !self.proposal_exists(proposal_id) {
             OptionalValue::None
         } else {
             let proposal = self.proposals().get(proposal_id);
-            OptionalValue::Some((proposal.title, proposal.description, proposal.proposer).into())
+            let voting_period = self.voting_period_in_blocks().get();
+            let start_timestamp = self.proposal_start_timestamp(proposal_id).get();
+            let end_timestamp = start_timestamp + voting_period * 6;
+            OptionalValue::Some((proposal.title, proposal.description, proposal.proposer, start_timestamp, end_timestamp).into())
         }
     }
 
@@ -242,20 +204,12 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
         self.is_valid_proposal_id(proposal_id) && !self.proposals().item_is_empty(proposal_id)
     }
 
-    fn total_gas_needed(&self, actions: &ManagedVec<Action<Self::Api>>) -> u64 {
-        let mut total = 0;
-        for action in actions {
-            total += action.gas_limit;
-        }
-
-        total
-    }
-
     /// specific votes/downvotes are not cleared,
     /// as they're used for reclaim tokens logic and cleared one by one
     fn clear_proposal(&self, proposal_id: usize) {
         self.proposals().clear_entry(proposal_id);
         self.proposal_start_block(proposal_id).clear();
+        self.proposal_start_timestamp(proposal_id).clear();
         self.total_upvotes(proposal_id).clear();
         self.total_downvotes(proposal_id).clear();
     }

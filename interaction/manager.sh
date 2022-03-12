@@ -3,7 +3,7 @@ DEPLOYER="./deployer.pem"
 
 ENTITY_ADDRESS=$(erdpy data load --partition $NETWORK_NAME --key=entity--address)
 ENTITY_DEPLOY_TRANSACTION=$(erdpy data load --partition $NETWORK_NAME --key=entity--deploy-transaction)
-MANAGER_ADDRESS=$(erdpy data load --partition $NETWORK_NAME} --key=manager--address)
+MANAGER_ADDRESS=$(erdpy data load --partition $NETWORK_NAME --key=manager--address)
 MANAGER_DEPLOY_TRANSACTION=$(erdpy data load --partition $NETWORK_NAME --key=manager--deploy-transaction)
 PROXY=$(erdpy data load --partition $NETWORK_NAME --key=proxy)
 CHAIN_ID=$(erdpy data load --partition $NETWORK_NAME --key=chain-id)
@@ -73,7 +73,7 @@ upgradeEntityTemplate() {
     erdpy --verbose contract test entity || return
 
     erdpy --verbose contract upgrade $ENTITY_ADDRESS --project entity \
-        --recall-nonce --gas-limit=100000000 \
+        --recall-nonce --gas-limit=200000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --pem=$DEPLOYER \
         --send || return

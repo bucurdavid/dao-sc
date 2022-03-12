@@ -12,36 +12,21 @@ pub enum ProposalStatus {
     Succeeded,
 }
 
-#[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, ManagedVecItem)]
+#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, TypeAbi, ManagedVecItem)]
 pub struct Action<M: ManagedTypeApi> {
+    pub address: ManagedAddress<M>,
+    pub endpoint: ManagedBuffer<M>,
+    pub arguments: ManagedVec<M, ManagedBuffer<M>>,
     pub gas_limit: u64,
-    pub dest_address: ManagedAddress<M>,
     pub token_id: TokenIdentifier<M>,
     pub token_nonce: u64,
     pub amount: BigUint<M>,
-    pub function_name: ManagedBuffer<M>,
-    pub arguments: ManagedVec<M, ManagedBuffer<M>>,
 }
 
-impl<M: ManagedTypeApi> Action<M> {
-    pub fn into_multiarg(self) -> ActionAsMultiArg<M> {
-        (
-            self.gas_limit,
-            self.dest_address,
-            self.token_id,
-            self.token_nonce,
-            self.amount,
-            self.function_name,
-            self.arguments,
-        )
-            .into()
-    }
-}
-
-#[derive(TypeAbi, TopEncode, TopDecode)]
+#[derive(TopEncode, TopDecode, TypeAbi)]
 pub struct Proposal<M: ManagedTypeApi> {
     pub proposer: ManagedAddress<M>,
-    pub actions: ManagedVec<M, Action<M>>,
     pub title: ManagedBuffer<M>,
     pub description: ManagedBuffer<M>,
+    pub actions: ManagedVec<M, Action<M>>,
 }

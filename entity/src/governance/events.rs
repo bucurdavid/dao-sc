@@ -5,31 +5,21 @@ use super::Action;
 #[elrond_wasm::module]
 pub trait GovEventsModule {
     #[event("proposalCreated")]
-    fn proposal_created_event(
+    fn emit_proposal_created_event(
         &self,
         #[indexed] proposal_id: usize,
         #[indexed] proposer: &ManagedAddress,
         #[indexed] start_block: u64,
         #[indexed] title: &ManagedBuffer,
         #[indexed] description: &ManagedBuffer,
-        actions: &ManagedVec<Action<Self::Api>>,
     );
 
-    #[event("voteCast")]
-    fn vote_cast_event(&self, #[indexed] voter: &ManagedAddress, #[indexed] proposal_id: usize, nr_votes: &BigUint);
+    #[event("votedFor")]
+    fn emit_vote_for_event(&self, #[indexed] voter: &ManagedAddress, #[indexed] proposal_id: usize, votes: &BigUint);
 
-    #[event("downvoteCast")]
-    fn downvote_cast_event(&self, #[indexed] downvoter: &ManagedAddress, #[indexed] proposal_id: usize, nr_downvotes: &BigUint);
+    #[event("votedAgainst")]
+    fn emit_vote_against_event(&self, #[indexed] voter: &ManagedAddress, #[indexed] proposal_id: usize, votes: &BigUint);
 
     #[event("proposalExecuted")]
-    fn proposal_executed_event(&self, #[indexed] proposal_id: usize);
-
-    #[event("userDeposit")]
-    fn user_deposit_event(
-        &self,
-        #[indexed] address: &ManagedAddress,
-        #[indexed] token_id: &TokenIdentifier,
-        #[indexed] token_nonce: u64,
-        amount: &BigUint,
-    );
+    fn emit_proposal_executed_event(&self, #[indexed] proposal_id: usize);
 }
