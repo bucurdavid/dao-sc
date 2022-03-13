@@ -30,13 +30,13 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
             .call_and_exit()
     }
 
+    #[payable("*")]
     #[endpoint(createEntityWithToken)]
-    fn create_entity_with_token_endpoint(&self, token_id: TokenIdentifier) {
-        require!(token_id.is_valid_esdt_identifier(), "not an esdt");
-
+    fn create_entity_with_token_endpoint(&self, #[payment_token] payment_token: TokenIdentifier, #[payment_amount] payment_amount: BigUint) {
         let caller = self.blockchain().get_caller();
 
-        self.setup_owner_token(&caller).set(&token_id);
+        self.setup_token_id(&caller).set(&payment_token);
+        self.setup_token_amount(&caller).set(&payment_amount);
     }
 
     #[payable("*")]
@@ -48,10 +48,13 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
         token_id: TokenIdentifier,
         #[var_args] feature_names: MultiValueEncoded<ManagedBuffer>,
     ) {
-        self.require_caller_is_temp_owner(&token_id);
+        self.require_caller_is_setup_owner(&token_id);
 
         let caller = self.blockchain().get_caller();
-        let initial_tokens = self.blockchain().get_sc_balance(&token_id, 0u64);
+        let initial_tokens = self.setup_token_amount(&caller).get();
+
+        require!(initial_tokens > 0, "setup token is not available");
+
         let entity_address = self.create_entity(&token_id, &initial_tokens);
 
         self.entities_map().insert(token_id.clone(), entity_address.clone());
@@ -60,19 +63,18 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
 
         self.burn_entity_creation_cost_tokens(cost_token_id, cost_amount);
 
-        self.send().direct(&caller, &token_id, 0, &initial_tokens, &[]);
-
         self.set_entity_edst_roles(&token_id, &entity_address).call_and_exit()
     }
 
     #[endpoint(finalizeEntity)]
     fn finalize_entity_endpoint(&self, token_id: TokenIdentifier) {
-        self.require_caller_is_temp_owner(&token_id);
+        self.require_caller_is_setup_owner(&token_id);
 
         let caller = self.blockchain().get_caller();
         let entity_address = self.get_entity_address(&token_id);
 
-        self.setup_owner_token(&caller).clear();
+        self.setup_token_id(&caller).clear();
+        self.setup_token_amount(&caller).clear();
 
         self.transfer_entity_esdt_ownership(&token_id, &entity_address).call_and_exit()
     }
@@ -83,10 +85,15 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
         &self,
         initial_caller: &ManagedAddress,
         #[payment_token] payment_token: TokenIdentifier,
+        #[payment_amount] payment_amount: BigUint,
         #[call_result] result: ManagedAsyncCallResult<()>,
     ) {
         match result {
-            ManagedAsyncCallResult::Ok(_) => self.setup_owner_token(&initial_caller).set(&payment_token),
+            ManagedAsyncCallResult::Ok(_) => {
+                self.setup_token_id(&initial_caller).set(&payment_token);
+                self.setup_token_amount(&initial_caller).set(&payment_amount);
+                self.send().direct(&initial_caller, &payment_token, 0, &payment_amount, &[]);
+            }
             ManagedAsyncCallResult::Err(_) => self.send_back_egld(&initial_caller),
         }
     }
@@ -114,9 +121,9 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
         }
     }
 
-    fn require_caller_is_temp_owner(&self, token_id: &TokenIdentifier) {
+    fn require_caller_is_setup_owner(&self, token_id: &TokenIdentifier) {
         let caller = self.blockchain().get_caller();
-        let temp_owner_token_id = self.setup_owner_token(&caller).get();
+        let temp_owner_token_id = self.setup_token_id(&caller).get();
         require!(&temp_owner_token_id == token_id, "token not in setup");
     }
 
@@ -124,6 +131,9 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
     fn entities_map(&self) -> MapMapper<TokenIdentifier, ManagedAddress>;
 
     #[view(getSetupToken)]
-    #[storage_mapper("setup_owner_token")]
-    fn setup_owner_token(&self, owner: &ManagedAddress) -> SingleValueMapper<TokenIdentifier>;
+    #[storage_mapper("setup:token_id")]
+    fn setup_token_id(&self, owner: &ManagedAddress) -> SingleValueMapper<TokenIdentifier>;
+
+    #[storage_mapper("setup:token_amount")]
+    fn setup_token_amount(&self, owner: &ManagedAddress) -> SingleValueMapper<BigUint>;
 }
