@@ -29,7 +29,7 @@ pub trait GovConfigurableModule: storage::GovStorageModule {
         self.try_change_min_token_balance_for_proposing(new_value);
     }
 
-    #[endpoint(changeVotingPeriodInBlocks)]
+    #[endpoint(changeVotingPeriodInHours)]
     fn change_voting_period_in_hours(&self, new_value: u32) {
         self.require_caller_self();
         self.try_change_voting_period_in_hours(new_value);
