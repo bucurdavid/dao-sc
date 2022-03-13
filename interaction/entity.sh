@@ -21,9 +21,27 @@ propose() {
         --send || return
 }
 
+getGovTokenId() {
+    erdpy contract query $ADDRESS \
+        --function="getGovTokenId" \
+        --proxy=$PROXY || return
+}
+
 getGovQuorum() {
     erdpy contract query $ADDRESS \
         --function="getQuorum" \
+        --proxy=$PROXY || return
+}
+
+getMinTokensForProposing() {
+    erdpy contract query $ADDRESS \
+        --function="getMinTokensForProposing" \
+        --proxy=$PROXY || return
+}
+
+getVotingPeriodInHours() {
+    erdpy contract query $ADDRESS \
+        --function="getVotingPeriodInHours" \
         --proxy=$PROXY || return
 }
 
