@@ -163,6 +163,6 @@ getEntityAddress() {
 getSetupToken() {
     erdpy contract query $MANAGER_ADDRESS \
         --function="getSetupToken" \
-        --arguments "str:$1" \
+        --arguments $1 \
         --proxy=$PROXY || return
 }
