@@ -7,12 +7,6 @@ pub trait GovStorageModule {
     #[storage_mapper("gov:proposals")]
     fn proposals(&self) -> VecMapper<Proposal<Self::Api>>;
 
-    #[storage_mapper("gov:proposal_start_block")]
-    fn proposal_start_block(&self, proposal_id: usize) -> SingleValueMapper<u64>;
-
-    #[storage_mapper("gov:proposal_start_timestamp")]
-    fn proposal_start_timestamp(&self, proposal_id: usize) -> SingleValueMapper<u64>;
-
     #[storage_mapper("gov:upvotes")]
     fn upvotes(&self, proposal_id: usize) -> MapMapper<ManagedAddress, BigUint>;
 
@@ -41,5 +35,5 @@ pub trait GovStorageModule {
 
     #[view(getVotingPeriodInBlocks)]
     #[storage_mapper("gov:voting_period_blocks")]
-    fn voting_period_in_blocks(&self) -> SingleValueMapper<u64>;
+    fn voting_period_in_hours(&self) -> SingleValueMapper<u32>;
 }

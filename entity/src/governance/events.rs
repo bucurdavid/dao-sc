@@ -1,7 +1,5 @@
 elrond_wasm::imports!();
 
-use super::Action;
-
 #[elrond_wasm::module]
 pub trait GovEventsModule {
     #[event("proposalCreated")]
@@ -9,7 +7,8 @@ pub trait GovEventsModule {
         &self,
         #[indexed] proposal_id: usize,
         #[indexed] proposer: &ManagedAddress,
-        #[indexed] start_block: u64,
+        #[indexed] starts_at: u64,
+        #[indexed] ends_at: u64,
         #[indexed] title: &ManagedBuffer,
         #[indexed] description: &ManagedBuffer,
     );

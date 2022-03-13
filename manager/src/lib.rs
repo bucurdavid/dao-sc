@@ -50,13 +50,17 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
     ) {
         self.require_caller_is_temp_owner(&token_id);
 
-        let entity_address = self.create_entity(&token_id);
+        let caller = self.blockchain().get_caller();
+        let initial_tokens = self.blockchain().get_sc_balance(&token_id, 0u64);
+        let entity_address = self.create_entity(&token_id, &initial_tokens);
 
         self.entities_map().insert(token_id.clone(), entity_address.clone());
 
         self.enable_entity_features(&entity_address, feature_names);
 
         self.burn_entity_creation_cost_tokens(cost_token_id, cost_amount);
+
+        self.send().direct(&caller, &token_id, 0, &initial_tokens, &[]);
 
         self.set_entity_edst_roles(&token_id, &entity_address).call_and_exit()
     }
@@ -79,14 +83,10 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
         &self,
         initial_caller: &ManagedAddress,
         #[payment_token] payment_token: TokenIdentifier,
-        #[payment_amount] payment_amount: BigUint,
         #[call_result] result: ManagedAsyncCallResult<()>,
     ) {
         match result {
-            ManagedAsyncCallResult::Ok(_) => {
-                self.setup_owner_token(&initial_caller).set(&payment_token);
-                self.send().direct(&initial_caller, &payment_token, 0, &payment_amount, &[]);
-            }
+            ManagedAsyncCallResult::Ok(_) => self.setup_owner_token(&initial_caller).set(&payment_token),
             ManagedAsyncCallResult::Err(_) => self.send_back_egld(&initial_caller),
         }
     }

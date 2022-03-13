@@ -3,7 +3,6 @@
 
 elrond_wasm::imports!();
 
-pub mod config;
 pub mod esdt;
 pub mod features;
 pub mod governance;
@@ -18,10 +17,10 @@ pub trait Entity:
     + governance::events::GovEventsModule
 {
     #[init]
-    fn init(&self, #[var_args] opt_token_id: OptionalValue<TokenIdentifier>) {
-        if let OptionalValue::Some(token_id) = opt_token_id {
+    fn init(&self, #[var_args] opt_initial_config: OptionalValue<(TokenIdentifier, BigUint)>) {
+        if let OptionalValue::Some((token_id, initial_tokens)) = opt_initial_config {
             self.token_id().set_if_empty(&token_id);
-            self.init_governance_module(&token_id);
+            self.init_governance_module(&token_id, &initial_tokens);
         }
     }
 

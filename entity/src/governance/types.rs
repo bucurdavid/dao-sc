@@ -28,5 +28,7 @@ pub struct Proposal<M: ManagedTypeApi> {
     pub proposer: ManagedAddress<M>,
     pub title: ManagedBuffer<M>,
     pub description: ManagedBuffer<M>,
+    pub starts_at: u64,
+    pub ends_at: u64,
     pub actions: ManagedVec<M, Action<M>>,
 }
