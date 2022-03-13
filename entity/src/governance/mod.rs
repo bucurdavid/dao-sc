@@ -40,7 +40,7 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
         #[var_args] actions: MultiValueManagedVec<Action<Self::Api>>,
     ) -> usize {
         self.require_payment_token_governance_token();
-        require!(payment_amount >= self.min_token_balance_for_proposing().get(), "not enough tokens");
+        require!(payment_amount >= self.min_token_balance_for_proposing().get(), "insufficient vote tokens");
 
         let proposer = self.blockchain().get_caller();
         let proposal_id = self.proposals().len() + 1;
