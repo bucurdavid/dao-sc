@@ -134,6 +134,7 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
     #[storage_mapper("setup:token_id")]
     fn setup_token_id(&self, owner: &ManagedAddress) -> SingleValueMapper<TokenIdentifier>;
 
+    #[view(getSetupTokenAmount)]
     #[storage_mapper("setup:token_amount")]
     fn setup_token_amount(&self, owner: &ManagedAddress) -> SingleValueMapper<BigUint>;
 }

@@ -9,11 +9,9 @@ pub trait FactoryModule {
     fn create_entity(&self, token_id: &TokenIdentifier, initial_tokens: &BigUint) -> ManagedAddress {
         let template_contract = self.get_template_address();
 
-        let initial_config = (token_id.clone(), initial_tokens.clone());
-
         let (address, _) = self
             .entity_contract_proxy(ManagedAddress::zero())
-            .init(OptionalValue::Some(initial_config))
+            .init(OptionalValue::Some(token_id.clone()), OptionalValue::Some(initial_tokens.clone()))
             .deploy_from_source(&template_contract, self.get_deploy_code_metadata());
 
         require!(!address.is_zero(), "address is zero");
@@ -25,7 +23,7 @@ pub trait FactoryModule {
         let template_contract = self.get_template_address();
 
         self.entity_contract_proxy(address)
-            .init(OptionalValue::None)
+            .init(OptionalValue::None, OptionalValue::None)
             .upgrade_from_source(&template_contract, self.get_deploy_code_metadata());
     }
 

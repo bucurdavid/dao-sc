@@ -17,8 +17,8 @@ pub trait Entity:
     + governance::events::GovEventsModule
 {
     #[init]
-    fn init(&self, #[var_args] opt_initial_config: OptionalValue<(TokenIdentifier, BigUint)>) {
-        if let OptionalValue::Some((token_id, initial_tokens)) = opt_initial_config {
+    fn init(&self, #[var_args] opt_token: OptionalValue<TokenIdentifier>, #[var_args] opt_initial_tokens: OptionalValue<BigUint>) {
+        if let (OptionalValue::Some(token_id), OptionalValue::Some(initial_tokens)) = (opt_token, opt_initial_tokens) {
             self.token_id().set_if_empty(&token_id);
             self.init_governance_module(&token_id, &initial_tokens);
         }

@@ -73,7 +73,7 @@ upgradeEntityTemplate() {
     erdpy --verbose contract test entity || return
 
     erdpy --verbose contract upgrade $ENTITY_ADDRESS --project entity \
-        --recall-nonce --gas-limit=200000000 \
+        --recall-nonce --gas-limit=500000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --pem=$DEPLOYER \
         --send || return
@@ -104,12 +104,13 @@ setCostTokenBurnRole() {
 # params:
 #   $1 = token name
 #   $2 = token ticker
+#   $3 = initial supply
 createEntityToken() {
     erdpy --verbose contract call $MANAGER_ADDRESS \
         --function="createEntityToken" \
-        --arguments "str:$1" "str:$2" 18 \
+        --arguments "str:$1" "str:$2" $3 \
         --value=50000000000000000 \
-        --recall-nonce --gas-limit=10000000 \
+        --recall-nonce --gas-limit=100000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --pem=$DEPLOYER \
         --send || return
@@ -122,7 +123,7 @@ createEntityToken() {
 createEntity() {
     erdpy contract call $MANAGER_ADDRESS \
         --function="ESDTTransfer" \
-        --arguments "str:$COST_TOKEN_ID" $COST_ENTITY_CREATION_AMOUNT "str:createEntity" "str:$1" "str:$feature1" "str:$feature2" \
+        --arguments "str:$COST_TOKEN_ID" $COST_ENTITY_CREATION_AMOUNT "str:createEntity" "str:$1" "str:$1" "str:$2" \
         --recall-nonce --gas-limit=80000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --pem=$DEPLOYER \
@@ -135,7 +136,7 @@ finalizeEntity() {
     erdpy contract call $MANAGER_ADDRESS \
         --function="finalizeEntity" \
         --arguments "str:$1" \
-        --recall-nonce --gas-limit=80000000 \
+        --recall-nonce --gas-limit=500000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --pem=$DEPLOYER \
         --send || return
@@ -162,6 +163,6 @@ getEntityAddress() {
 getSetupToken() {
     erdpy contract query $MANAGER_ADDRESS \
         --function="getSetupToken" \
-        --arguments $1 \
+        --arguments "str:$1" \
         --proxy=$PROXY || return
 }
