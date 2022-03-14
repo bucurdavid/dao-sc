@@ -9,12 +9,12 @@ pub trait GovConfigurableModule: storage::GovStorageModule {
 
         let initial_quorum = initial_tokens / &BigUint::from(20u32); // 5% of initial tokens
         let initial_min_tokens_for_proposing = initial_tokens / &BigUint::from(100u32); // 1% of initial tokens
-        let initial_voting_period_hours = 72u32; // 3 days
+        let initial_voting_period_minutes = 4320u32; // 3 days
 
         self.governance_token_id().set_if_empty(&governance_token_id);
         self.try_change_quorum(BigUint::from(initial_quorum));
         self.try_change_min_token_balance_for_proposing(BigUint::from(initial_min_tokens_for_proposing));
-        self.try_change_voting_period_in_hours(initial_voting_period_hours);
+        self.try_change_voting_period_in_minutes(initial_voting_period_minutes);
     }
 
     #[endpoint(changeQuorum)]
@@ -29,10 +29,10 @@ pub trait GovConfigurableModule: storage::GovStorageModule {
         self.try_change_min_token_balance_for_proposing(new_value);
     }
 
-    #[endpoint(changeVotingPeriodInHours)]
-    fn change_voting_period_in_hours(&self, new_value: u32) {
+    #[endpoint(changeVotingPeriodInMinutes)]
+    fn change_voting_period_in_minutes(&self, new_value: u32) {
         self.require_caller_self();
-        self.try_change_voting_period_in_hours(new_value);
+        self.try_change_voting_period_in_minutes(new_value);
     }
 
     fn require_caller_self(&self) {
@@ -52,8 +52,8 @@ pub trait GovConfigurableModule: storage::GovStorageModule {
         self.min_token_balance_for_proposing().set(&new_value);
     }
 
-    fn try_change_voting_period_in_hours(&self, new_value: u32) {
-        require!(new_value != 0, "voting period (in hours) can not be 0");
-        self.voting_period_in_hours().set(&new_value);
+    fn try_change_voting_period_in_minutes(&self, new_value: u32) {
+        require!(new_value != 0, "voting period (in minutes) can not be 0");
+        self.voting_period_in_minutes().set(&new_value);
     }
 }

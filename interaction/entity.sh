@@ -39,9 +39,9 @@ getMinTokensForProposing() {
         --proxy=$PROXY || return
 }
 
-getVotingPeriodInHours() {
+getVotingPeriodInMinutes() {
     erdpy contract query $ADDRESS \
-        --function="getVotingPeriodInHours" \
+        --function="getVotingPeriodInMinutes" \
         --proxy=$PROXY || return
 }
 

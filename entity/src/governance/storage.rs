@@ -33,7 +33,7 @@ pub trait GovStorageModule {
     #[storage_mapper("gov:min_token_balance_propose")]
     fn min_token_balance_for_proposing(&self) -> SingleValueMapper<BigUint>;
 
-    #[view(getVotingPeriodInHours)]
-    #[storage_mapper("gov:voting_period_hours")]
-    fn voting_period_in_hours(&self) -> SingleValueMapper<u32>;
+    #[view(getVotingPeriodInMinutes)]
+    #[storage_mapper("gov:voting_period_minutes")]
+    fn voting_period_in_minutes(&self) -> SingleValueMapper<u32>;
 }

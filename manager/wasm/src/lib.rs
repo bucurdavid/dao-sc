@@ -16,6 +16,7 @@ elrond_wasm_node::wasm_endpoints! {
         getEntityAddress
         getEntityTemplateAddress
         getSetupToken
+        getSetupTokenAmount
         upgradeEntity
     )
 }

@@ -9,7 +9,7 @@ elrond_wasm_node::wasm_endpoints! {
     (
         changeMinTokenBalanceForProposing
         changeQuorum
-        changeVotingPeriodInBlocks
+        changeVotingPeriodInMinutes
         enableFeatures
         execute
         getGovQuorum
@@ -19,7 +19,7 @@ elrond_wasm_node::wasm_endpoints! {
         getProposalAddressVotes
         getProposalStatus
         getProposalVotes
-        getVotingPeriodInBlocks
+        getVotingPeriodInMinutes
         propose
         voteAgainst
         voteFor

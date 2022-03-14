@@ -45,8 +45,8 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
         let proposer = self.blockchain().get_caller();
         let proposal_id = self.proposals().len() + 1;
         let starts_at = self.blockchain().get_block_timestamp();
-        let voting_period_hours = self.voting_period_in_hours().get() as u64;
-        let ends_at = starts_at + voting_period_hours * 60 * 60;
+        let voting_period_minutes = self.voting_period_in_minutes().get() as u64;
+        let ends_at = starts_at + voting_period_minutes * 60;
 
         self.emit_proposal_created_event(proposal_id, &proposer, starts_at, ends_at, &title, &description);
 
