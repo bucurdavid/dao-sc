@@ -19,6 +19,7 @@ elrond_wasm_node::wasm_endpoints! {
         getProposalAddressVotes
         getProposalStatus
         getProposalVotes
+        getTokenId
         getVotingPeriodInMinutes
         propose
         voteAgainst

@@ -3,14 +3,12 @@
 
 elrond_wasm::imports!();
 
-pub mod esdt;
 pub mod features;
 pub mod governance;
 
 #[elrond_wasm::contract]
 pub trait Entity:
     features::FeaturesModule
-    + esdt::EsdtModule
     + governance::GovernanceModule
     + governance::configurable::GovConfigurableModule
     + governance::storage::GovStorageModule
@@ -19,7 +17,7 @@ pub trait Entity:
     #[init]
     fn init(&self, #[var_args] opt_token: OptionalValue<TokenIdentifier>, #[var_args] opt_initial_tokens: OptionalValue<BigUint>) {
         if let (OptionalValue::Some(token_id), OptionalValue::Some(initial_tokens)) = (opt_token, opt_initial_tokens) {
-            self.token_id().set_if_empty(&token_id);
+            self.token().set_token_id(&token_id);
             self.init_governance_module(&token_id, &initial_tokens);
         }
     }
@@ -30,4 +28,8 @@ pub trait Entity:
             self.set_feature_flag(feature, true);
         }
     }
+
+    #[view(getTokenId)]
+    #[storage_mapper("token")]
+    fn token(&self) -> FungibleTokenMapper<Self::Api>;
 }

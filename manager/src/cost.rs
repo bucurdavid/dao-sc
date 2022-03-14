@@ -14,7 +14,7 @@ pub trait CostModule {
         self.send().esdt_local_burn(&cost_token_id, 0, &amount);
     }
 
-    #[storage_mapper("currency_token")]
+    #[storage_mapper("cost_token")]
     fn cost_token_id(&self) -> SingleValueMapper<TokenIdentifier>;
 
     #[storage_mapper("cost_creation_amount")]
