@@ -7,6 +7,18 @@ PROXY=$(erdpy data load --partition $NETWORK_NAME --key=proxy)
 CHAIN_ID=$(erdpy data load --partition $NETWORK_NAME --key=chain-id)
 COST_TOKEN_ID=$(erdpy data load --partition $NETWORK_NAME --key=cost-token-id)
 
+getTokenId() {
+    erdpy contract query $ADDRESS \
+        --function="getTokenId" \
+        --proxy=$PROXY || return
+}
+
+getGovTokenId() {
+    erdpy contract query $ADDRESS \
+        --function="getGovTokenId" \
+        --proxy=$PROXY || return
+}
+
 # params:
 #   $1 = title
 #   $2 = description
@@ -19,12 +31,6 @@ propose() {
         --proxy=$PROXY --chain=$CHAIN_ID \
         --pem=$DEPLOYER \
         --send || return
-}
-
-getGovTokenId() {
-    erdpy contract query $ADDRESS \
-        --function="getGovTokenId" \
-        --proxy=$PROXY || return
 }
 
 getGovQuorum() {
