@@ -35,7 +35,7 @@ pub trait EsdtModule {
     fn transfer_entity_esdt_ownership(&self, token_id: &TokenIdentifier, entity_address: &ManagedAddress) -> AsyncCall {
         self.send()
             .esdt_system_sc_proxy()
-            .transfer_ownership(&token_id, &entity_address.to_address())
+            .transfer_ownership(&token_id, &entity_address)
             .async_call()
     }
 }
