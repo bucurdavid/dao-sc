@@ -1,15 +1,15 @@
 [package]
-name = "fellowships-meta"
+name = "manager-meta"
 version = "0.1.0"
 authors = ["Micha Vie <micha@freeiam.com>", "Superciety <hello@superciety.com>"]
 edition = "2018"
 publish = false
 
-[dependencies.fellowships]
+[dependencies.manager]
 path = ".."
 
 [dependencies.elrond-wasm]
-version = "0.25.0"
+version = "0.30.0"
 
 [dependencies.elrond-wasm-debug]
-version = "0.25.0"
+version = "0.30.0"
