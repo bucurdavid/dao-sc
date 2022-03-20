@@ -8,17 +8,20 @@ pub mod governance;
 
 #[elrond_wasm::contract]
 pub trait Entity:
-    features::FeaturesModule
-    + governance::GovernanceModule
-    + governance::configurable::GovConfigurableModule
-    + governance::storage::GovStorageModule
-    + governance::events::GovEventsModule
+    features::FeaturesModule + governance::GovernanceModule + governance::config::GovConfigModule + governance::events::GovEventsModule
 {
     #[init]
-    fn init(&self, #[var_args] opt_token: OptionalValue<TokenIdentifier>, #[var_args] opt_initial_tokens: OptionalValue<BigUint>) {
-        if let (OptionalValue::Some(token_id), OptionalValue::Some(initial_tokens)) = (opt_token, opt_initial_tokens) {
+    fn init(
+        &self,
+        #[var_args] opt_token: OptionalValue<TokenIdentifier>,
+        #[var_args] opt_vote_nft_token: OptionalValue<TokenIdentifier>,
+        #[var_args] opt_initial_tokens: OptionalValue<BigUint>,
+    ) {
+        if let (OptionalValue::Some(token_id), OptionalValue::Some(vote_nft_token), OptionalValue::Some(initial_tokens)) =
+            (opt_token, opt_vote_nft_token, opt_initial_tokens)
+        {
             self.token().set_token_id(&token_id);
-            self.init_governance_module(&token_id, &initial_tokens);
+            self.init_governance_module(&token_id, &vote_nft_token, &initial_tokens);
         }
     }
 

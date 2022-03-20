@@ -1,153 +1,153 @@
+use self::types::{Action, Proposal, ProposalStatus, VoteNFTAttributes, VoteType};
+
 elrond_wasm::imports!();
 
-pub mod configurable;
+pub mod config;
 pub mod events;
-pub mod storage;
 pub mod types;
 
-use types::*;
-
 #[elrond_wasm::module]
-pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovStorageModule + events::GovEventsModule {
-    #[endpoint(withdrawVoteTokens)]
-    fn withdraw_gov_tokens_endpoint(&self, proposal_id: usize) {
-        self.require_valid_proposal_id(proposal_id);
-        require!(
-            self.get_proposal_status(proposal_id) != ProposalStatus::Active,
-            "proposal is still active"
-        );
+pub trait GovernanceModule: config::GovConfigModule + events::GovEventsModule {
+    // #[endpoint(withdrawVoteTokens)]
+    // fn withdraw_gov_tokens_endpoint(&self, proposal_id: u64) {
+    //     self.require_valid_proposal_id(proposal_id);
+    //     require!(
+    //         self.get_proposal_status(proposal_id) != ProposalStatus::Active,
+    //         "proposal is still active"
+    //     );
 
-        let caller = self.blockchain().get_caller();
-        let gov_token_id = self.governance_token_id().get();
-        let nr_votes_tokens = self.upvotes(proposal_id).get(&caller).unwrap_or_default();
-        let nr_downvotes_tokens = self.downvotes(proposal_id).get(&caller).unwrap_or_default();
-        let total_tokens = nr_votes_tokens + nr_downvotes_tokens;
+    //     let caller = self.blockchain().get_caller();
+    //     let gov_token_id = self.governance_token_id().get();
+    //     let nr_votes_tokens = self.upvotes(proposal_id).get(&caller).unwrap_or_default();
+    //     let nr_downvotes_tokens = self.downvotes(proposal_id).get(&caller).unwrap_or_default();
+    //     let total_tokens = nr_votes_tokens + nr_downvotes_tokens;
 
-        if total_tokens > 0 {
-            self.upvotes(proposal_id).remove(&caller);
-            self.downvotes(proposal_id).remove(&caller);
-            self.send().direct(&caller, &gov_token_id, 0, &total_tokens, &[]);
-        }
-    }
+    //     if total_tokens > 0 {
+    //         self.upvotes(proposal_id).remove(&caller);
+    //         self.downvotes(proposal_id).remove(&caller);
+    //         self.send().direct(&caller, &gov_token_id, 0, &total_tokens, &[]);
+    //     }
+    // }
 
     #[payable("*")]
     #[endpoint(propose)]
     fn propose_endpoint(
         &self,
-        #[payment_amount] payment_amount: BigUint,
         title: ManagedBuffer,
         description: ManagedBuffer,
         #[var_args] actions: MultiValueManagedVec<Action<Self::Api>>,
-    ) -> usize {
+    ) -> u64 {
         self.require_payment_token_governance_token();
-        require!(payment_amount >= self.min_token_balance_for_proposing().get(), "insufficient vote tokens");
 
+        let payment = self.call_value().payment();
+        let vote_weight = payment.amount.clone();
         let proposer = self.blockchain().get_caller();
-        let proposal_id = self.proposals().len() + 1;
+        let proposal_id = self.proposal_id_counter().get();
         let starts_at = self.blockchain().get_block_timestamp();
         let voting_period_minutes = self.voting_period_in_minutes().get() as u64;
         let ends_at = starts_at + voting_period_minutes * 60;
 
-        self.emit_proposal_created_event(proposal_id, &proposer, starts_at, ends_at, &title, &description);
+        require!(vote_weight >= self.min_proposal_vote_weight().get(), "insufficient vote weight");
 
-        let _ = self.proposals().push(&Proposal {
+        let proposal = Proposal {
+            id: proposal_id.clone(),
             proposer: proposer.clone(),
             title,
             description,
             starts_at,
             ends_at,
             actions: actions.into_vec(),
-        });
+            votes_for: vote_weight.clone(),
+            votes_against: BigUint::zero(),
+        };
 
-        self.total_upvotes(proposal_id).set(&payment_amount);
-        self.upvotes(proposal_id).insert(proposer, payment_amount);
+        self.proposals(proposal_id.clone()).set(&proposal);
+        self.proposal_id_counter().set(proposal.id + 1);
+        self.create_vote_nft_and_send(&proposer, proposal.id, VoteType::For, vote_weight.clone(), payment.clone());
+        self.emit_propose_event(proposal, payment, vote_weight);
 
         proposal_id
     }
 
     #[payable("*")]
     #[endpoint(voteFor)]
-    fn vote_for_endpoint(&self, #[payment_amount] payment_amount: BigUint, proposal_id: usize) {
-        self.require_payment_token_governance_token();
-        self.require_valid_proposal_id(proposal_id);
-        require!(self.get_proposal_status(proposal_id) == ProposalStatus::Active, "proposal not active");
-
-        let voter = self.blockchain().get_caller();
-
-        self.emit_vote_for_event(&voter, proposal_id, &payment_amount);
-
-        self.total_upvotes(proposal_id).update(|current| *current += &payment_amount);
-        self.upvotes(proposal_id)
-            .entry(voter)
-            .and_modify(|current| *current += &payment_amount)
-            .or_insert(payment_amount);
+    fn vote_for_endpoint(&self, proposal_id: u64) {
+        self.vote(proposal_id, VoteType::For)
     }
 
     #[payable("*")]
     #[endpoint(voteAgainst)]
-    fn vote_against_endpoint(&self, #[payment_amount] payment_amount: BigUint, proposal_id: usize) {
-        self.require_payment_token_governance_token();
-        self.require_valid_proposal_id(proposal_id);
-        require!(self.get_proposal_status(proposal_id) == ProposalStatus::Active, "proposal not active");
-
-        let downvoter = self.blockchain().get_caller();
-        self.emit_vote_against_event(&downvoter, proposal_id, &payment_amount);
-        self.total_downvotes(proposal_id).update(|current| *current += &payment_amount);
-
-        self.downvotes(proposal_id)
-            .entry(downvoter)
-            .and_modify(|current| *current += &payment_amount)
-            .or_insert(payment_amount);
+    fn vote_against_endpoint(&self, proposal_id: u64) {
+        self.vote(proposal_id, VoteType::Against)
     }
 
-    #[endpoint(execute)]
-    fn execute_endpoint(&self, proposal_id: usize) {
-        require!(self.get_proposal_status(proposal_id) == ProposalStatus::Succeeded, "not ready to execute");
+    fn vote(&self, proposal_id: u64, vote_type: VoteType) {
+        self.require_payment_token_governance_token();
+        require!(self.get_proposal_status(proposal_id) == ProposalStatus::Active, "proposal is not active");
 
-        let proposal = self.proposals().get(proposal_id);
+        let voter = self.blockchain().get_caller();
+        let payment = self.call_value().payment();
+        let vote_weight = payment.amount.clone();
+        let mut proposal = self.proposals(proposal_id).get();
 
-        for action in proposal.actions.iter() {
-            let mut call = self
-                .send()
-                .contract_call::<()>(action.address, action.endpoint)
-                .with_gas_limit(action.gas_limit);
+        require!(vote_weight != 0u64, "can not vote with zero");
 
-            if action.amount > 0 {
-                call = if action.token_id == TokenIdentifier::egld() {
-                    call.with_egld_transfer(action.amount)
-                } else {
-                    call.add_token_transfer(action.token_id, action.token_nonce, action.amount)
-                }
-            }
-
-            call.transfer_execute()
+        match vote_type {
+            VoteType::For => proposal.votes_for += &vote_weight,
+            VoteType::Against => proposal.votes_against += &vote_weight,
         }
 
-        self.clear_proposal(proposal_id);
-        self.emit_proposal_executed_event(proposal_id);
+        self.create_vote_nft_and_send(&voter, proposal_id, vote_type.clone(), vote_weight.clone(), payment.clone());
+        self.proposals(proposal_id).set(&proposal);
+        self.emit_vote_event(proposal, vote_type, payment, vote_weight);
     }
 
+    // #[endpoint(execute)]
+    // fn execute_endpoint(&self, proposal_id: u64) {
+    //     require!(self.get_proposal_status(proposal_id) == ProposalStatus::Succeeded, "not ready to execute");
+
+    //     let proposal = self.proposals(proposal_id).get();
+
+    //     for action in proposal.actions.iter() {
+    //         let mut call = self
+    //             .send()
+    //             .contract_call::<()>(action.address, action.endpoint)
+    //             .with_gas_limit(action.gas_limit);
+
+    //         if action.amount > 0 {
+    //             call = if action.token_id == TokenIdentifier::egld() {
+    //                 call.with_egld_transfer(action.amount)
+    //             } else {
+    //                 call.add_token_transfer(action.token_id, action.token_nonce, action.amount)
+    //             }
+    //         }
+
+    //         call.transfer_execute()
+    //     }
+
+    //     self.proposals(proposal_id).clear();
+    //     // self.emit_proposal_executed_event(proposal_id);
+    // }
+
     #[view(getProposalStatus)]
-    fn get_proposal_status(&self, proposal_id: usize) -> ProposalStatus {
+    fn get_proposal_status(&self, proposal_id: u64) -> ProposalStatus {
         if !self.proposal_exists(proposal_id) {
             return ProposalStatus::None;
         }
 
         let current_time = self.blockchain().get_block_timestamp();
-        let proposal = self.proposals().get(proposal_id);
+        let proposal = self.proposals(proposal_id).get();
 
         if current_time >= proposal.starts_at && current_time < proposal.ends_at {
             return ProposalStatus::Active;
         }
 
-        let total_for_votes = self.total_upvotes(proposal_id).get();
-        let total_against_votes = self.total_downvotes(proposal_id).get();
         let quorum = self.quorum().get();
-        let total_votes = &total_for_votes + &total_against_votes;
-        let vote_for_percent = &total_for_votes / &total_votes;
+        let total_votes = &proposal.votes_for + &proposal.votes_against;
+        let vote_for_percent = &proposal.votes_for / &total_votes;
         let vote_for_percent_to_pass = 66u64;
 
-        if vote_for_percent > vote_for_percent_to_pass && total_for_votes >= quorum {
+        if vote_for_percent > vote_for_percent_to_pass && &proposal.votes_for >= &quorum {
             ProposalStatus::Succeeded
         } else {
             ProposalStatus::Defeated
@@ -155,11 +155,11 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
     }
 
     #[view(getProposal)]
-    fn get_proposal_view(&self, proposal_id: usize) -> OptionalValue<MultiValue5<ManagedBuffer, ManagedBuffer, ManagedAddress, u64, u64>> {
+    fn get_proposal_view(&self, proposal_id: u64) -> OptionalValue<MultiValue5<ManagedBuffer, ManagedBuffer, ManagedAddress, u64, u64>> {
         if !self.proposal_exists(proposal_id) {
             OptionalValue::None
         } else {
-            let proposal = self.proposals().get(proposal_id);
+            let proposal = self.proposals(proposal_id).get();
             OptionalValue::Some(
                 (
                     proposal.title,
@@ -174,23 +174,22 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
     }
 
     #[view(getProposalVotes)]
-    fn get_proposal_votes_view(&self, proposal_id: usize) -> MultiValue2<BigUint, BigUint> {
-        let upvotes = self.total_upvotes(proposal_id).get();
-        let downvotes = self.total_downvotes(proposal_id).get();
+    fn get_proposal_votes_view(&self, proposal_id: u64) -> MultiValue2<BigUint, BigUint> {
+        let proposal = self.proposals(proposal_id).get();
 
-        (upvotes, downvotes).into()
+        (proposal.votes_for, proposal.votes_against).into()
     }
 
-    #[view(getProposalAddressVotes)]
-    fn get_proposal_address_votes_view(&self, proposal_id: usize, address: ManagedAddress) -> MultiValue2<BigUint, BigUint> {
-        let upvotes = self.upvotes(proposal_id).get(&address).unwrap_or_default();
-        let downvotes = self.downvotes(proposal_id).get(&address).unwrap_or_default();
+    // #[view(getProposalAddressVotes)]
+    // fn get_proposal_address_votes_view(&self, proposal_id: u64, address: ManagedAddress) -> MultiValue2<BigUint, BigUint> {
+    //     let upvotes = self.upvotes(proposal_id).get(&address).unwrap_or_default();
+    //     let downvotes = self.downvotes(proposal_id).get(&address).unwrap_or_default();
 
-        (upvotes, downvotes).into()
-    }
+    //     (upvotes, downvotes).into()
+    // }
 
     // #[view(getProposalActions)]
-    // fn get_proposal_actions_view(&self, proposal_id: usize) -> MultiValueVec<ActionAsMultiArg<Self::Api>> {
+    // fn get_proposal_actions_view(&self, proposal_id: u64) -> MultiValueVec<ActionAsMultiArg<Self::Api>> {
     //     if !self.proposal_exists(proposal_id) {
     //         return MultiValueVec::new();
     //     }
@@ -205,27 +204,53 @@ pub trait GovernanceModule: configurable::GovConfigurableModule + storage::GovSt
     //     actions_as_multiarg.into()
     // }
 
+    fn create_vote_nft_and_send(
+        &self,
+        voter: &ManagedAddress,
+        proposal_id: u64,
+        vote_type: VoteType,
+        vote_weight: BigUint,
+        payment: EsdtTokenPayment<Self::Api>,
+    ) {
+        let big_one = BigUint::from(1u64);
+        let vote_nft_token_id = self.vote_nft_token_id().get();
+        let attributes = VoteNFTAttributes {
+            proposal_id,
+            vote_type,
+            vote_weight,
+            voter: voter.clone(),
+            payment,
+        };
+
+        let nonce = self.send().esdt_nft_create(
+            &vote_nft_token_id,
+            &big_one,
+            &ManagedBuffer::new(),
+            &BigUint::zero(),
+            &ManagedBuffer::new(),
+            &attributes,
+            &ManagedVec::new(),
+        );
+
+        self.send().direct(&voter, &vote_nft_token_id, nonce, &big_one, &[]);
+    }
+
+    fn get_vote_nft_attr(&self, payment: &EsdtTokenPayment<Self::Api>) -> VoteNFTAttributes<Self::Api> {
+        self.blockchain()
+            .get_esdt_token_data(&self.blockchain().get_sc_address(), &payment.token_identifier, payment.token_nonce)
+            .decode_attributes()
+    }
+
+    fn burn_vote_nft(&self, payment: EsdtTokenPayment<Self::Api>) {
+        self.send()
+            .esdt_local_burn(&payment.token_identifier, payment.token_nonce, &payment.amount);
+    }
+
     fn require_payment_token_governance_token(&self) {
         require!(self.call_value().token() == self.governance_token_id().get(), "invalid token");
     }
 
-    fn require_valid_proposal_id(&self, proposal_id: usize) {
-        require!(self.is_valid_proposal_id(proposal_id), "invalid proposal id");
-    }
-
-    fn is_valid_proposal_id(&self, proposal_id: usize) -> bool {
-        proposal_id >= 1 && proposal_id <= self.proposals().len()
-    }
-
-    fn proposal_exists(&self, proposal_id: usize) -> bool {
-        self.is_valid_proposal_id(proposal_id) && !self.proposals().item_is_empty(proposal_id)
-    }
-
-    /// specific votes/downvotes are not cleared,
-    /// as they're used for reclaim tokens logic and cleared one by one
-    fn clear_proposal(&self, proposal_id: usize) {
-        self.proposals().clear_entry(proposal_id);
-        self.total_upvotes(proposal_id).clear();
-        self.total_downvotes(proposal_id).clear();
+    fn proposal_exists(&self, proposal_id: u64) -> bool {
+        !self.proposals(proposal_id).is_empty()
     }
 }

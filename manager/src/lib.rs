@@ -3,16 +3,24 @@
 
 elrond_wasm::imports!();
 
-mod cost;
+mod config;
 mod esdt;
 mod factory;
 
 #[elrond_wasm::contract]
-pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule {
+pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtModule {
     #[init]
-    fn init(&self, entity_template_address: ManagedAddress, cost_token: TokenIdentifier, cost_entity_creation: BigUint) {
-        self.init_factory_module(entity_template_address);
-        self.init_cost_module(cost_token, cost_entity_creation);
+    fn init(
+        &self,
+        entity_template_address: ManagedAddress,
+        vote_nft_token: TokenIdentifier,
+        cost_token: TokenIdentifier,
+        cost_entity_creation: BigUint,
+    ) {
+        self.entity_templ_address().set_if_empty(&entity_template_address);
+        self.vote_nft_token_id().set_if_empty(&vote_nft_token);
+        self.cost_token_id().set_if_empty(&cost_token);
+        self.cost_creation_amount().set_if_empty(&cost_entity_creation);
     }
 
     #[payable("EGLD")]
@@ -41,14 +49,12 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
 
     #[payable("*")]
     #[endpoint(createEntity)]
-    fn create_entity_endpoint(
-        &self,
-        #[payment_token] cost_token_id: TokenIdentifier,
-        #[payment_amount] cost_amount: BigUint,
-        token_id: TokenIdentifier,
-        #[var_args] feature_names: MultiValueEncoded<ManagedBuffer>,
-    ) {
+    fn create_entity_endpoint(&self, token_id: TokenIdentifier, #[var_args] feature_names: MultiValueEncoded<ManagedBuffer>) {
+        let (cost_token_id, _, cost_amount) = self.call_value().payment_as_tuple();
+
         self.require_caller_is_setup_owner(&token_id);
+        require!(cost_token_id == self.cost_token_id().get(), "invalid cost token");
+        require!(cost_amount >= self.cost_creation_amount().get(), "invalid cost amount");
 
         let caller = self.blockchain().get_caller();
         let initial_tokens = self.setup_token_amount(&caller).get();
@@ -61,7 +67,7 @@ pub trait Manager: factory::FactoryModule + esdt::EsdtModule + cost::CostModule 
 
         self.enable_entity_features(&entity_address, feature_names);
 
-        self.burn_entity_creation_cost_tokens(cost_token_id, cost_amount);
+        self.send().esdt_local_burn(&cost_token_id, 0, &cost_amount);
 
         self.set_entity_edst_roles(&token_id, &entity_address).call_and_exit()
     }

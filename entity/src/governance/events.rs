@@ -1,24 +1,115 @@
+use super::types::{Proposal, VoteNFTAttributes, VoteType};
+
 elrond_wasm::imports!();
 
 #[elrond_wasm::module]
 pub trait GovEventsModule {
-    #[event("proposalCreated")]
-    fn emit_proposal_created_event(
+    fn emit_propose_event(&self, proposal: Proposal<Self::Api>, payment: EsdtTokenPayment<Self::Api>, weight: BigUint) {
+        self.propose_event(
+            self.blockchain().get_caller(),
+            proposal,
+            payment,
+            weight,
+            self.blockchain().get_block_timestamp(),
+            self.blockchain().get_block_nonce(),
+        );
+    }
+
+    fn emit_vote_event(&self, proposal: Proposal<Self::Api>, vote_type: VoteType, payment: EsdtTokenPayment<Self::Api>, weight: BigUint) {
+        match vote_type {
+            VoteType::For => {
+                self.upvote_event(
+                    self.blockchain().get_caller(),
+                    proposal,
+                    payment,
+                    weight,
+                    self.blockchain().get_block_timestamp(),
+                    self.blockchain().get_block_nonce(),
+                );
+            }
+            VoteType::Against => {
+                self.downvote_event(
+                    self.blockchain().get_caller(),
+                    proposal,
+                    payment,
+                    weight,
+                    self.blockchain().get_block_timestamp(),
+                    self.blockchain().get_block_nonce(),
+                );
+            }
+        }
+    }
+
+    fn emit_execute_event(&self, proposal: Proposal<Self::Api>) {
+        self.execute_event(
+            self.blockchain().get_caller(),
+            proposal,
+            self.blockchain().get_block_timestamp(),
+            self.blockchain().get_block_nonce(),
+        );
+    }
+
+    fn emit_redeem_event(&self, proposal: Proposal<Self::Api>, payment: EsdtTokenPayment<Self::Api>, vote_attr: VoteNFTAttributes<Self::Api>) {
+        self.redeem_event(
+            self.blockchain().get_caller(),
+            proposal,
+            payment,
+            vote_attr,
+            self.blockchain().get_block_timestamp(),
+            self.blockchain().get_block_nonce(),
+        );
+    }
+
+    #[event("propose")]
+    fn propose_event(
         &self,
-        #[indexed] proposal_id: usize,
-        #[indexed] proposer: &ManagedAddress,
-        #[indexed] starts_at: u64,
-        #[indexed] ends_at: u64,
-        #[indexed] title: &ManagedBuffer,
-        #[indexed] description: &ManagedBuffer,
+        #[indexed] caller: ManagedAddress,
+        #[indexed] proposal: Proposal<Self::Api>,
+        #[indexed] payment: EsdtTokenPayment<Self::Api>,
+        #[indexed] weight: BigUint,
+        #[indexed] timestamp: u64,
+        #[indexed] epoch: u64,
     );
 
-    #[event("votedFor")]
-    fn emit_vote_for_event(&self, #[indexed] voter: &ManagedAddress, #[indexed] proposal_id: usize, votes: &BigUint);
+    #[event("upvote")]
+    fn upvote_event(
+        &self,
+        #[indexed] caller: ManagedAddress,
+        #[indexed] proposal: Proposal<Self::Api>,
+        #[indexed] payment: EsdtTokenPayment<Self::Api>,
+        #[indexed] weight: BigUint,
+        #[indexed] timestamp: u64,
+        #[indexed] epoch: u64,
+    );
 
-    #[event("votedAgainst")]
-    fn emit_vote_against_event(&self, #[indexed] voter: &ManagedAddress, #[indexed] proposal_id: usize, votes: &BigUint);
+    #[event("downvote")]
+    fn downvote_event(
+        &self,
+        #[indexed] caller: ManagedAddress,
+        #[indexed] proposal: Proposal<Self::Api>,
+        #[indexed] payment: EsdtTokenPayment<Self::Api>,
+        #[indexed] weight: BigUint,
+        #[indexed] timestamp: u64,
+        #[indexed] epoch: u64,
+    );
 
-    #[event("proposalExecuted")]
-    fn emit_proposal_executed_event(&self, #[indexed] proposal_id: usize);
+    #[event("execute")]
+    fn execute_event(
+        &self,
+        #[indexed] caller: ManagedAddress,
+        #[indexed] proposal: Proposal<Self::Api>,
+        #[indexed] timestamp: u64,
+        #[indexed] epoch: u64,
+    );
+
+    #[event("redeem")]
+    fn redeem_event(
+        &self,
+        #[indexed] caller: ManagedAddress,
+        #[indexed] proposal: Proposal<Self::Api>,
+        #[indexed] payment: EsdtTokenPayment<Self::Api>,
+        #[indexed] vote_attr: VoteNFTAttributes<Self::Api>,
+        #[indexed] timestamp: u64,
+        #[indexed] epoch: u64,
+    );
 }
