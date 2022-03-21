@@ -166,3 +166,11 @@ getSetupToken() {
         --arguments $1 \
         --proxy=$PROXY || return
 }
+
+# params:
+#   $1 = address
+getVoteNftTokenId() {
+    erdpy contract query $MANAGER_ADDRESS \
+        --function="getVoteNftTokenId" \
+        --proxy=$PROXY || return
+}

@@ -1,6 +1,8 @@
-use super::types::{Proposal, VoteNFTAttributes, VoteType};
-
 elrond_wasm::imports!();
+
+use super::proposal::Proposal;
+use super::vote::{VoteNFTAttributes, VoteType};
+
 
 #[elrond_wasm::module]
 pub trait GovEventsModule {

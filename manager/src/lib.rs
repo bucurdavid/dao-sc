@@ -10,15 +10,8 @@ mod factory;
 #[elrond_wasm::contract]
 pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtModule {
     #[init]
-    fn init(
-        &self,
-        entity_template_address: ManagedAddress,
-        vote_nft_token: TokenIdentifier,
-        cost_token: TokenIdentifier,
-        cost_entity_creation: BigUint,
-    ) {
+    fn init(&self, entity_template_address: ManagedAddress, cost_token: TokenIdentifier, cost_entity_creation: BigUint) {
         self.entity_templ_address().set_if_empty(&entity_template_address);
-        self.vote_nft_token_id().set_if_empty(&vote_nft_token);
         self.cost_token_id().set_if_empty(&cost_token);
         self.cost_creation_amount().set_if_empty(&cost_entity_creation);
     }
@@ -49,7 +42,7 @@ pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtMod
 
     #[payable("*")]
     #[endpoint(createEntity)]
-    fn create_entity_endpoint(&self, token_id: TokenIdentifier, #[var_args] feature_names: MultiValueEncoded<ManagedBuffer>) {
+    fn create_entity_endpoint(&self, token_id: TokenIdentifier, #[var_args] features: MultiValueEncoded<MultiValue2<ManagedBuffer, ManagedBuffer>>) {
         let (cost_token_id, _, cost_amount) = self.call_value().payment_as_tuple();
 
         self.require_caller_is_setup_owner(&token_id);
@@ -65,7 +58,7 @@ pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtMod
 
         self.entities_map().insert(token_id.clone(), entity_address.clone());
 
-        self.enable_entity_features(&entity_address, feature_names);
+        self.enable_entity_features(&entity_address, features);
 
         self.send().esdt_local_burn(&cost_token_id, 0, &cost_amount);
 

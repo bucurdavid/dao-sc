@@ -7,24 +7,27 @@
 elrond_wasm_node::wasm_endpoints! {
     entity
     (
-        changeMinTokenBalanceForProposing
+        changeMinProposalVoteWeight
         changeQuorum
-        changeVotingPeriodInMinutes
-        enableFeatures
+        changeVotingPeriodMinutes
         execute
-        getGovQuorum
         getGovTokenId
-        getMinTokensForProposing
+        getMinProposalVoteWeight
         getProposal
-        getProposalAddressVotes
+        getProposalIdCounter
         getProposalStatus
         getProposalVotes
+        getQuorum
+        getSealed
         getTokenId
-        getVotingPeriodInMinutes
+        getVoteNftTokenId
+        getVotingPeriodMinutes
         propose
+        redeem
+        seal
+        setFeatures
         voteAgainst
         voteFor
-        withdrawVoteTokens
     )
 }
 

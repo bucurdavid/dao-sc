@@ -1,33 +1,64 @@
-use self::types::{Action, Proposal, ProposalStatus, VoteNFTAttributes, VoteType};
-
 elrond_wasm::imports!();
 
-pub mod config;
+use crate::config;
+use proposal::{Action, Proposal, ProposalStatus};
+use vote::VoteType;
+
 pub mod events;
-pub mod types;
+pub mod proposal;
+pub mod vote;
 
 #[elrond_wasm::module]
-pub trait GovernanceModule: config::GovConfigModule + events::GovEventsModule {
-    // #[endpoint(withdrawVoteTokens)]
-    // fn withdraw_gov_tokens_endpoint(&self, proposal_id: u64) {
-    //     self.require_valid_proposal_id(proposal_id);
-    //     require!(
-    //         self.get_proposal_status(proposal_id) != ProposalStatus::Active,
-    //         "proposal is still active"
-    //     );
+pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + proposal::ProposalModule + vote::VoteModule {
+    fn init_governance_module(&self, gov_token_id: &TokenIdentifier, initial_tokens: &BigUint) {
+        require!(gov_token_id.is_valid_esdt_identifier(), "invalid edst");
 
-    //     let caller = self.blockchain().get_caller();
-    //     let gov_token_id = self.governance_token_id().get();
-    //     let nr_votes_tokens = self.upvotes(proposal_id).get(&caller).unwrap_or_default();
-    //     let nr_downvotes_tokens = self.downvotes(proposal_id).get(&caller).unwrap_or_default();
-    //     let total_tokens = nr_votes_tokens + nr_downvotes_tokens;
+        let initial_quorum = initial_tokens / &BigUint::from(20u64); // 5% of initial tokens
+        let initial_min_tokens_for_proposing = initial_tokens / &BigUint::from(1000u64); // 0.1% of initial tokens
+        let initial_voting_period_minutes = 4320u32; // 3 days
 
-    //     if total_tokens > 0 {
-    //         self.upvotes(proposal_id).remove(&caller);
-    //         self.downvotes(proposal_id).remove(&caller);
-    //         self.send().direct(&caller, &gov_token_id, 0, &total_tokens, &[]);
-    //     }
-    // }
+        self.governance_token_id().set_if_empty(&gov_token_id);
+        self.try_change_quorum(BigUint::from(initial_quorum));
+        self.try_change_min_proposal_vote_weight(BigUint::from(initial_min_tokens_for_proposing));
+        self.try_change_voting_period_in_minutes(initial_voting_period_minutes);
+    }
+
+    #[endpoint(changeQuorum)]
+    fn change_quorum(&self, new_value: BigUint) {
+        self.require_caller_self_or_unsealed();
+        self.try_change_quorum(new_value);
+    }
+
+    #[endpoint(changeMinProposalVoteWeight)]
+    fn change_min_proposal_vote_weight(&self, new_value: BigUint) {
+        self.require_caller_self_or_unsealed();
+        self.try_change_min_proposal_vote_weight(new_value);
+    }
+
+    #[endpoint(changeVotingPeriodMinutes)]
+    fn change_voting_period_in_minutes(&self, new_value: u32) {
+        self.require_caller_self_or_unsealed();
+        self.try_change_voting_period_in_minutes(new_value);
+    }
+
+    #[endpoint(redeem)]
+    fn redeem_endpoint(&self) {
+        let payment = self.call_value().payment();
+        let caller = self.blockchain().get_caller();
+        let vote_nft_id = self.vote_nft_token().get_token_id();
+        let attributes = self.get_vote_nft_attr(&payment);
+        let status = self.get_proposal_status(attributes.proposal_id);
+        let proposal = self.proposals(attributes.proposal_id).get();
+
+        require!(payment.token_identifier == vote_nft_id, "invalid vote position");
+        require!(status != ProposalStatus::Active, "proposal is still active");
+
+        self.send()
+            .direct(&caller, &payment.token_identifier, payment.token_nonce, &payment.amount, &[]);
+
+        self.burn_vote_nft(payment.clone());
+        self.emit_redeem_event(proposal, payment, attributes);
+    }
 
     #[payable("*")]
     #[endpoint(propose)]
@@ -37,6 +68,7 @@ pub trait GovernanceModule: config::GovConfigModule + events::GovEventsModule {
         description: ManagedBuffer,
         #[var_args] actions: MultiValueManagedVec<Action<Self::Api>>,
     ) -> u64 {
+        self.require_sealed();
         self.require_payment_token_governance_token();
 
         let payment = self.call_value().payment();
@@ -56,6 +88,7 @@ pub trait GovernanceModule: config::GovConfigModule + events::GovEventsModule {
             description,
             starts_at,
             ends_at,
+            was_executed: false,
             actions: actions.into_vec(),
             votes_for: vote_weight.clone(),
             votes_against: BigUint::zero(),
@@ -82,6 +115,7 @@ pub trait GovernanceModule: config::GovConfigModule + events::GovEventsModule {
     }
 
     fn vote(&self, proposal_id: u64, vote_type: VoteType) {
+        self.require_sealed();
         self.require_payment_token_governance_token();
         require!(self.get_proposal_status(proposal_id) == ProposalStatus::Active, "proposal is not active");
 
@@ -102,32 +136,17 @@ pub trait GovernanceModule: config::GovConfigModule + events::GovEventsModule {
         self.emit_vote_event(proposal, vote_type, payment, vote_weight);
     }
 
-    // #[endpoint(execute)]
-    // fn execute_endpoint(&self, proposal_id: u64) {
-    //     require!(self.get_proposal_status(proposal_id) == ProposalStatus::Succeeded, "not ready to execute");
+    #[endpoint(execute)]
+    fn execute_endpoint(&self, proposal_id: u64) {
+        self.require_sealed();
+        require!(self.get_proposal_status(proposal_id) == ProposalStatus::Succeeded, "not ready to execute");
 
-    //     let proposal = self.proposals(proposal_id).get();
+        let proposal = self.proposals(proposal_id).get();
 
-    //     for action in proposal.actions.iter() {
-    //         let mut call = self
-    //             .send()
-    //             .contract_call::<()>(action.address, action.endpoint)
-    //             .with_gas_limit(action.gas_limit);
+        self.execute_proposal(&proposal);
 
-    //         if action.amount > 0 {
-    //             call = if action.token_id == TokenIdentifier::egld() {
-    //                 call.with_egld_transfer(action.amount)
-    //             } else {
-    //                 call.add_token_transfer(action.token_id, action.token_nonce, action.amount)
-    //             }
-    //         }
-
-    //         call.transfer_execute()
-    //     }
-
-    //     self.proposals(proposal_id).clear();
-    //     // self.emit_proposal_executed_event(proposal_id);
-    // }
+        self.emit_execute_event(proposal);
+    }
 
     #[view(getProposalStatus)]
     fn get_proposal_status(&self, proposal_id: u64) -> ProposalStatus {
@@ -203,52 +222,6 @@ pub trait GovernanceModule: config::GovConfigModule + events::GovEventsModule {
 
     //     actions_as_multiarg.into()
     // }
-
-    fn create_vote_nft_and_send(
-        &self,
-        voter: &ManagedAddress,
-        proposal_id: u64,
-        vote_type: VoteType,
-        vote_weight: BigUint,
-        payment: EsdtTokenPayment<Self::Api>,
-    ) {
-        let big_one = BigUint::from(1u64);
-        let vote_nft_token_id = self.vote_nft_token_id().get();
-        let attributes = VoteNFTAttributes {
-            proposal_id,
-            vote_type,
-            vote_weight,
-            voter: voter.clone(),
-            payment,
-        };
-
-        let nonce = self.send().esdt_nft_create(
-            &vote_nft_token_id,
-            &big_one,
-            &ManagedBuffer::new(),
-            &BigUint::zero(),
-            &ManagedBuffer::new(),
-            &attributes,
-            &ManagedVec::new(),
-        );
-
-        self.send().direct(&voter, &vote_nft_token_id, nonce, &big_one, &[]);
-    }
-
-    fn get_vote_nft_attr(&self, payment: &EsdtTokenPayment<Self::Api>) -> VoteNFTAttributes<Self::Api> {
-        self.blockchain()
-            .get_esdt_token_data(&self.blockchain().get_sc_address(), &payment.token_identifier, payment.token_nonce)
-            .decode_attributes()
-    }
-
-    fn burn_vote_nft(&self, payment: EsdtTokenPayment<Self::Api>) {
-        self.send()
-            .esdt_local_burn(&payment.token_identifier, payment.token_nonce, &payment.amount);
-    }
-
-    fn require_payment_token_governance_token(&self) {
-        require!(self.call_value().token() == self.governance_token_id().get(), "invalid token");
-    }
 
     fn proposal_exists(&self, proposal_id: u64) -> bool {
         !self.proposals(proposal_id).is_empty()

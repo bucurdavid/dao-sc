@@ -6,15 +6,10 @@ use super::config;
 pub trait FactoryModule: config::ConfigModule {
     fn create_entity(&self, token_id: &TokenIdentifier, initial_tokens: &BigUint) -> ManagedAddress {
         let template_contract = self.get_template_address();
-        let vote_nft_token_id = self.vote_nft_token_id().get();
 
         let (address, _) = self
             .entity_contract_proxy(ManagedAddress::zero())
-            .init(
-                OptionalValue::Some(token_id.clone()),
-                OptionalValue::Some(vote_nft_token_id.clone()),
-                OptionalValue::Some(initial_tokens.clone()),
-            )
+            .init(OptionalValue::Some(token_id.clone()), OptionalValue::Some(initial_tokens.clone()))
             .deploy_from_source(&template_contract, self.get_deploy_code_metadata());
 
         require!(!address.is_zero(), "address is zero");
@@ -26,13 +21,13 @@ pub trait FactoryModule: config::ConfigModule {
         let template_contract = self.get_template_address();
 
         self.entity_contract_proxy(address)
-            .init(OptionalValue::None, OptionalValue::None, OptionalValue::None)
+            .init(OptionalValue::None, OptionalValue::None)
             .upgrade_from_source(&template_contract, self.get_deploy_code_metadata());
     }
 
-    fn enable_entity_features(&self, address: &ManagedAddress, features_names: MultiValueEncoded<ManagedBuffer>) {
+    fn enable_entity_features(&self, address: &ManagedAddress, features: MultiValueEncoded<MultiValue2<ManagedBuffer, ManagedBuffer>>) {
         self.entity_contract_proxy(address.clone())
-            .enable_features(features_names)
+            .set_features(features)
             .execute_on_dest_context();
     }
 
