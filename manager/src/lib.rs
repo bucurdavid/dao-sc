@@ -22,9 +22,11 @@ pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtMod
 
     #[payable("EGLD")]
     #[endpoint(createEntityToken)]
-    fn create_entity_token_endpoint(&self, token_name: ManagedBuffer, token_ticker: ManagedBuffer, amount: BigUint, #[payment] issue_cost: BigUint) {
-        require!(amount > 0, "amount must be greater than zero");
+    fn create_entity_token_endpoint(&self, token_name: ManagedBuffer, token_ticker: ManagedBuffer, amount: BigUint) {
+        let issue_cost = self.call_value().egld_value();
         let initial_caller = self.blockchain().get_caller();
+
+        require!(amount > 0, "amount must be greater than zero");
 
         self.issue_token(&token_name, &token_ticker, &amount, &issue_cost)
             .with_callback(self.callbacks().token_issue_callback(&initial_caller))
@@ -33,11 +35,12 @@ pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtMod
 
     #[payable("*")]
     #[endpoint(createEntityWithToken)]
-    fn create_entity_with_token_endpoint(&self, #[payment_token] payment_token: TokenIdentifier, #[payment_amount] payment_amount: BigUint) {
+    fn create_entity_with_token_endpoint(&self) {
+        let payment = self.call_value().payment();
         let caller = self.blockchain().get_caller();
 
-        self.setup_token_id(&caller).set(&payment_token);
-        self.setup_token_amount(&caller).set(&payment_amount);
+        self.setup_token_id(&caller).set(&payment.token_identifier);
+        self.setup_token_amount(&caller).set(&payment.amount);
     }
 
     #[payable("*")]
@@ -80,18 +83,13 @@ pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtMod
 
     #[payable("*")]
     #[callback]
-    fn token_issue_callback(
-        &self,
-        initial_caller: &ManagedAddress,
-        #[payment_token] payment_token: TokenIdentifier,
-        #[payment_amount] payment_amount: BigUint,
-        #[call_result] result: ManagedAsyncCallResult<()>,
-    ) {
+    fn token_issue_callback(&self, initial_caller: &ManagedAddress, #[call_result] result: ManagedAsyncCallResult<()>) {
         match result {
             ManagedAsyncCallResult::Ok(_) => {
-                self.setup_token_id(&initial_caller).set(&payment_token);
-                self.setup_token_amount(&initial_caller).set(&payment_amount);
-                self.send().direct(&initial_caller, &payment_token, 0, &payment_amount, &[]);
+                let payment = self.call_value().payment();
+                self.setup_token_id(&initial_caller).set(&payment.token_identifier);
+                self.setup_token_amount(&initial_caller).set(&payment.amount);
+                self.send().direct(&initial_caller, &payment.token_identifier, 0, &payment.amount, &[]);
             }
             ManagedAsyncCallResult::Err(_) => self.send_back_egld(&initial_caller),
         }

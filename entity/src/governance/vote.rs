@@ -1,6 +1,9 @@
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
+use super::events;
+use super::proposal;
+use super::proposal::ProposalStatus;
 use crate::config;
 
 #[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug, Clone)]
@@ -19,7 +22,29 @@ pub struct VoteNFTAttributes<M: ManagedTypeApi> {
 }
 
 #[elrond_wasm::module]
-pub trait VoteModule: config::ConfigModule {
+pub trait VoteModule: config::ConfigModule + proposal::ProposalModule + events::GovEventsModule {
+    fn vote(&self, proposal_id: u64, vote_type: VoteType) {
+        self.require_sealed();
+        self.require_payment_token_governance_token();
+        require!(self.get_proposal_status(proposal_id) == ProposalStatus::Active, "proposal is not active");
+
+        let voter = self.blockchain().get_caller();
+        let payment = self.call_value().payment();
+        let vote_weight = payment.amount.clone();
+        let mut proposal = self.proposals(proposal_id).get();
+
+        require!(vote_weight != 0u64, "can not vote with zero");
+
+        match vote_type {
+            VoteType::For => proposal.votes_for += &vote_weight,
+            VoteType::Against => proposal.votes_against += &vote_weight,
+        }
+
+        self.create_vote_nft_and_send(&voter, proposal_id, vote_type.clone(), vote_weight.clone(), payment.clone());
+        self.proposals(proposal_id).set(&proposal);
+        self.emit_vote_event(proposal, vote_type, payment, vote_weight);
+    }
+
     fn create_vote_nft_and_send(
         &self,
         voter: &ManagedAddress,

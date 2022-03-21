@@ -1,6 +1,8 @@
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
+use crate::config;
+
 #[derive(TopEncode, TopDecode, TypeAbi)]
 pub struct Proposal<M: ManagedTypeApi> {
     pub id: u64,
@@ -38,7 +40,32 @@ pub enum ProposalStatus {
 }
 
 #[elrond_wasm::module]
-pub trait ProposalModule {
+pub trait ProposalModule: config::ConfigModule {
+    #[view(getProposalStatus)]
+    fn get_proposal_status(&self, proposal_id: u64) -> ProposalStatus {
+        if !self.proposal_exists(proposal_id) {
+            return ProposalStatus::None;
+        }
+
+        let current_time = self.blockchain().get_block_timestamp();
+        let proposal = self.proposals(proposal_id).get();
+
+        if current_time >= proposal.starts_at && current_time < proposal.ends_at {
+            return ProposalStatus::Active;
+        }
+
+        let quorum = self.quorum().get();
+        let total_votes = &proposal.votes_for + &proposal.votes_against;
+        let vote_for_percent = &proposal.votes_for / &total_votes;
+        let vote_for_percent_to_pass = 66u64;
+
+        if vote_for_percent > vote_for_percent_to_pass && &proposal.votes_for >= &quorum {
+            ProposalStatus::Succeeded
+        } else {
+            ProposalStatus::Defeated
+        }
+    }
+
     fn execute_proposal(&self, proposal: &Proposal<Self::Api>) {
         for action in proposal.actions.iter() {
             let mut call = self
@@ -56,5 +83,9 @@ pub trait ProposalModule {
 
             call.transfer_execute()
         }
+    }
+
+    fn proposal_exists(&self, proposal_id: u64) -> bool {
+        !self.proposals(proposal_id).is_empty()
     }
 }

@@ -114,28 +114,6 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
         self.vote(proposal_id, VoteType::Against)
     }
 
-    fn vote(&self, proposal_id: u64, vote_type: VoteType) {
-        self.require_sealed();
-        self.require_payment_token_governance_token();
-        require!(self.get_proposal_status(proposal_id) == ProposalStatus::Active, "proposal is not active");
-
-        let voter = self.blockchain().get_caller();
-        let payment = self.call_value().payment();
-        let vote_weight = payment.amount.clone();
-        let mut proposal = self.proposals(proposal_id).get();
-
-        require!(vote_weight != 0u64, "can not vote with zero");
-
-        match vote_type {
-            VoteType::For => proposal.votes_for += &vote_weight,
-            VoteType::Against => proposal.votes_against += &vote_weight,
-        }
-
-        self.create_vote_nft_and_send(&voter, proposal_id, vote_type.clone(), vote_weight.clone(), payment.clone());
-        self.proposals(proposal_id).set(&proposal);
-        self.emit_vote_event(proposal, vote_type, payment, vote_weight);
-    }
-
     #[endpoint(execute)]
     fn execute_endpoint(&self, proposal_id: u64) {
         self.require_sealed();
@@ -146,31 +124,6 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
         self.execute_proposal(&proposal);
 
         self.emit_execute_event(proposal);
-    }
-
-    #[view(getProposalStatus)]
-    fn get_proposal_status(&self, proposal_id: u64) -> ProposalStatus {
-        if !self.proposal_exists(proposal_id) {
-            return ProposalStatus::None;
-        }
-
-        let current_time = self.blockchain().get_block_timestamp();
-        let proposal = self.proposals(proposal_id).get();
-
-        if current_time >= proposal.starts_at && current_time < proposal.ends_at {
-            return ProposalStatus::Active;
-        }
-
-        let quorum = self.quorum().get();
-        let total_votes = &proposal.votes_for + &proposal.votes_against;
-        let vote_for_percent = &proposal.votes_for / &total_votes;
-        let vote_for_percent_to_pass = 66u64;
-
-        if vote_for_percent > vote_for_percent_to_pass && &proposal.votes_for >= &quorum {
-            ProposalStatus::Succeeded
-        } else {
-            ProposalStatus::Defeated
-        }
     }
 
     #[view(getProposal)]
@@ -223,7 +176,31 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
     //     actions_as_multiarg.into()
     // }
 
-    fn proposal_exists(&self, proposal_id: u64) -> bool {
-        !self.proposals(proposal_id).is_empty()
+    #[payable("EGLD")]
+    #[endpoint(issueNftVoteToken)]
+    fn issue_nft_vote_token(&self, token_name: ManagedBuffer, token_ticker: ManagedBuffer) {
+        let caller = self.blockchain().get_caller();
+
+        self.vote_nft_token().issue(
+            EsdtTokenType::NonFungible,
+            self.call_value().egld_value(),
+            token_name,
+            token_ticker,
+            18usize,
+            Option::Some(self.callbacks().vote_nft_issue_callback(&caller)),
+        );
+    }
+
+    #[callback]
+    fn vote_nft_issue_callback(&self, initial_caller: &ManagedAddress, #[call_result] result: ManagedAsyncCallResult<TokenIdentifier>) {
+        match result {
+            ManagedAsyncCallResult::Ok(token_id) => self.vote_nft_token().set_token_id(&token_id),
+            ManagedAsyncCallResult::Err(_) => {
+                let egld_returned = self.call_value().egld_value();
+                if egld_returned > 0u32 {
+                    self.send().direct_egld(&initial_caller, &egld_returned, &[]);
+                }
+            }
+        }
     }
 }

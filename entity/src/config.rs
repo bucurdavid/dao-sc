@@ -58,7 +58,7 @@ pub trait ConfigModule {
     #[storage_mapper("token")]
     fn token(&self) -> FungibleTokenMapper<Self::Api>;
 
-    #[view(getGovTokenId)]
+    #[view(getGovernanceTokenId)]
     #[storage_mapper("governance_token_id")]
     fn governance_token_id(&self) -> SingleValueMapper<TokenIdentifier>;
 

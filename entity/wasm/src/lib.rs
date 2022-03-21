@@ -7,11 +7,12 @@
 elrond_wasm_node::wasm_endpoints! {
     entity
     (
+        callBack
         changeMinProposalVoteWeight
         changeQuorum
         changeVotingPeriodMinutes
         execute
-        getGovTokenId
+        getGovernanceTokenId
         getMinProposalVoteWeight
         getProposal
         getProposalIdCounter
@@ -22,6 +23,7 @@ elrond_wasm_node::wasm_endpoints! {
         getTokenId
         getVoteNftTokenId
         getVotingPeriodMinutes
+        issueNftVoteToken
         propose
         redeem
         seal
@@ -30,5 +32,3 @@ elrond_wasm_node::wasm_endpoints! {
         voteFor
     )
 }
-
-elrond_wasm_node::wasm_empty_callback! {}

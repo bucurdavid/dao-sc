@@ -46,6 +46,7 @@ pub trait Entity:
     #[endpoint(seal)]
     fn seal_endpoint(&self) {
         self.require_not_sealed();
+        require!(!self.vote_nft_token().is_empty(), "vote nft token must be set");
 
         let caller = self.blockchain().get_caller();
         let proof = self.call_value().payment();
@@ -56,5 +57,8 @@ pub trait Entity:
 
         self.send()
             .direct(&caller, &proof.token_identifier, proof.token_nonce, &proof.amount, &[]);
+
+        self.vote_nft_token()
+            .set_local_roles(&[EsdtLocalRole::Mint, EsdtLocalRole::Burn], Option::None);
     }
 }
