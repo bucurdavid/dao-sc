@@ -45,12 +45,11 @@ pub trait Entity:
     #[payable("*")]
     #[endpoint(seal)]
     fn seal_endpoint(&self) {
-        self.require_not_sealed();
-        require!(!self.vote_nft_token().is_empty(), "vote nft token must be set");
-
         let caller = self.blockchain().get_caller();
         let proof = self.call_value().payment();
 
+        self.require_not_sealed();
+        require!(!self.vote_nft_token().is_empty(), "vote nft token must be set");
         require!(proof.token_identifier == self.token().get_token_id(), "invalid token proof");
 
         self.sealed().set(SEALED_ON);
@@ -59,6 +58,6 @@ pub trait Entity:
             .direct(&caller, &proof.token_identifier, proof.token_nonce, &proof.amount, &[]);
 
         self.vote_nft_token()
-            .set_local_roles(&[EsdtLocalRole::Mint, EsdtLocalRole::Burn], Option::None);
+            .set_local_roles(&[EsdtLocalRole::NftCreate, EsdtLocalRole::NftBurn][..], None);
     }
 }
