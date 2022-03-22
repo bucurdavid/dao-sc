@@ -1,5 +1,6 @@
 elrond_wasm::imports!();
 
+use self::vote::VoteNFTAttributes;
 use crate::config;
 use proposal::{Action, Proposal, ProposalStatus};
 use vote::VoteType;
@@ -39,25 +40,6 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
     fn change_voting_period_in_minutes(&self, new_value: u32) {
         self.require_caller_self_or_unsealed();
         self.try_change_voting_period_in_minutes(new_value);
-    }
-
-    #[endpoint(redeem)]
-    fn redeem_endpoint(&self) {
-        let payment = self.call_value().payment();
-        let caller = self.blockchain().get_caller();
-        let vote_nft_id = self.vote_nft_token().get_token_id();
-        let attributes = self.get_vote_nft_attr(&payment);
-        let proposal = self.proposals(attributes.proposal_id).get();
-        let status = self.get_proposal_status(&proposal);
-
-        require!(payment.token_identifier == vote_nft_id, "invalid vote position");
-        require!(status != ProposalStatus::Active, "proposal is still active");
-
-        self.send()
-            .direct(&caller, &payment.token_identifier, payment.token_nonce, &payment.amount, &[]);
-
-        self.burn_vote_nft(payment.clone());
-        self.emit_redeem_event(proposal, payment, attributes);
     }
 
     #[payable("*")]
@@ -129,6 +111,27 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
 
         self.proposals(proposal_id).set(&proposal);
         self.emit_execute_event(proposal);
+    }
+
+    #[payable("*")]
+    #[endpoint(redeem)]
+    fn redeem_endpoint(&self) {
+        let payment = self.call_value().payment();
+        let caller = self.blockchain().get_caller();
+        let vote_nft_id = self.vote_nft_token().get_token_id();
+        let attributes: VoteNFTAttributes<Self::Api> = self.vote_nft_token().get_token_attributes(payment.token_nonce.clone());
+        let proposal = self.proposals(attributes.proposal_id).get();
+        let status = self.get_proposal_status(&proposal);
+
+        require!(payment.token_identifier == vote_nft_id, "invalid vote position");
+        require!(status != ProposalStatus::Active, "proposal is still active");
+
+        self.vote_nft_token().nft_burn(payment.token_nonce, &payment.amount);
+
+        self.send()
+            .direct(&caller, &payment.token_identifier, payment.token_nonce, &payment.amount, &[]);
+
+        self.emit_redeem_event(proposal, payment, attributes);
     }
 
     #[view(getProposal)]
