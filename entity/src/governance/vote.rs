@@ -26,13 +26,13 @@ pub trait VoteModule: config::ConfigModule + proposal::ProposalModule + events::
     fn vote(&self, proposal_id: u64, vote_type: VoteType) {
         self.require_sealed();
         self.require_payment_token_governance_token();
-        require!(self.get_proposal_status(proposal_id) == ProposalStatus::Active, "proposal is not active");
 
         let voter = self.blockchain().get_caller();
         let payment = self.call_value().payment();
         let vote_weight = payment.amount.clone();
         let mut proposal = self.proposals(proposal_id).get();
 
+        require!(self.get_proposal_status(&proposal) == ProposalStatus::Active, "proposal is not active");
         require!(vote_weight != 0u64, "can not vote with zero");
 
         match vote_type {

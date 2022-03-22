@@ -47,8 +47,8 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
         let caller = self.blockchain().get_caller();
         let vote_nft_id = self.vote_nft_token().get_token_id();
         let attributes = self.get_vote_nft_attr(&payment);
-        let status = self.get_proposal_status(attributes.proposal_id);
         let proposal = self.proposals(attributes.proposal_id).get();
+        let status = self.get_proposal_status(&proposal);
 
         require!(payment.token_identifier == vote_nft_id, "invalid vote position");
         require!(status != ProposalStatus::Active, "proposal is still active");
@@ -95,7 +95,7 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
         };
 
         self.proposals(proposal_id.clone()).set(&proposal);
-        self.proposal_id_counter().set(proposal.id + 1);
+        self.proposal_id_counter().set(proposal_id + 1);
         self.create_vote_nft_and_send(&proposer, proposal.id, VoteType::For, vote_weight.clone(), payment.clone());
         self.emit_propose_event(proposal, payment, vote_weight);
 
@@ -117,17 +117,22 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
     #[endpoint(execute)]
     fn execute_endpoint(&self, proposal_id: u64) {
         self.require_sealed();
-        require!(self.get_proposal_status(proposal_id) == ProposalStatus::Succeeded, "not ready to execute");
+        require!(!self.proposals(proposal_id).is_empty(), "proposal not found");
 
-        let proposal = self.proposals(proposal_id).get();
+        let mut proposal = self.proposals(proposal_id).get();
+        let status = self.get_proposal_status(&proposal);
+
+        require!(status == ProposalStatus::Succeeded, "proposal not succeeded");
 
         self.execute_proposal(&proposal);
+        proposal.was_executed = true;
 
+        self.proposals(proposal_id).set(&proposal);
         self.emit_execute_event(proposal);
     }
 
     #[view(getProposal)]
-    fn get_proposal_view(&self, proposal_id: u64) -> OptionalValue<MultiValue5<ManagedBuffer, ManagedBuffer, ManagedAddress, u64, u64>> {
+    fn get_proposal_view(&self, proposal_id: u64) -> OptionalValue<MultiValue6<ManagedBuffer, ManagedBuffer, ManagedAddress, u64, u64, bool>> {
         if !self.proposal_exists(proposal_id) {
             OptionalValue::None
         } else {
@@ -139,10 +144,18 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
                     proposal.proposer,
                     proposal.starts_at,
                     proposal.ends_at,
+                    proposal.was_executed,
                 )
                     .into(),
             )
         }
+    }
+
+    #[view(getProposalStatus)]
+    fn get_proposal_status_view(&self, proposal_id: u64) -> ProposalStatus {
+        require!(!self.proposals(proposal_id).is_empty(), "proposal not found");
+
+        self.get_proposal_status(&self.proposals(proposal_id).get())
     }
 
     #[view(getProposalVotes)]

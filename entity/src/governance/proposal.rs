@@ -33,22 +33,21 @@ pub type ActionAsMultiArg<M> =
 
 #[derive(TypeAbi, TopEncode, TopDecode, PartialEq)]
 pub enum ProposalStatus {
-    None,
+    Pending,
     Active,
     Defeated,
     Succeeded,
+    Executed,
 }
 
 #[elrond_wasm::module]
 pub trait ProposalModule: config::ConfigModule {
-    #[view(getProposalStatus)]
-    fn get_proposal_status(&self, proposal_id: u64) -> ProposalStatus {
-        if !self.proposal_exists(proposal_id) {
-            return ProposalStatus::None;
+    fn get_proposal_status(&self, proposal: &Proposal<Self::Api>) -> ProposalStatus {
+        if proposal.was_executed {
+            return ProposalStatus::Executed;
         }
 
         let current_time = self.blockchain().get_block_timestamp();
-        let proposal = self.proposals(proposal_id).get();
 
         if current_time >= proposal.starts_at && current_time < proposal.ends_at {
             return ProposalStatus::Active;
