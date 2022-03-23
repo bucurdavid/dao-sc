@@ -8,6 +8,7 @@ elrond_wasm_node::wasm_endpoints! {
     entity
     (
         callBack
+        changeGovernanceToken
         changeMinProposalVoteWeight
         changeQuorum
         changeVotingPeriodMinutes
