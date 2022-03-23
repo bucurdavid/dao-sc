@@ -168,14 +168,6 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
         (proposal.votes_for, proposal.votes_against).into()
     }
 
-    // #[view(getProposalAddressVotes)]
-    // fn get_proposal_address_votes_view(&self, proposal_id: u64, address: ManagedAddress) -> MultiValue2<BigUint, BigUint> {
-    //     let upvotes = self.upvotes(proposal_id).get(&address).unwrap_or_default();
-    //     let downvotes = self.downvotes(proposal_id).get(&address).unwrap_or_default();
-
-    //     (upvotes, downvotes).into()
-    // }
-
     // #[view(getProposalActions)]
     // fn get_proposal_actions_view(&self, proposal_id: u64) -> MultiValueVec<ActionAsMultiArg<Self::Api>> {
     //     if !self.proposal_exists(proposal_id) {
