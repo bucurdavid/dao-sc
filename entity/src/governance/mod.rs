@@ -120,22 +120,30 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
     #[payable("*")]
     #[endpoint(redeem)]
     fn redeem_endpoint(&self) {
-        let payment = self.call_value().payment();
+        let payments = self.call_value().all_esdt_transfers();
         let caller = self.blockchain().get_caller();
         let vote_nft_id = self.vote_nft_token().get_token_id();
-        let attributes: VoteNFTAttributes<Self::Api> = self.vote_nft_token().get_token_attributes(payment.token_nonce.clone());
-        let proposal = self.proposals(attributes.proposal_id).get();
-        let status = self.get_proposal_status(&proposal);
 
-        require!(payment.token_identifier == vote_nft_id, "invalid vote position");
-        require!(status != ProposalStatus::Active, "proposal is still active");
+        for payment in payments.into_iter() {
+            let attr: VoteNFTAttributes<Self::Api> = self.vote_nft_token().get_token_attributes(payment.token_nonce.clone());
+            let proposal = self.proposals(attr.proposal_id).get();
+            let status = self.get_proposal_status(&proposal);
 
-        self.vote_nft_token().nft_burn(payment.token_nonce, &payment.amount);
+            require!(payment.token_identifier == vote_nft_id, "invalid vote position");
+            require!(status != ProposalStatus::Active, "proposal is still active");
 
-        self.send()
-            .direct(&caller, &payment.token_identifier, payment.token_nonce, &payment.amount, &[]);
+            self.vote_nft_token().nft_burn(payment.token_nonce, &payment.amount);
 
-        self.emit_redeem_event(proposal, payment, attributes);
+            self.send().direct(
+                &caller,
+                &attr.payment.token_identifier,
+                attr.payment.token_nonce,
+                &attr.payment.amount,
+                &[],
+            );
+
+            self.emit_redeem_event(proposal, payment, attr);
+        }
     }
 
     #[view(getProposal)]
