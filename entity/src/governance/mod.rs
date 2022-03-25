@@ -12,13 +12,11 @@ pub mod vote;
 #[elrond_wasm::module]
 pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + proposal::ProposalModule + vote::VoteModule {
     fn init_governance_module(&self, gov_token_id: &TokenIdentifier, initial_tokens: &BigUint) {
-        require!(gov_token_id.is_valid_esdt_identifier(), "invalid edst");
-
         let initial_quorum = initial_tokens / &BigUint::from(20u64); // 5% of initial tokens
         let initial_min_tokens_for_proposing = initial_tokens / &BigUint::from(1000u64); // 0.1% of initial tokens
         let initial_voting_period_minutes = 4320u32; // 3 days
 
-        self.governance_token_id().set_if_empty(&gov_token_id);
+        self.try_change_governance_token(gov_token_id.clone());
         self.try_change_quorum(BigUint::from(initial_quorum));
         self.try_change_min_proposal_vote_weight(BigUint::from(initial_min_tokens_for_proposing));
         self.try_change_voting_period_in_minutes(initial_voting_period_minutes);
@@ -27,7 +25,7 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
     #[endpoint(changeGovernanceToken)]
     fn change_gov_token(&self, token_id: TokenIdentifier) {
         self.require_not_sealed();
-        self.governance_token_id().set(&token_id);
+        self.try_change_governance_token(token_id);
     }
 
     #[endpoint(changeQuorum)]

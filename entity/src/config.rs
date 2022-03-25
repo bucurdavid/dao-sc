@@ -35,6 +35,11 @@ pub trait ConfigModule {
         require!(self.call_value().token() == self.governance_token_id().get(), "invalid token");
     }
 
+    fn try_change_governance_token(&self, token_id: TokenIdentifier) {
+        require!(token_id.is_valid_esdt_identifier(), "invalid governance token id");
+        self.governance_token_id().set(token_id);
+    }
+
     fn try_change_quorum(&self, quorum: BigUint) {
         require!(quorum != 0, "invalid quorum");
         self.quorum().set(&quorum);
