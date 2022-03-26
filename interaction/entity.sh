@@ -39,9 +39,9 @@ getTokenId() {
         --proxy=$PROXY || return
 }
 
-getGovTokenId() {
+getGovernanceTokenId() {
     erdpy contract query $ADDRESS \
-        --function="getGovTokenId" \
+        --function="getGovernanceTokenId" \
         --proxy=$PROXY || return
 }
 
@@ -51,7 +51,7 @@ getVoteNftTokenId() {
         --proxy=$PROXY || return
 }
 
-getGovQuorum() {
+getQuorum() {
     erdpy contract query $ADDRESS \
         --function="getQuorum" \
         --proxy=$PROXY || return
