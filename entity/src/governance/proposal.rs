@@ -55,7 +55,7 @@ pub trait ProposalModule: config::ConfigModule {
 
         let quorum = self.quorum().get();
         let total_votes = &proposal.votes_for + &proposal.votes_against;
-        let vote_for_percent = &proposal.votes_for / &total_votes * &BigUint::from(100u64);
+        let vote_for_percent = &proposal.votes_for * &BigUint::from(100u64) / &total_votes;
         let vote_for_percent_to_pass = BigUint::from(50u64);
 
         if vote_for_percent > vote_for_percent_to_pass && &proposal.votes_for >= &quorum {
