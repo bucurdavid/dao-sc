@@ -51,6 +51,12 @@ getVoteNftTokenId() {
         --proxy=$PROXY || return
 }
 
+getProtectedVoteTokens() {
+    erdpy contract query $ADDRESS \
+        --function="getProtectedVoteTokens" \
+        --proxy=$PROXY || return
+}
+
 getQuorum() {
     erdpy contract query $ADDRESS \
         --function="getQuorum" \

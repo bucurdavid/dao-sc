@@ -35,6 +35,15 @@ pub trait ConfigModule {
         require!(self.call_value().token() == self.governance_token_id().get(), "invalid token");
     }
 
+    fn require_governance_tokens_available(&self, amount: &BigUint) {
+        let gov_token_id = self.governance_token_id().get();
+        let protected_vote_tokens = self.protected_vote_tokens().get();
+        let balance = self.blockchain().get_sc_balance(&gov_token_id, 0u64);
+        let available_balance = balance - protected_vote_tokens;
+
+        require!(amount <= &available_balance, "not enough governance tokens available");
+    }
+
     fn try_change_governance_token(&self, token_id: TokenIdentifier) {
         require!(token_id.is_valid_esdt_identifier(), "invalid governance token id");
         self.governance_token_id().set(token_id);
@@ -77,6 +86,10 @@ pub trait ConfigModule {
     #[view(getProposalIdCounter)]
     #[storage_mapper("proposals_id_counter")]
     fn proposal_id_counter(&self) -> SingleValueMapper<u64>;
+
+    #[view(getProtectedVoteTokens)]
+    #[storage_mapper("protected_vote_tokens")]
+    fn protected_vote_tokens(&self) -> SingleValueMapper<BigUint>;
 
     #[view(getQuorum)]
     #[storage_mapper("quorum")]

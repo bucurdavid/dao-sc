@@ -1,9 +1,8 @@
 elrond_wasm::imports!();
 
-use self::vote::VoteNFTAttributes;
+use self::vote::VoteType;
 use crate::config;
-use proposal::{Action, Proposal, ProposalStatus};
-use vote::VoteType;
+use proposal::{Action, ProposalStatus};
 
 pub mod events;
 pub mod proposal;
@@ -57,31 +56,13 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
         self.require_sealed();
         self.require_payment_token_governance_token();
 
+        let proposer = self.blockchain().get_caller();
         let payment = self.call_value().payment();
         let vote_weight = payment.amount.clone();
-        let proposer = self.blockchain().get_caller();
-        let proposal_id = self.proposal_id_counter().get();
-        let starts_at = self.blockchain().get_block_timestamp();
-        let voting_period_minutes = self.voting_period_in_minutes().get() as u64;
-        let ends_at = starts_at + voting_period_minutes * 60;
+        let proposal = self.create_proposal(title, description, actions.into_vec(), vote_weight.clone());
+        let proposal_id = proposal.id;
 
-        require!(vote_weight >= self.min_proposal_vote_weight().get(), "insufficient vote weight");
-
-        let proposal = Proposal {
-            id: proposal_id.clone(),
-            proposer: proposer.clone(),
-            title,
-            description,
-            starts_at,
-            ends_at,
-            was_executed: false,
-            actions: actions.into_vec(),
-            votes_for: vote_weight.clone(),
-            votes_against: BigUint::zero(),
-        };
-
-        self.proposals(proposal_id.clone()).set(&proposal);
-        self.proposal_id_counter().set(proposal_id + 1);
+        self.protected_vote_tokens().update(|current| *current += &payment.amount);
         self.create_vote_nft_and_send(&proposer, proposal.id, VoteType::For, vote_weight.clone(), payment.clone());
         self.emit_propose_event(proposal, payment, vote_weight);
 
@@ -121,28 +102,9 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
     #[endpoint(redeem)]
     fn redeem_endpoint(&self) {
         let payments = self.call_value().all_esdt_transfers();
-        let caller = self.blockchain().get_caller();
-        let vote_nft_id = self.vote_nft_token().get_token_id();
 
         for payment in payments.into_iter() {
-            let attr: VoteNFTAttributes<Self::Api> = self.vote_nft_token().get_token_attributes(payment.token_nonce.clone());
-            let proposal = self.proposals(attr.proposal_id).get();
-            let status = self.get_proposal_status(&proposal);
-
-            require!(payment.token_identifier == vote_nft_id, "invalid vote position");
-            require!(status != ProposalStatus::Active, "proposal is still active");
-
-            self.vote_nft_token().nft_burn(payment.token_nonce, &payment.amount);
-
-            self.send().direct(
-                &caller,
-                &attr.payment.token_identifier,
-                attr.payment.token_nonce,
-                &attr.payment.amount,
-                &[],
-            );
-
-            self.emit_redeem_event(proposal, payment, attr);
+            self.redeem_vote_tokens(payment);
         }
     }
 

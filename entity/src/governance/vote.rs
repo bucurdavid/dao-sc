@@ -42,7 +42,32 @@ pub trait VoteModule: config::ConfigModule + proposal::ProposalModule + events::
 
         self.create_vote_nft_and_send(&voter, proposal_id, vote_type.clone(), vote_weight.clone(), payment.clone());
         self.proposals(proposal_id).set(&proposal);
+        self.protected_vote_tokens().update(|current| *current += &payment.amount);
         self.emit_vote_event(proposal, vote_type, payment, vote_weight);
+    }
+
+    fn redeem_vote_tokens(&self, payment: EsdtTokenPayment<Self::Api>) {
+        let caller = self.blockchain().get_caller();
+        let vote_nft_id = self.vote_nft_token().get_token_id();
+        let attr: VoteNFTAttributes<Self::Api> = self.vote_nft_token().get_token_attributes(payment.token_nonce.clone());
+        let proposal = self.proposals(attr.proposal_id).get();
+        let status = self.get_proposal_status(&proposal);
+
+        require!(payment.token_identifier == vote_nft_id, "invalid vote position");
+        require!(status != ProposalStatus::Active, "proposal is still active");
+
+        self.protected_vote_tokens().update(|current| *current -= &payment.amount);
+        self.vote_nft_token().nft_burn(payment.token_nonce, &payment.amount);
+
+        self.send().direct(
+            &caller,
+            &attr.payment.token_identifier,
+            attr.payment.token_nonce,
+            &attr.payment.amount,
+            &[],
+        );
+
+        self.emit_redeem_event(proposal, payment, attr);
     }
 
     fn create_vote_nft_and_send(

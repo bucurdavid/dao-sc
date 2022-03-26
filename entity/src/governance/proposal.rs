@@ -42,6 +42,40 @@ pub enum ProposalStatus {
 
 #[elrond_wasm::module]
 pub trait ProposalModule: config::ConfigModule {
+    fn create_proposal(
+        &self,
+        title: ManagedBuffer,
+        description: ManagedBuffer,
+        actions: ManagedVec<Action<Self::Api>>,
+        vote_weight: BigUint,
+    ) -> Proposal<Self::Api> {
+        let proposer = self.blockchain().get_caller();
+        let proposal_id = self.proposal_id_counter().get();
+        let starts_at = self.blockchain().get_block_timestamp();
+        let voting_period_minutes = self.voting_period_in_minutes().get() as u64;
+        let ends_at = starts_at + voting_period_minutes * 60;
+
+        require!(vote_weight >= self.min_proposal_vote_weight().get(), "insufficient vote weight");
+
+        let proposal = Proposal {
+            id: proposal_id.clone(),
+            proposer: proposer.clone(),
+            title,
+            description,
+            starts_at,
+            ends_at,
+            was_executed: false,
+            actions,
+            votes_for: vote_weight.clone(),
+            votes_against: BigUint::zero(),
+        };
+
+        self.proposals(proposal_id.clone()).set(&proposal);
+        self.proposal_id_counter().set(proposal_id + 1);
+
+        proposal
+    }
+
     fn get_proposal_status(&self, proposal: &Proposal<Self::Api>) -> ProposalStatus {
         if proposal.was_executed {
             return ProposalStatus::Executed;
@@ -66,6 +100,8 @@ pub trait ProposalModule: config::ConfigModule {
     }
 
     fn execute_proposal(&self, proposal: &Proposal<Self::Api>) {
+        let gov_token_id = self.governance_token_id().get();
+
         for action in proposal.actions.iter() {
             let mut call = self
                 .send()
@@ -76,6 +112,10 @@ pub trait ProposalModule: config::ConfigModule {
                 call = if action.token_id == TokenIdentifier::egld() {
                     call.with_egld_transfer(action.amount)
                 } else {
+                    if action.token_id == gov_token_id {
+                        self.require_governance_tokens_available(&action.amount);
+                    }
+
                     call.add_token_transfer(action.token_id, action.token_nonce, action.amount)
                 }
             }
