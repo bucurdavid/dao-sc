@@ -19,6 +19,7 @@ elrond_wasm_node::wasm_endpoints! {
         getProposalIdCounter
         getProposalStatus
         getProposalVotes
+        getProtectedVoteTokens
         getQuorum
         getSealed
         getTokenId
