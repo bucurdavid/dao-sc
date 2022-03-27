@@ -5,6 +5,7 @@ use entity::config::*;
 use entity::*;
 
 pub const ENTITY_TOKEN_ID: &[u8] = b"SUPER-abcdef";
+pub const VOTE_NFT_TOKEN_ID: &[u8] = b"SUPERVOTE-abcdef";
 pub const WASM_PATH: &'static str = "output/entity.wasm";
 
 #[allow(dead_code)]
@@ -25,15 +26,21 @@ where
     let mut blockchain = BlockchainStateWrapper::new();
     let owner_address = blockchain.create_user_account(&rust_zero);
     let contract = blockchain.create_sc_account(&rust_zero, Some(&owner_address), builder, WASM_PATH);
+    let initial_tokens = 1000u64;
+
+    blockchain.set_esdt_balance(&owner_address, ENTITY_TOKEN_ID, &rust_biguint!(initial_tokens.clone()));
 
     blockchain
         .execute_tx(&owner_address, &contract, &rust_zero, |sc| {
             sc.init(
                 OptionalValue::Some(managed_token_id!(ENTITY_TOKEN_ID)),
-                OptionalValue::Some(managed_biguint!(1000u64)),
+                OptionalValue::Some(managed_biguint!(initial_tokens)),
             );
         })
         .assert_ok();
+
+    let vote_nft_roles = [EsdtLocalRole::NftCreate, EsdtLocalRole::NftBurn, EsdtLocalRole::NftUpdateAttributes];
+    blockchain.set_esdt_local_roles(contract.address_ref(), VOTE_NFT_TOKEN_ID, &vote_nft_roles[..]);
 
     EntitySetup {
         blockchain,
