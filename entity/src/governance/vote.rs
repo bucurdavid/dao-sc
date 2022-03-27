@@ -56,7 +56,7 @@ pub trait VoteModule: config::ConfigModule + proposal::ProposalModule + events::
         require!(payment.token_identifier == vote_nft_id, "invalid vote position");
         require!(status != ProposalStatus::Active, "proposal is still active");
 
-        self.protected_vote_tokens().update(|current| *current -= &payment.amount);
+        self.protected_vote_tokens().update(|current| *current -= &attr.payment.amount);
         self.vote_nft_token().nft_burn(payment.token_nonce, &payment.amount);
 
         self.send().direct(
