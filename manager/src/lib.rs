@@ -103,6 +103,13 @@ pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtMod
         self.upgrade_entity(self.get_entity_address(&token_id));
     }
 
+    #[only_owner]
+    #[endpoint(clearSetup)]
+    fn clear_setup_endpoint(&self, address: ManagedAddress) {
+        self.setup_token_id(&address).clear();
+        self.setup_token_amount(&address).clear();
+    }
+
     #[view(getEntityAddress)]
     fn get_entity_address_view(&self, token_id: TokenIdentifier) -> ManagedAddress {
         self.entities_map().get(&token_id).unwrap_or_default()

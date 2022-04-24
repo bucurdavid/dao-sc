@@ -142,6 +142,17 @@ finalizeEntity() {
         --send || return
 }
 
+# params:
+#   $1 = address
+clearSetup() {
+    erdpy contract call $MANAGER_ADDRESS \
+        --function="clearSetup" \
+        --arguments $1 \
+        --recall-nonce --gas-limit=500000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --pem=$DEPLOYER \
+        --send || return
+}
 
 getEntityTemplateAddress() {
     erdpy contract query $MANAGER_ADDRESS \
