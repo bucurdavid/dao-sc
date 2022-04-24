@@ -1,22 +1,22 @@
 {
-  "devnet": {
-    "proxy": "https://devnet-gateway.elrond.com",
-    "chain-id": "D",
-    "cost-token-id": "XSUPER-5ef129",
-    "cost-entity-creation-amount": 500,
-    "entity--address": "erd1qqqqqqqqqqqqqpgq3eesgn6lkc9n9l8xe9zk6huar3ksrnm627rss2978p",
-    "entity--deploy-transaction": "329f32bcaac4abd4b887bd1f446101dc85f43aadf907435d688e9a0d82fab085",
-    "manager--address": "erd1qqqqqqqqqqqqqpgqcz0fy8fyzqyy5dmlj8zfeuzehpx2yxt227rszkwzwh",
-    "manager--deploy-transaction": "58bdbdaaa136d0605887efbd60df154fa68b0733e3c079d5e1cf449734dbd6d4"
-  },
-  "testnet": {
-    "proxy": "https://testnet-gateway.elrond.com",
-    "chain-id": "T",
-    "cost-token-id": "XSUPER-0ad9d6",
-    "cost-entity-creation-amount": 500,
-    "entity--address": "erd1qqqqqqqqqqqqqpgqr0au7fjx4frqynu4k3ledygz3sm6dc6xyt2s6vczhj",
-    "entity--deploy-transaction": "d6ed96b9a42ff230d237a52528e3f2aa777a34b2734ac65b3263b28dba8454d9",
-    "manager--address": "erd1qqqqqqqqqqqqqpgqhaljuh3sgpl7c6w464l8m7fuwe5zh6clyt2syp3dxn",
-    "manager--deploy-transaction": "981b5d474121669ae1a86d7470692783072c112319cd4e4bcb3416462aaf3e98"
-  }
+    "devnet": {
+        "proxy": "https://devnet-gateway.elrond.com",
+        "chain-id": "D",
+        "cost-token-id": "DSUPER-9af8df",
+        "cost-entity-creation-amount": 500,
+        "entity--address": "erd1qqqqqqqqqqqqqpgqw3v88rdpsdegr4c36rgtvcjr00eeajxh27rs5p6774",
+        "entity--deploy-transaction": "26d6fb130bdd4e0698b1e304939a985f84fddd45380cb1a651cb8f8e2e12f567",
+        "manager--address": "erd1qqqqqqqqqqqqqpgqxuumvlqxzfaxv9x0yhwwcfnf6qr9g3mr27rstmzedu",
+        "manager--deploy-transaction": "0d70a3c7fa9a492e71baf37c599672a11ac7fb686ef234b35772c9b00d90adef"
+    },
+    "testnet": {
+        "proxy": "https://testnet-gateway.elrond.com",
+        "chain-id": "T",
+        "cost-token-id": "XSUPER-0ad9d6",
+        "cost-entity-creation-amount": 500,
+        "entity--address": "erd1qqqqqqqqqqqqqpgqr0au7fjx4frqynu4k3ledygz3sm6dc6xyt2s6vczhj",
+        "entity--deploy-transaction": "d6ed96b9a42ff230d237a52528e3f2aa777a34b2734ac65b3263b28dba8454d9",
+        "manager--address": "erd1qqqqqqqqqqqqqpgqhaljuh3sgpl7c6w464l8m7fuwe5zh6clyt2syp3dxn",
+        "manager--deploy-transaction": "981b5d474121669ae1a86d7470692783072c112319cd4e4bcb3416462aaf3e98"
+    }
 }
