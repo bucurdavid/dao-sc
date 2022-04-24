@@ -10,13 +10,13 @@ elrond_wasm_node::wasm_endpoints! {
         callBack
         createEntity
         createEntityToken
-        createEntityWithToken
         deposit
         finalizeEntity
         getEntityAddress
         getEntityTemplateAddress
         getSetupToken
         getSetupTokenAmount
+        registerEntityToken
         upgradeEntity
     )
 }

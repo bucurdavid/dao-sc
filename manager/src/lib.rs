@@ -34,13 +34,16 @@ pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtMod
     }
 
     #[payable("*")]
-    #[endpoint(createEntityWithToken)]
-    fn create_entity_with_token_endpoint(&self) {
-        let payment = self.call_value().payment();
+    #[endpoint(registerEntityToken)]
+    fn register_entity_token_endpoint(&self, supply: BigUint) {
         let caller = self.blockchain().get_caller();
+        let proof = self.call_value().payment();
 
-        self.setup_token_id(&caller).set(&payment.token_identifier);
-        self.setup_token_amount(&caller).set(&payment.amount);
+        self.setup_token_id(&caller).set(&proof.token_identifier);
+        self.setup_token_amount(&caller).set(&supply);
+
+        self.send()
+            .direct(&caller, &proof.token_identifier, proof.token_nonce, &proof.amount, &[]);
     }
 
     #[payable("*")]
