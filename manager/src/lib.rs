@@ -3,9 +3,9 @@
 
 elrond_wasm::imports!();
 
-mod config;
-mod esdt;
-mod factory;
+pub mod config;
+pub mod esdt;
+pub mod factory;
 
 #[elrond_wasm::contract]
 pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtModule {
