@@ -1,6 +1,7 @@
 elrond_wasm::imports!();
 
-use elrond_wasm_debug::{managed_biguint, managed_token_id, rust_biguint, testing_framework::*, DebugApi};
+use elrond_wasm_debug::testing_framework::*;
+use elrond_wasm_debug::*;
 use entity::config::*;
 use entity::*;
 

@@ -1,10 +1,11 @@
 elrond_wasm::imports!();
 
-use elrond_wasm_debug::{managed_address, managed_biguint, managed_token_id, rust_biguint, testing_framework::*, DebugApi};
+use elrond_wasm_debug::testing_framework::*;
+use elrond_wasm_debug::*;
 use manager::config::*;
 use manager::*;
 
-pub const SUPER_TOKEN_ID: &[u8] = b"SUPER-abcdef";
+pub const COST_TOKEN_ID: &[u8] = b"SUPER-abcdef";
 pub const WASM_PATH: &'static str = "output/manager.wasm";
 pub const WASM_PATH_ENTITY_TEMPLATE: &'static str = "output/entity.wasm";
 
@@ -28,13 +29,13 @@ where
     let contract = blockchain.create_sc_account(&rust_zero, Some(&owner_address), builder, WASM_PATH);
     let contract_entity_template = blockchain.create_sc_account(&rust_zero, Some(&owner_address), builder, WASM_PATH_ENTITY_TEMPLATE);
 
-    blockchain.set_esdt_balance(&owner_address, SUPER_TOKEN_ID, &rust_biguint!(10_000));
+    blockchain.set_esdt_balance(&owner_address, COST_TOKEN_ID, &rust_biguint!(10_000));
 
     blockchain
         .execute_tx(&owner_address, &contract, &rust_zero, |sc| {
             sc.init(
                 managed_address!(contract_entity_template.address_ref()),
-                managed_token_id!(SUPER_TOKEN_ID),
+                managed_token_id!(COST_TOKEN_ID),
                 managed_biguint!(500),
             );
         })
@@ -54,7 +55,7 @@ fn it_initializes_the_contract() {
     setup
         .blockchain
         .execute_query(&setup.contract, |sc| {
-            assert_eq!(managed_token_id!(SUPER_TOKEN_ID), sc.cost_token_id().get());
+            assert_eq!(managed_token_id!(COST_TOKEN_ID), sc.cost_token_id().get());
         })
         .assert_ok();
 }
