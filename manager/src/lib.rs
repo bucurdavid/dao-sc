@@ -66,8 +66,6 @@ pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtMod
 
         self.enable_entity_features(&entity_address, features);
 
-        self.send().esdt_local_burn(&cost_token_id, 0, &cost_amount);
-
         self.set_entity_edst_roles(&token_id, &entity_address).call_and_exit()
     }
 
