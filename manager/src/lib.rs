@@ -40,7 +40,7 @@ pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtMod
         let proof = self.call_value().payment();
 
         self.setup_token_id(&caller).set(&proof.token_identifier);
-        self.setup_token_amount(&caller).set(&supply);
+        self.setup_token_supply(&caller).set(&supply);
 
         self.send()
             .direct(&caller, &proof.token_identifier, proof.token_nonce, &proof.amount, &[]);
@@ -56,11 +56,11 @@ pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtMod
         require!(cost_amount >= self.cost_creation_amount().get(), "invalid cost amount");
 
         let caller = self.blockchain().get_caller();
-        let initial_tokens = self.setup_token_amount(&caller).get();
+        let initial_supply = self.setup_token_supply(&caller).get();
 
-        require!(initial_tokens > 0, "setup token is not available");
+        require!(initial_supply > 0, "setup token is not available");
 
-        let entity_address = self.create_entity(&token_id, &initial_tokens);
+        let entity_address = self.create_entity(&token_id, &initial_supply);
 
         self.entities_map().insert(token_id.clone(), entity_address.clone());
 
@@ -77,7 +77,7 @@ pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtMod
         let entity_address = self.get_entity_address(&token_id);
 
         self.setup_token_id(&caller).clear();
-        self.setup_token_amount(&caller).clear();
+        self.setup_token_supply(&caller).clear();
 
         self.transfer_entity_esdt_ownership(&token_id, &entity_address).call_and_exit()
     }
@@ -89,7 +89,7 @@ pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtMod
             ManagedAsyncCallResult::Ok(_) => {
                 let payment = self.call_value().payment();
                 self.setup_token_id(&initial_caller).set(&payment.token_identifier);
-                self.setup_token_amount(&initial_caller).set(&payment.amount);
+                self.setup_token_supply(&initial_caller).set(&payment.amount);
                 self.send().direct(&initial_caller, &payment.token_identifier, 0, &payment.amount, &[]);
             }
             ManagedAsyncCallResult::Err(_) => self.send_back_egld(&initial_caller),
@@ -105,7 +105,7 @@ pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtMod
     #[endpoint(clearSetup)]
     fn clear_setup_endpoint(&self, address: ManagedAddress) {
         self.setup_token_id(&address).clear();
-        self.setup_token_amount(&address).clear();
+        self.setup_token_supply(&address).clear();
     }
 
     #[view(getEntityAddress)]
@@ -140,6 +140,6 @@ pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtMod
     fn setup_token_id(&self, owner: &ManagedAddress) -> SingleValueMapper<TokenIdentifier>;
 
     #[view(getSetupTokenAmount)]
-    #[storage_mapper("setup:token_amount")]
-    fn setup_token_amount(&self, owner: &ManagedAddress) -> SingleValueMapper<BigUint>;
+    #[storage_mapper("setup:token_supply")]
+    fn setup_token_supply(&self, owner: &ManagedAddress) -> SingleValueMapper<BigUint>;
 }

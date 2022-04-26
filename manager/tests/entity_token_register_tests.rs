@@ -17,7 +17,7 @@ fn it_registers_an_entity_token() {
             sc.register_entity_token_endpoint(managed_biguint!(100_000));
 
             assert_eq!(sc.setup_token_id(&managed_address!(&caller)).get(), managed_token_id!(entity_token_id));
-            assert_eq!(sc.setup_token_amount(&managed_address!(&caller)).get(), managed_biguint!(100_000));
+            assert_eq!(sc.setup_token_supply(&managed_address!(&caller)).get(), managed_biguint!(100_000));
         })
         .assert_ok();
 }
