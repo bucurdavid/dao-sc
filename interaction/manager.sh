@@ -1,5 +1,4 @@
-NETWORK_NAME="devnet" # devnet, testnet, mainnet
-DEPLOYER="./deployer.pem"
+NETWORK_NAME="testnet" # devnet, testnet, mainnet
 
 ENTITY_ADDRESS=$(erdpy data load --partition $NETWORK_NAME --key=entity--address)
 ENTITY_DEPLOY_TRANSACTION=$(erdpy data load --partition $NETWORK_NAME --key=entity--deploy-transaction)
@@ -23,7 +22,7 @@ deploy() {
         --recall-nonce --gas-limit=200000000 \
         --outfile="deploy-$NETWORK_NAME-entity.interaction.json" \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --pem=$DEPLOYER \
+        --ledger \
         --send || return
 
     ENTITY_ADDRESS=$(erdpy data parse --file="deploy-$NETWORK_NAME-entity.interaction.json" --expression="data['contractAddress']")
@@ -39,7 +38,7 @@ deploy() {
         --recall-nonce --gas-limit=80000000 \
         --outfile="deploy-$NETWORK_NAME-manager.interaction.json" \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --pem=$DEPLOYER \
+        --ledger \
         --send || return
 
     MANAGER_ADDRESS=$(erdpy data parse --file="deploy-$NETWORK_NAME-manager.interaction.json" --expression="data['contractAddress']")
@@ -64,7 +63,7 @@ upgrade() {
         --arguments $ENTITY_ADDRESS "str:$COST_TOKEN_ID" $COST_ENTITY_CREATION_AMOUNT \
         --recall-nonce --gas-limit=80000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --pem=$DEPLOYER \
+        --ledger \
         --send || return
 }
 
@@ -75,7 +74,7 @@ upgradeEntityTemplate() {
     erdpy --verbose contract upgrade $ENTITY_ADDRESS --project entity \
         --recall-nonce --gas-limit=500000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --pem=$DEPLOYER \
+        --ledger \
         --send || return
 }
 
@@ -87,7 +86,7 @@ upgradeEntity() {
         --arguments "str:$1" \
         --recall-nonce --gas-limit=100000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --pem=$DEPLOYER \
+        --ledger \
         --send || return
 }
 
@@ -97,7 +96,7 @@ setCostTokenBurnRole() {
         --arguments "str:$COST_TOKEN_ID" $MANAGER_ADDRESS "str:ESDTRoleLocalBurn"  \
         --recall-nonce --gas-limit=60000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --pem=$DEPLOYER \
+        --ledger \
         --send || return
 }
 
@@ -112,7 +111,7 @@ createEntityToken() {
         --value=50000000000000000 \
         --recall-nonce --gas-limit=100000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --pem=$DEPLOYER \
+        --ledger \
         --send || return
 }
 
@@ -126,7 +125,7 @@ createEntity() {
         --arguments "str:$COST_TOKEN_ID" $COST_ENTITY_CREATION_AMOUNT "str:createEntity" "str:$1" "str:$1" "str:$2" \
         --recall-nonce --gas-limit=80000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --pem=$DEPLOYER \
+        --ledger \
         --send || return
 }
 
@@ -138,7 +137,7 @@ finalizeEntity() {
         --arguments "str:$1" \
         --recall-nonce --gas-limit=500000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --pem=$DEPLOYER \
+        --ledger \
         --send || return
 }
 
@@ -150,7 +149,7 @@ clearSetup() {
         --arguments $1 \
         --recall-nonce --gas-limit=500000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --pem=$DEPLOYER \
+        --ledger \
         --send || return
 }
 

@@ -1,7 +1,6 @@
 NETWORK_NAME="devnet" # devnet, testnet, mainnet
-DEPLOYER="./deployer.pem"
-ADDRESS="erd1qqqqqqqqqqqqqpgqq2usalruzalugenl0pcngtlwf3pxk24t27rs8j66tv"
-TOKEN_ID="ONE-34c485"
+ADDRESS="erd1qqqqqqqqqqqqqpgqk0g30cz0dkn3mgr62arnc0khym96u6h827rs0hqp70"
+TOKEN_ID="ALPHA-0ca233"
 
 PROXY=$(erdpy data load --partition $NETWORK_NAME --key=proxy)
 CHAIN_ID=$(erdpy data load --partition $NETWORK_NAME --key=chain-id)
@@ -17,7 +16,7 @@ propose() {
         --arguments "str:$TOKEN_ID" $3 "str:propose" "str:$1" "str:$2" \
         --recall-nonce --gas-limit=80000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --pem=$DEPLOYER \
+        --ledger \
         --send || return
 }
 
@@ -29,7 +28,7 @@ changeVotingPeriodMinutes() {
         --arguments $1 \
         --recall-nonce --gas-limit=10000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --pem=$DEPLOYER \
+        --ledger \
         --send || return
 }
 
