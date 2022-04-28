@@ -6,6 +6,8 @@ use manager::config::*;
 use manager::*;
 
 pub const COST_TOKEN_ID: &[u8] = b"SUPER-abcdef";
+pub const COST_AMOUNT_ENTITY_CREATION: u64 = 500;
+
 pub const WASM_PATH: &'static str = "output/manager.wasm";
 pub const WASM_PATH_ENTITY_TEMPLATE: &'static str = "output/entity.wasm";
 
@@ -17,6 +19,7 @@ where
     pub blockchain: BlockchainStateWrapper,
     pub owner_address: Address,
     pub contract: ContractObjWrapper<manager::ContractObj<DebugApi>, ObjBuilder>,
+    pub contract_entity_template: ContractObjWrapper<manager::ContractObj<DebugApi>, ObjBuilder>,
 }
 
 pub fn setup_manager<ObjBuilder>(builder: ObjBuilder) -> ManagerSetup<ObjBuilder>
@@ -36,7 +39,7 @@ where
             sc.init(
                 managed_address!(contract_entity_template.address_ref()),
                 managed_token_id!(COST_TOKEN_ID),
-                managed_biguint!(500),
+                managed_biguint!(COST_AMOUNT_ENTITY_CREATION),
             );
         })
         .assert_ok();
@@ -45,6 +48,7 @@ where
         blockchain,
         owner_address,
         contract,
+        contract_entity_template,
     }
 }
 
