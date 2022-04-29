@@ -28,7 +28,7 @@ pub trait FeaturesModule {
 elrond_wasm::derive_imports!();
 
 #[derive(TopEncode)]
-pub struct FeatureName<M>(ManagedBuffer<M>)
+pub struct FeatureName<M>(pub ManagedBuffer<M>)
 where
     M: ManagedTypeApi;
 

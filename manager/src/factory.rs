@@ -27,7 +27,7 @@ pub trait FactoryModule: config::ConfigModule {
 
     fn enable_entity_features(&self, address: &ManagedAddress, features: MultiValueEncoded<MultiValue2<ManagedBuffer, ManagedBuffer>>) {
         self.entity_contract_proxy(address.clone())
-            .set_features(features)
+            .set_features_endpoint(features)
             .execute_on_dest_context();
     }
 

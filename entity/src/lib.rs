@@ -27,7 +27,7 @@ pub trait Entity:
     }
 
     #[endpoint(setFeatures)]
-    fn set_features(&self, #[var_args] features: MultiValueEncoded<MultiValue2<ManagedBuffer, ManagedBuffer>>) {
+    fn set_features_endpoint(&self, #[var_args] features: MultiValueEncoded<MultiValue2<ManagedBuffer, ManagedBuffer>>) {
         self.require_caller_self_or_unsealed();
 
         for feature_setting in features.into_iter() {
