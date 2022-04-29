@@ -1,6 +1,6 @@
 elrond_wasm::imports!();
 
-use self::vote::VoteType;
+use self::{proposal::ActionAsMultiArg, vote::VoteType};
 use crate::config;
 use proposal::{Action, ProposalStatus};
 
@@ -142,21 +142,21 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
         (proposal.votes_for, proposal.votes_against).into()
     }
 
-    // #[view(getProposalActions)]
-    // fn get_proposal_actions_view(&self, proposal_id: u64) -> MultiValueVec<ActionAsMultiArg<Self::Api>> {
-    //     if !self.proposal_exists(proposal_id) {
-    //         return MultiValueVec::new();
-    //     }
+    #[view(getProposalActions)]
+    fn get_proposal_actions_view(&self, proposal_id: u64) -> MultiValueEncoded<ActionAsMultiArg<Self::Api>> {
+        if !self.proposal_exists(proposal_id) {
+            return MultiValueEncoded::new();
+        }
 
-    //     let actions = self.proposals().get(proposal_id).actions;
-    //     let mut actions_as_multiarg = Vec::with_capacity(actions.len());
+        let actions = self.proposals(proposal_id).get().actions;
+        let mut actions_as_multiarg = MultiValueEncoded::new();
 
-    //     for action in actions.iter() {
-    //         actions_as_multiarg.push(action.into_multiarg());
-    //     }
+        for action in actions.into_iter() {
+            actions_as_multiarg.push(action.into_multiarg());
+        }
 
-    //     actions_as_multiarg.into()
-    // }
+        actions_as_multiarg
+    }
 
     #[payable("EGLD")]
     #[endpoint(issueNftVoteToken)]

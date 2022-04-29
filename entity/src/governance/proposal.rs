@@ -29,7 +29,22 @@ pub struct Action<M: ManagedTypeApi> {
 }
 
 pub type ActionAsMultiArg<M> =
-    MultiValue7<u64, ManagedAddress<M>, TokenIdentifier<M>, u64, BigUint<M>, ManagedBuffer<M>, ManagedVec<M, ManagedBuffer<M>>>;
+    MultiValue7<ManagedAddress<M>, ManagedBuffer<M>, ManagedVec<M, ManagedBuffer<M>>, u64, TokenIdentifier<M>, u64, BigUint<M>>;
+
+impl<M: ManagedTypeApi> Action<M> {
+    pub fn into_multiarg(self) -> ActionAsMultiArg<M> {
+        (
+            self.address,
+            self.endpoint,
+            self.arguments,
+            self.gas_limit,
+            self.token_id,
+            self.token_nonce,
+            self.amount,
+        )
+            .into()
+    }
+}
 
 #[derive(TypeAbi, TopEncode, TopDecode, PartialEq)]
 pub enum ProposalStatus {

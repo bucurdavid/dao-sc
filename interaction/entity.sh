@@ -110,3 +110,12 @@ getProposalAddressVotes() {
         --arguments $1 $2 \
         --proxy=$PROXY || return
 }
+
+# params:
+#   $1 = proposal id
+getProposalActions() {
+    erdpy contract query $ADDRESS \
+        --function="getProposalActions" \
+        --arguments $1 \
+        --proxy=$PROXY || return
+}

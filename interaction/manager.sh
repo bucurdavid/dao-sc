@@ -1,4 +1,4 @@
-NETWORK_NAME="testnet" # devnet, testnet, mainnet
+NETWORK_NAME="devnet" # devnet, testnet, mainnet
 
 ENTITY_ADDRESS=$(erdpy data load --partition $NETWORK_NAME --key=entity--address)
 ENTITY_DEPLOY_TRANSACTION=$(erdpy data load --partition $NETWORK_NAME --key=entity--deploy-transaction)
