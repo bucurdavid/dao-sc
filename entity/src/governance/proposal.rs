@@ -29,18 +29,19 @@ pub struct Action<M: ManagedTypeApi> {
 }
 
 pub type ActionAsMultiArg<M> =
-    MultiValue7<ManagedAddress<M>, ManagedBuffer<M>, ManagedVec<M, ManagedBuffer<M>>, u64, TokenIdentifier<M>, u64, BigUint<M>>;
+    MultiValue8<ManagedAddress<M>, ManagedBuffer<M>, u64, TokenIdentifier<M>, u64, BigUint<M>, usize, MultiValueManagedVec<M, ManagedBuffer<M>>>;
 
 impl<M: ManagedTypeApi> Action<M> {
     pub fn into_multiarg(self) -> ActionAsMultiArg<M> {
         (
             self.address,
             self.endpoint,
-            self.arguments,
             self.gas_limit,
             self.token_id,
             self.token_nonce,
             self.amount,
+            self.arguments.len(),
+            MultiValueManagedVec::from(self.arguments),
         )
             .into()
     }
