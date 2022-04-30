@@ -21,6 +21,18 @@ propose() {
 }
 
 # params:
+#   $1 = proposal id
+execute() {
+    erdpy contract call $ADDRESS \
+        --function="execute" \
+        --arguments $1 \
+        --recall-nonce --gas-limit=600000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+# params:
 #   $1 = minutes
 changeVotingPeriodMinutes() {
     erdpy contract call $ADDRESS \
