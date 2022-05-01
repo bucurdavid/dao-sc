@@ -22,25 +22,25 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
     }
 
     #[endpoint(changeGovernanceToken)]
-    fn change_gov_token(&self, token_id: TokenIdentifier) {
+    fn change_gov_token_endpoint(&self, token_id: TokenIdentifier) {
         self.require_not_sealed();
         self.try_change_governance_token(token_id);
     }
 
     #[endpoint(changeQuorum)]
-    fn change_quorum(&self, value: BigUint) {
+    fn change_quorum_endpoint(&self, value: BigUint) {
         self.require_caller_self_or_unsealed();
         self.try_change_quorum(value);
     }
 
     #[endpoint(changeMinProposalVoteWeight)]
-    fn change_min_proposal_vote_weight(&self, value: BigUint) {
+    fn change_min_proposal_vote_weight_endpoint(&self, value: BigUint) {
         self.require_caller_self_or_unsealed();
         self.try_change_min_proposal_vote_weight(value);
     }
 
     #[endpoint(changeVotingPeriodMinutes)]
-    fn change_voting_period_in_minutes(&self, value: u32) {
+    fn change_voting_period_in_minutes_endpoint(&self, value: u32) {
         self.require_caller_self_or_unsealed();
         self.try_change_voting_period_in_minutes(value);
     }
