@@ -5,12 +5,14 @@ use entity::governance::*;
 mod setup;
 
 #[test]
-fn it_changes_min_proposal_vote_weight() {
+fn it_changes_min_proposal_vote_weight_on_unsealed_entity() {
     let mut setup = setup::setup_entity(entity::contract_obj);
 
     setup
         .blockchain
         .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
+            sc.sealed().set(SEALED_NOT_SET);
+
             sc.change_min_proposal_vote_weight_endpoint(managed_biguint!(1000));
 
             assert_eq!(sc.min_proposal_vote_weight().get(), managed_biguint!(1000));

@@ -89,7 +89,7 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
         let mut proposal = self.proposals(proposal_id).get();
         let status = self.get_proposal_status(&proposal);
 
-        require!(status == ProposalStatus::Succeeded, "proposal not succeeded");
+        require!(status == ProposalStatus::Succeeded, "proposal is not executable");
 
         self.execute_proposal(&proposal);
         proposal.was_executed = true;

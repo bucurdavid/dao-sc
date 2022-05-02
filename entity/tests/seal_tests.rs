@@ -1,5 +1,5 @@
 use elrond_wasm::storage::mappers::StorageTokenWrapper;
-use elrond_wasm_debug::{managed_token_id, rust_biguint};
+use elrond_wasm_debug::*;
 use entity::config::*;
 use entity::*;
 use setup::*;
@@ -13,7 +13,7 @@ fn it_seals_the_entity() {
     setup
         .blockchain
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(1), |sc| {
-            sc.vote_nft_token().set_token_id(&managed_token_id!(VOTE_NFT_TOKEN_ID));
+            sc.sealed().set(SEALED_NOT_SET);
 
             sc.seal_endpoint();
 

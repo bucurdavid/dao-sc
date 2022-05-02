@@ -5,12 +5,13 @@ use entity::governance::*;
 mod setup;
 
 #[test]
-fn it_changes_the_governance_token() {
+fn it_changes_the_governance_token_on_unsealed_entity() {
     let mut setup = setup::setup_entity(entity::contract_obj);
 
     setup
         .blockchain
         .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
+            sc.sealed().set(SEALED_NOT_SET);
             sc.change_gov_token_endpoint(managed_token_id!(b"GOV-123456"));
 
             assert_eq!(sc.governance_token_id().get(), managed_token_id!(b"GOV-123456"));
