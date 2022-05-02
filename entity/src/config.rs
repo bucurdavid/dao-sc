@@ -2,6 +2,8 @@ use crate::governance::proposal::Proposal;
 
 elrond_wasm::imports!();
 
+pub const VOTING_PERIOD_MINUTES_DEFAULT: u32 = 4320; // 3 days
+
 pub const SEALED_NOT_SET: u8 = 0;
 pub const SEALED_ON: u8 = 1;
 

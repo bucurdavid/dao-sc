@@ -1,7 +1,7 @@
 elrond_wasm::imports!();
 
 use self::{proposal::ActionAsMultiArg, vote::VoteType};
-use crate::config;
+use crate::config::{self, VOTING_PERIOD_MINUTES_DEFAULT};
 use proposal::{Action, ProposalStatus};
 
 pub mod events;
@@ -13,12 +13,11 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
     fn init_governance_module(&self, gov_token_id: &TokenIdentifier, initial_tokens: &BigUint) {
         let initial_quorum = initial_tokens / &BigUint::from(20u64); // 5% of initial tokens
         let initial_min_tokens_for_proposing = initial_tokens / &BigUint::from(1000u64); // 0.1% of initial tokens
-        let initial_voting_period_minutes = 4320u32; // 3 days
 
         self.try_change_governance_token(gov_token_id.clone());
         self.try_change_quorum(BigUint::from(initial_quorum));
         self.try_change_min_proposal_vote_weight(BigUint::from(initial_min_tokens_for_proposing));
-        self.try_change_voting_period_in_minutes(initial_voting_period_minutes);
+        self.try_change_voting_period_in_minutes(VOTING_PERIOD_MINUTES_DEFAULT);
     }
 
     #[endpoint(changeGovernanceToken)]

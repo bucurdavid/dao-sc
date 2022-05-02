@@ -1,4 +1,3 @@
-use elrond_wasm::storage::mappers::StorageTokenWrapper;
 use elrond_wasm_debug::*;
 use entity::config::*;
 use entity::*;

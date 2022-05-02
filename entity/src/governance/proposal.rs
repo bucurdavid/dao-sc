@@ -47,7 +47,7 @@ impl<M: ManagedTypeApi> Action<M> {
     }
 }
 
-#[derive(TypeAbi, TopEncode, TopDecode, PartialEq)]
+#[derive(TypeAbi, TopEncode, TopDecode, PartialEq, Debug)]
 pub enum ProposalStatus {
     Pending,
     Active,
