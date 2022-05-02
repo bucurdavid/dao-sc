@@ -122,18 +122,15 @@ pub trait ProposalModule: config::ConfigModule {
             let mut call = self
                 .send()
                 .contract_call::<()>(action.address, action.endpoint)
+                .with_arguments_raw(ManagedArgBuffer::from(action.arguments))
                 .with_gas_limit(action.gas_limit);
 
             if action.amount > 0 {
-                call = if action.token_id == TokenIdentifier::egld() {
-                    call.with_egld_transfer(action.amount)
-                } else {
-                    if action.token_id == gov_token_id {
-                        self.require_governance_tokens_available(&action.amount);
-                    }
-
-                    call.add_token_transfer(action.token_id, action.token_nonce, action.amount)
+                if action.token_id == gov_token_id {
+                    self.require_governance_tokens_available(&action.amount);
                 }
+
+                call = call.add_token_transfer(action.token_id, action.token_nonce, action.amount)
             }
 
             call.transfer_execute()
