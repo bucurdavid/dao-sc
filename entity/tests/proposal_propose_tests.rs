@@ -52,6 +52,62 @@ fn it_creates_a_proposal() {
 }
 
 #[test]
+fn it_creates_a_proposal_with_actions() {
+    let mut setup = setup::setup_entity(entity::contract_obj);
+    let user_address = setup.user_address.clone();
+
+    setup
+        .blockchain
+        .execute_esdt_transfer(
+            &setup.owner_address,
+            &setup.contract,
+            ENTITY_TOKEN_ID,
+            0,
+            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
+            |sc| {
+                let mut actions = Vec::<Action<DebugApi>>::new();
+
+                actions.push(Action::<DebugApi> {
+                    address: managed_address!(&user_address),
+                    endpoint: managed_buffer!(b"func"),
+                    arguments: ManagedVec::from(vec![managed_buffer!(b"arg1")]),
+                    gas_limit: 5_000_000u64,
+                    token_id: managed_token_id!(b"EGLD"),
+                    token_nonce: 0,
+                    amount: managed_biguint!(5),
+                });
+
+                actions.push(Action::<DebugApi> {
+                    address: managed_address!(&user_address),
+                    endpoint: managed_buffer!(b"func"),
+                    arguments: ManagedVec::from(vec![managed_buffer!(b"arg1")]),
+                    gas_limit: 5_000_000u64,
+                    token_id: managed_token_id!(b"EGLD"),
+                    token_nonce: 0,
+                    amount: managed_biguint!(5),
+                });
+
+                sc.propose_endpoint(
+                    managed_buffer!(b"my title"),
+                    managed_buffer!(b"my description"),
+                    MultiValueManagedVec::from(actions),
+                );
+            },
+        )
+        .assert_ok();
+
+    // assert contract storage
+    setup
+        .blockchain
+        .execute_query(&setup.contract, |sc| {
+            let proposal = sc.proposals(0).get();
+
+            assert_eq!(2, proposal.actions.len());
+        })
+        .assert_ok();
+}
+
+#[test]
 fn it_sends_a_vote_nft_to_the_voter() {
     let mut setup = setup::setup_entity(entity::contract_obj);
     let owner_address = setup.owner_address.clone();
