@@ -85,7 +85,7 @@ pub trait ConfigModule {
 
     #[view(getProposalIdCounter)]
     #[storage_mapper("proposals_id_counter")]
-    fn proposal_id_counter(&self) -> SingleValueMapper<u64>;
+    fn next_proposal_id(&self) -> SingleValueMapper<u64>;
 
     #[view(getProtectedVoteTokens)]
     #[storage_mapper("protected_vote_tokens")]

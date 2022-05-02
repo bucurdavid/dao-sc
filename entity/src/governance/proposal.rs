@@ -66,7 +66,7 @@ pub trait ProposalModule: config::ConfigModule {
         vote_weight: BigUint,
     ) -> Proposal<Self::Api> {
         let proposer = self.blockchain().get_caller();
-        let proposal_id = self.proposal_id_counter().get();
+        let proposal_id = self.next_proposal_id().get();
         let starts_at = self.blockchain().get_block_timestamp();
         let voting_period_minutes = self.voting_period_in_minutes().get() as u64;
         let ends_at = starts_at + voting_period_minutes * 60;
@@ -87,7 +87,7 @@ pub trait ProposalModule: config::ConfigModule {
         };
 
         self.proposals(proposal_id.clone()).set(&proposal);
-        self.proposal_id_counter().set(proposal_id + 1);
+        self.next_proposal_id().set(proposal_id + 1);
 
         proposal
     }
