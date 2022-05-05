@@ -24,6 +24,7 @@ elrond_wasm_node::wasm_endpoints! {
         getQuorum
         getSealed
         getTokenId
+        getVersion
         getVoteNftTokenId
         getVotingPeriodMinutes
         issueNftVoteToken

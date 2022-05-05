@@ -44,6 +44,12 @@ changeVotingPeriodMinutes() {
         --send || return
 }
 
+getVersion() {
+    erdpy contract query $ADDRESS \
+        --function="getVersion" \
+        --proxy=$PROXY || return
+}
+
 getTokenId() {
     erdpy contract query $ADDRESS \
         --function="getTokenId" \

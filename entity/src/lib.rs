@@ -60,4 +60,9 @@ pub trait Entity:
         self.vote_nft_token()
             .set_local_roles(&[EsdtLocalRole::NftCreate, EsdtLocalRole::NftBurn][..], None);
     }
+
+    #[view(getVersion)]
+    fn version_view(&self) -> &'static [u8] {
+        env!("CARGO_PKG_VERSION").as_bytes()
+    }
 }
