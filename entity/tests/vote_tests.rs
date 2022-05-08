@@ -4,7 +4,6 @@ use entity::config::*;
 use entity::governance::proposal::*;
 use entity::governance::vote::*;
 use entity::governance::*;
-use entity::*;
 use setup::*;
 
 mod setup;

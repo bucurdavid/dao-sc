@@ -13,6 +13,7 @@ elrond_wasm_node::wasm_endpoints! {
         changeQuorum
         changeVotingPeriodMinutes
         execute
+        getFeatures
         getGovernanceTokenId
         getMinProposalVoteWeight
         getProposal

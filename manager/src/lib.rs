@@ -4,11 +4,13 @@
 elrond_wasm::imports!();
 
 pub mod config;
+pub mod credits;
 pub mod esdt;
 pub mod factory;
+pub mod features;
 
 #[elrond_wasm::contract]
-pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtModule {
+pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::FactoryModule + esdt::EsdtModule + credits::CreditsModule {
     #[init]
     fn init(&self, entity_template_address: ManagedAddress, cost_token: TokenIdentifier, cost_entity_creation: BigUint) {
         self.entity_templ_address().set_if_empty(&entity_template_address);
@@ -48,7 +50,7 @@ pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtMod
 
     #[payable("*")]
     #[endpoint(createEntity)]
-    fn create_entity_endpoint(&self, token_id: TokenIdentifier, #[var_args] features: MultiValueEncoded<MultiValue2<ManagedBuffer, ManagedBuffer>>) {
+    fn create_entity_endpoint(&self, token_id: TokenIdentifier, features: MultiValueEncoded<MultiValue2<ManagedBuffer, ManagedBuffer>>) {
         let (cost_token_id, _, cost_amount) = self.call_value().payment_as_tuple();
 
         self.require_caller_is_setup_owner(&token_id);
@@ -63,9 +65,7 @@ pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtMod
         let entity_address = self.create_entity(&token_id, &initial_supply);
 
         self.entities_map().insert(token_id.clone(), entity_address.clone());
-
-        self.enable_entity_features(&entity_address, features);
-
+        self.set_features(&token_id, features);
         self.set_entity_edst_roles(&token_id, &entity_address).call_and_exit()
     }
 
@@ -78,7 +78,6 @@ pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtMod
 
         self.setup_token_id(&caller).clear();
         self.setup_token_supply(&caller).clear();
-
         self.transfer_entity_esdt_ownership(&token_id, &entity_address).call_and_exit()
     }
 
@@ -98,7 +97,12 @@ pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtMod
 
     #[endpoint(upgradeEntity)]
     fn upgrade_entity_endpoint(&self, token_id: TokenIdentifier) {
-        self.upgrade_entity(self.get_entity_address(&token_id));
+        let entity_address = self.get_entity_address(&token_id);
+
+        // let entity_features = self.entity_contract_proxy(entity_address.clone()).features().execute_on_dest_context();
+
+        self.upgrade_entity(entity_address.clone());
+        // self.recalculate_daily_cost(&entity_address, entity_features);
     }
 
     #[only_owner]
@@ -106,17 +110,6 @@ pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtMod
     fn clear_setup_endpoint(&self, address: ManagedAddress) {
         self.setup_token_id(&address).clear();
         self.setup_token_supply(&address).clear();
-    }
-
-    #[view(getEntityAddress)]
-    fn get_entity_address_view(&self, token_id: TokenIdentifier) -> ManagedAddress {
-        self.entities_map().get(&token_id).unwrap_or_default()
-    }
-
-    fn get_entity_address(&self, token_id: &TokenIdentifier) -> ManagedAddress {
-        require!(self.entities_map().contains_key(&token_id), "entity does not exist");
-
-        self.entities_map().get(&token_id).unwrap()
     }
 
     fn send_back_egld(&self, initial_caller: &ManagedAddress) {
@@ -131,9 +124,6 @@ pub trait Manager: config::ConfigModule + factory::FactoryModule + esdt::EsdtMod
         let temp_owner_token_id = self.setup_token_id(&caller).get();
         require!(&temp_owner_token_id == token_id, "token not in setup");
     }
-
-    #[storage_mapper("entities")]
-    fn entities_map(&self) -> MapMapper<TokenIdentifier, ManagedAddress>;
 
     #[view(getSetupToken)]
     #[storage_mapper("setup:token_id")]

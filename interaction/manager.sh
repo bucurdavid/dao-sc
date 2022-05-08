@@ -153,6 +153,19 @@ clearSetup() {
         --send || return
 }
 
+# params:
+#   $1 = address
+#   $2 = amount
+boost() {
+    erdpy contract call $MANAGER_ADDRESS \
+        --function="ESDTTransfer" \
+        --arguments "str:$COST_TOKEN_ID" $2 "str:boost" $1 \
+        --recall-nonce --gas-limit=80000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
 getEntityTemplateAddress() {
     erdpy contract query $MANAGER_ADDRESS \
         --function="getEntityTemplateAddress" \
@@ -173,6 +186,24 @@ getEntityAddress() {
 getSetupToken() {
     erdpy contract query $MANAGER_ADDRESS \
         --function="getSetupToken" \
+        --arguments $1 \
+        --proxy=$PROXY || return
+}
+
+# params:
+#   $1 = address
+getAvailableCredits() {
+    erdpy contract query $MANAGER_ADDRESS \
+        --function="getAvailableCredits" \
+        --arguments $1 \
+        --proxy=$PROXY || return
+}
+
+# params:
+#   $1 = address
+getDailyCost() {
+    erdpy contract query $MANAGER_ADDRESS \
+        --function="getDailyCost" \
         --arguments $1 \
         --proxy=$PROXY || return
 }
