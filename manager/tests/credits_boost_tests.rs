@@ -21,7 +21,7 @@ fn it_increases_deposited_amounts_in_the_storage() {
 
             sc.boost_endpoint(managed_token_id!(entity_token));
 
-            let actual = sc.credit_entries(&managed_address!(entity_address)).get();
+            let actual = sc.credit_entries(&managed_token_id!(entity_token)).get();
 
             assert_eq!(managed_biguint!(50), actual.total_amount);
             assert_eq!(managed_biguint!(50), actual.period_amount);
@@ -34,7 +34,7 @@ fn it_increases_deposited_amounts_in_the_storage() {
         .execute_esdt_transfer(&entity_address, &setup.contract, COST_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
             sc.boost_endpoint(managed_token_id!(entity_token));
 
-            let actual = sc.credit_entries(&managed_address!(entity_address)).get();
+            let actual = sc.credit_entries(&managed_token_id!(entity_token)).get();
 
             assert_eq!(managed_biguint!(75), actual.total_amount);
             assert_eq!(managed_biguint!(75), actual.period_amount);

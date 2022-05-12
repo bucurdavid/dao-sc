@@ -1,4 +1,5 @@
 use crate::config;
+use crate::features;
 
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
@@ -12,7 +13,7 @@ pub struct CreditEntry<M: ManagedTypeApi> {
 }
 
 #[elrond_wasm::module]
-pub trait CreditsModule: config::ConfigModule {
+pub trait CreditsModule: config::ConfigModule + features::FeaturesModule {
     #[payable("*")]
     #[endpoint(boost)]
     fn boost_endpoint(&self, entity_token_id: TokenIdentifier) {
@@ -24,50 +25,50 @@ pub trait CreditsModule: config::ConfigModule {
         require!(payment_amount >= self.cost_boost_min_amount().get(), "invalid amount");
         require!(entity_address == caller, "given token id does not belong to caller",);
 
-        let mut entry = self.get_or_create_entry(&entity_address);
+        let mut entry = self.get_or_create_entry(&entity_token_id);
         entry.total_amount += &payment_amount;
         entry.period_amount += &payment_amount;
 
-        self.credit_entries(&entity_address).set(entry);
+        self.credit_entries(&entity_token_id).set(entry);
         self.credit_total_deposits_amount().update(|current| *current += &payment_amount);
     }
 
     #[view(getAvailableCredits)]
-    fn available_credits_view(&self, contract_address: ManagedAddress) -> BigUint {
-        if self.credit_entries(&contract_address).is_empty() {
+    fn available_credits_view(&self, entity_token_id: TokenIdentifier) -> BigUint {
+        if self.credit_entries(&entity_token_id).is_empty() {
             return BigUint::zero();
         }
 
-        let entry = self.credit_entries(&contract_address).get();
+        let entry = self.credit_entries(&entity_token_id).get();
 
         self.calculate_available_credits(&entry)
     }
 
     #[view(getDailyCost)]
-    fn daily_cost_view(&self, contract_address: ManagedAddress) -> BigUint {
-        if self.credit_entries(&contract_address).is_empty() {
+    fn daily_cost_view(&self, entity_token_id: TokenIdentifier) -> BigUint {
+        if self.credit_entries(&entity_token_id).is_empty() {
             return BigUint::zero();
         }
 
-        let entry = self.credit_entries(&contract_address).get();
+        let entry = self.credit_entries(&entity_token_id).get();
 
         entry.daily_cost
     }
 
-    fn recalculate_daily_cost(&self, contract_address: &ManagedAddress, features: ManagedVec<ManagedBuffer>) {
-        let mut entry = self.get_or_create_entry(&contract_address);
+    fn recalculate_daily_cost(&self, entity_token_id: &TokenIdentifier) {
+        let mut entry = self.get_or_create_entry(&entity_token_id);
         let mut daily_cost = self.cost_base_daily_amount().get();
 
         entry.last_period_change = self.blockchain().get_block_timestamp();
         entry.period_amount = self.calculate_available_credits(&entry);
 
-        for feature in features.into_iter() {
+        for feature in self.features(&entity_token_id).iter() {
             daily_cost += self.cost_feature_daily_amount(&feature).get();
         }
 
         entry.daily_cost = daily_cost;
 
-        self.credit_entries(&contract_address).set(entry);
+        self.credit_entries(&entity_token_id).set(entry);
     }
 
     fn calculate_available_credits(&self, entry: &CreditEntry<Self::Api>) -> BigUint {
@@ -83,8 +84,8 @@ pub trait CreditsModule: config::ConfigModule {
         available_credits
     }
 
-    fn get_or_create_entry(&self, contract_address: &ManagedAddress) -> CreditEntry<Self::Api> {
-        if self.credit_entries(&contract_address).is_empty() {
+    fn get_or_create_entry(&self, entity_token_id: &TokenIdentifier) -> CreditEntry<Self::Api> {
+        if self.credit_entries(&entity_token_id).is_empty() {
             CreditEntry {
                 total_amount: BigUint::zero(),
                 period_amount: BigUint::zero(),
@@ -92,12 +93,12 @@ pub trait CreditsModule: config::ConfigModule {
                 last_period_change: self.blockchain().get_block_timestamp(),
             }
         } else {
-            self.credit_entries(&contract_address).get()
+            self.credit_entries(&entity_token_id).get()
         }
     }
 
     #[storage_mapper("credits:entries")]
-    fn credit_entries(&self, contract_address: &ManagedAddress) -> SingleValueMapper<CreditEntry<Self::Api>>;
+    fn credit_entries(&self, entity_token_id: &TokenIdentifier) -> SingleValueMapper<CreditEntry<Self::Api>>;
 
     #[storage_mapper("credits:total_deposits")]
     fn credit_total_deposits_amount(&self) -> SingleValueMapper<BigUint>;

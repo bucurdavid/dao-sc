@@ -1,4 +1,5 @@
 use elrond_wasm_debug::*;
+use manager::config::*;
 use manager::credits::*;
 
 mod setup;
@@ -6,12 +7,16 @@ mod setup;
 #[test]
 fn it_returns_available_credits() {
     let mut setup = setup::setup_manager(manager::contract_obj);
+    let entity_token = b"ENTITY-123456";
     let entity_address = setup.contract_entity_template.address_ref();
 
     // prepare
     setup
         .blockchain
         .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
+            sc.entities_map()
+                .insert(managed_token_id!(entity_token), managed_address!(entity_address));
+
             let expand_val = managed_biguint!(1_000000000000000000u64);
             let entry = CreditEntry {
                 total_amount: &managed_biguint!(250) * &expand_val,
@@ -20,7 +25,7 @@ fn it_returns_available_credits() {
                 last_period_change: 0u64,
             };
 
-            sc.credit_entries(&managed_address!(entity_address)).set(entry);
+            sc.credit_entries(&managed_token_id!(entity_token)).set(entry);
         })
         .assert_ok();
 
@@ -29,7 +34,7 @@ fn it_returns_available_credits() {
         .execute_query(&setup.contract, |sc| {
             let expand_val = managed_biguint!(1_000000000000000000u64);
 
-            let actual = sc.available_credits_view(managed_address!(entity_address));
+            let actual = sc.available_credits_view(managed_token_id!(entity_token));
 
             assert!(actual > managed_biguint!(99) * &expand_val && actual < managed_biguint!(101) * &expand_val);
         })
@@ -42,7 +47,7 @@ fn it_returns_available_credits() {
         .execute_query(&setup.contract, |sc| {
             let expand_val = managed_biguint!(1_000000000000000000u64);
 
-            let actual = sc.available_credits_view(managed_address!(entity_address));
+            let actual = sc.available_credits_view(managed_token_id!(entity_token));
 
             assert!(actual > managed_biguint!(79) * &expand_val && actual < managed_biguint!(81) * &expand_val);
         })
@@ -55,7 +60,7 @@ fn it_returns_available_credits() {
         .execute_query(&setup.contract, |sc| {
             let expand_val = managed_biguint!(1_000000000000000000u64);
 
-            let actual = sc.available_credits_view(managed_address!(entity_address));
+            let actual = sc.available_credits_view(managed_token_id!(entity_token));
 
             assert!(actual > managed_biguint!(59) * &expand_val && actual < managed_biguint!(61) * &expand_val);
         })
