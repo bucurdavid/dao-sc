@@ -4,16 +4,6 @@ use crate::config;
 
 #[elrond_wasm::module]
 pub trait FeaturesModule: config::ConfigModule {
-    #[endpoint(setFeatures)]
-    fn set_features_endpoint(&self, entity_token_id: TokenIdentifier, features: MultiValueEncoded<MultiValue2<ManagedBuffer, ManagedBuffer>>) {
-        let caller = self.blockchain().get_caller();
-        let entity_address = self.get_entity_address(&entity_token_id);
-
-        require!(entity_address == caller, "given token id does not belong to caller");
-
-        self.set_features(&entity_token_id, features);
-    }
-
     fn set_features(&self, entity_token_id: &TokenIdentifier, features: MultiValueEncoded<MultiValue2<ManagedBuffer, ManagedBuffer>>) {
         for feature_setting in features.into_iter() {
             let (feature_name, feature_enabled_arg) = feature_setting.into_tuple();

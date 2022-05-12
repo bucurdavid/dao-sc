@@ -18,12 +18,10 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule {
     #[endpoint(boost)]
     fn boost_endpoint(&self, entity_token_id: TokenIdentifier) {
         let (payment_token_id, _, payment_amount) = self.call_value().payment_as_tuple();
-        let caller = self.blockchain().get_caller();
-        let entity_address = self.get_entity_address(&entity_token_id);
 
+        self.require_entity_exists(&entity_token_id);
         require!(payment_token_id == self.cost_token_id().get(), "invalid token");
         require!(payment_amount >= self.cost_boost_min_amount().get(), "invalid amount");
-        require!(entity_address == caller, "given token id does not belong to caller",);
 
         let mut entry = self.get_or_create_entry(&entity_token_id);
         entry.total_amount += &payment_amount;

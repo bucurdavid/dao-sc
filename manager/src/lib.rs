@@ -66,6 +66,8 @@ pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::Fa
 
         self.entities_map().insert(token_id.clone(), entity_address.clone());
         self.set_features(&token_id, features);
+        self.recalculate_daily_cost(&token_id);
+
         self.set_entity_edst_roles(&token_id, &entity_address).call_and_exit()
     }
 
@@ -78,6 +80,7 @@ pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::Fa
 
         self.setup_token_id(&caller).clear();
         self.setup_token_supply(&caller).clear();
+
         self.transfer_entity_esdt_ownership(&token_id, &entity_address).call_and_exit()
     }
 
@@ -102,6 +105,13 @@ pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::Fa
         self.upgrade_entity(entity_address.clone());
 
         self.recalculate_daily_cost(&token_id);
+    }
+
+    #[endpoint(setFeatures)]
+    fn set_features_endpoint(&self, entity_token_id: TokenIdentifier, features: MultiValueEncoded<MultiValue2<ManagedBuffer, ManagedBuffer>>) {
+        self.require_token_id_belongs_to_caller(&entity_token_id);
+        self.set_features(&entity_token_id, features);
+        self.recalculate_daily_cost(&entity_token_id);
     }
 
     #[only_owner]

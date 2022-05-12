@@ -15,7 +15,7 @@ fn it_increases_deposited_amounts_in_the_storage() {
 
     setup
         .blockchain
-        .execute_esdt_transfer(&entity_address, &setup.contract, COST_TOKEN_ID, 0, &rust_biguint!(50), |sc| {
+        .execute_esdt_transfer(&setup.owner_address, &setup.contract, COST_TOKEN_ID, 0, &rust_biguint!(50), |sc| {
             sc.entities_map()
                 .insert(managed_token_id!(entity_token), managed_address!(entity_address));
 
@@ -31,7 +31,7 @@ fn it_increases_deposited_amounts_in_the_storage() {
 
     setup
         .blockchain
-        .execute_esdt_transfer(&entity_address, &setup.contract, COST_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
+        .execute_esdt_transfer(&setup.owner_address, &setup.contract, COST_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
             sc.boost_endpoint(managed_token_id!(entity_token));
 
             let actual = sc.credit_entries(&managed_token_id!(entity_token)).get();
