@@ -14,16 +14,17 @@ elrond_wasm_node::wasm_endpoints! {
         createEntityToken
         deposit
         finalizeEntity
-        getAvailableCredits
         getBaseDailyCost
-        getDailyCost
+        getCredits
         getEntityAddress
         getEntityTemplateAddress
         getFeatureDailyCost
+        getFeatures
         getMinBoostAmount
         getSetupToken
         getSetupTokenAmount
         registerEntityToken
+        setFeatures
         upgradeEntity
     )
 }

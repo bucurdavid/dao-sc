@@ -34,9 +34,10 @@ fn it_returns_available_credits() {
         .execute_query(&setup.contract, |sc| {
             let expand_val = managed_biguint!(1_000000000000000000u64);
 
-            let actual = sc.available_credits_view(managed_token_id!(entity_token));
+            let (available, daily_cost) = sc.get_credits_view(managed_token_id!(entity_token)).into_tuple();
 
-            assert!(actual > managed_biguint!(99) * &expand_val && actual < managed_biguint!(101) * &expand_val);
+            assert!(available > managed_biguint!(99) * &expand_val && available < managed_biguint!(101) * &expand_val);
+            assert_eq!(daily_cost, &managed_biguint!(20) * &expand_val)
         })
         .assert_ok();
 
@@ -47,9 +48,10 @@ fn it_returns_available_credits() {
         .execute_query(&setup.contract, |sc| {
             let expand_val = managed_biguint!(1_000000000000000000u64);
 
-            let actual = sc.available_credits_view(managed_token_id!(entity_token));
+            let (available, daily_cost) = sc.get_credits_view(managed_token_id!(entity_token)).into_tuple();
 
-            assert!(actual > managed_biguint!(79) * &expand_val && actual < managed_biguint!(81) * &expand_val);
+            assert!(available > managed_biguint!(79) * &expand_val && available < managed_biguint!(81) * &expand_val);
+            assert_eq!(daily_cost, &managed_biguint!(20) * &expand_val)
         })
         .assert_ok();
 
@@ -60,9 +62,10 @@ fn it_returns_available_credits() {
         .execute_query(&setup.contract, |sc| {
             let expand_val = managed_biguint!(1_000000000000000000u64);
 
-            let actual = sc.available_credits_view(managed_token_id!(entity_token));
+            let (available, daily_cost) = sc.get_credits_view(managed_token_id!(entity_token)).into_tuple();
 
-            assert!(actual > managed_biguint!(59) * &expand_val && actual < managed_biguint!(61) * &expand_val);
+            assert!(available > managed_biguint!(59) * &expand_val && available < managed_biguint!(61) * &expand_val);
+            assert_eq!(daily_cost, &managed_biguint!(20) * &expand_val)
         })
         .assert_ok();
 }

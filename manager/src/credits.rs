@@ -31,26 +31,16 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule {
         self.credit_total_deposits_amount().update(|current| *current += &payment_amount);
     }
 
-    #[view(getAvailableCredits)]
-    fn available_credits_view(&self, entity_token_id: TokenIdentifier) -> BigUint {
+    #[view(getCredits)]
+    fn get_credits_view(&self, entity_token_id: TokenIdentifier) -> MultiValue2<BigUint, BigUint> {
         if self.credit_entries(&entity_token_id).is_empty() {
-            return BigUint::zero();
+            return (BigUint::zero(), BigUint::zero()).into();
         }
 
         let entry = self.credit_entries(&entity_token_id).get();
+        let available = self.calculate_available_credits(&entry);
 
-        self.calculate_available_credits(&entry)
-    }
-
-    #[view(getDailyCost)]
-    fn daily_cost_view(&self, entity_token_id: TokenIdentifier) -> BigUint {
-        if self.credit_entries(&entity_token_id).is_empty() {
-            return BigUint::zero();
-        }
-
-        let entry = self.credit_entries(&entity_token_id).get();
-
-        entry.daily_cost
+        (available, entry.daily_cost).into()
     }
 
     fn recalculate_daily_cost(&self, entity_token_id: &TokenIdentifier) {

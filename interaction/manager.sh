@@ -191,19 +191,10 @@ getSetupToken() {
 }
 
 # params:
-#   $1 = address
-getAvailableCredits() {
+#   $1 = token id
+getCredits() {
     erdpy contract query $MANAGER_ADDRESS \
-        --function="getAvailableCredits" \
-        --arguments $1 \
-        --proxy=$PROXY || return
-}
-
-# params:
-#   $1 = address
-getDailyCost() {
-    erdpy contract query $MANAGER_ADDRESS \
-        --function="getDailyCost" \
-        --arguments $1 \
+        --function="getCredits" \
+        --arguments "str:$1" \
         --proxy=$PROXY || return
 }

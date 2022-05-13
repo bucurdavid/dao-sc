@@ -13,7 +13,6 @@ elrond_wasm_node::wasm_endpoints! {
         changeQuorum
         changeVotingPeriodMinutes
         execute
-        getFeatures
         getGovernanceTokenId
         getMinProposalVoteWeight
         getProposal
@@ -32,7 +31,6 @@ elrond_wasm_node::wasm_endpoints! {
         propose
         redeem
         seal
-        setFeatures
         voteAgainst
         voteFor
     )
