@@ -102,9 +102,9 @@ pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::Fa
     fn upgrade_entity_endpoint(&self, token_id: TokenIdentifier) {
         let entity_address = self.get_entity_address(&token_id);
 
-        self.upgrade_entity(entity_address.clone());
-
         self.recalculate_daily_cost(&token_id);
+
+        self.upgrade_entity(entity_address.clone());
     }
 
     #[endpoint(setFeatures)]
