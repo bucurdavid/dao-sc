@@ -24,6 +24,8 @@ elrond_wasm_node::wasm_endpoints! {
         getSetupToken
         getSetupTokenAmount
         registerEntityToken
+        setDailyBaseCost
+        setDailyFeatureCost
         setFeatures
         upgradeEntity
     )

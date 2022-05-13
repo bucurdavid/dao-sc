@@ -103,6 +103,31 @@ setCostTokenBurnRole() {
 }
 
 # params:
+#   $1 = amount
+setDailyBaseCost() {
+    erdpy --verbose contract call $MANAGER_ADDRESS \
+        --function="setDailyBaseCost" \
+        --arguments $1 \
+        --recall-nonce --gas-limit=5000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+# params:
+#   $1 = feature name
+#   $2 = amount
+setDailyFeatureCost() {
+    erdpy --verbose contract call $MANAGER_ADDRESS \
+        --function="setDailyFeatureCost" \
+        --arguments "str:$1" $2 \
+        --recall-nonce --gas-limit=5000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+# params:
 #   $1 = token name
 #   $2 = token ticker
 #   $3 = initial supply
@@ -189,6 +214,14 @@ getSetupToken() {
     erdpy contract query $MANAGER_ADDRESS \
         --function="getSetupToken" \
         --arguments $1 \
+        --proxy=$PROXY || return
+}
+
+# params:
+#   $1 = token id
+getBaseDailyCost() {
+    erdpy contract query $MANAGER_ADDRESS \
+        --function="getBaseDailyCost" \
         --proxy=$PROXY || return
 }
 

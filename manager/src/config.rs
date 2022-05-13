@@ -29,6 +29,20 @@ pub trait ConfigModule {
         self.entity_templ_address().get()
     }
 
+    #[only_owner]
+    #[endpoint(setDailyBaseCost)]
+    fn set_daily_base_cost_endpoint(&self, amount: BigUint) {
+        require!(amount > 0, "can not be zero");
+        self.cost_base_daily_amount().set(amount);
+    }
+
+    #[only_owner]
+    #[endpoint(setDailyFeatureCost)]
+    fn set_daily_feature_cost_endpoint(&self, feature: ManagedBuffer, amount: BigUint) {
+        require!(amount > 0, "can not be zero");
+        self.cost_feature_daily_amount(&feature).set(amount);
+    }
+
     #[storage_mapper("entities")]
     fn entities_map(&self) -> MapMapper<TokenIdentifier, ManagedAddress>;
 
