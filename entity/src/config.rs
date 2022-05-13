@@ -39,11 +39,11 @@ pub trait ConfigModule {
 
     fn require_governance_tokens_available(&self, amount: &BigUint) {
         let gov_token_id = self.governance_token_id().get();
-        let protected_vote_tokens = self.protected_vote_tokens().get();
+        let protected = self.protected_vote_tokens().get();
         let balance = self.blockchain().get_sc_balance(&gov_token_id, 0u64);
-        let available_balance = balance - protected_vote_tokens;
+        let available = balance - protected;
 
-        require!(amount <= &available_balance, "not enough governance tokens available");
+        require!(amount <= &available, "not enough governance tokens available");
     }
 
     fn try_change_governance_token(&self, token_id: TokenIdentifier) {

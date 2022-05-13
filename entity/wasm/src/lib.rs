@@ -31,7 +31,6 @@ elrond_wasm_node::wasm_endpoints! {
         propose
         redeem
         seal
-        setFeatures
         voteAgainst
         voteFor
     )

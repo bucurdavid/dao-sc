@@ -1,5 +1,6 @@
 use elrond_wasm::types::*;
 use elrond_wasm_debug::*;
+use manager::config::*;
 use manager::*;
 use setup::*;
 mod setup;
@@ -14,6 +15,9 @@ fn it_creates_an_entity() {
 
     setup.blockchain.set_esdt_balance(&caller, COST_TOKEN_ID, &rust_biguint!(5000));
 
+    let manager_addr = setup.contract.address_ref().clone();
+    let new_entity_wrapper = setup.blockchain.prepare_deploy_from_sc(&manager_addr, entity::contract_obj);
+
     setup
         .blockchain
         .execute_esdt_transfer(&caller, &setup.contract, COST_TOKEN_ID, 0, &rust_biguint!(1000), |sc| {
@@ -22,7 +26,9 @@ fn it_creates_an_entity() {
 
             sc.create_entity_endpoint(managed_token_id!(token_id), MultiValueEncoded::new());
 
-            assert!(sc.entities_map().get(&managed_token_id!(token_id)).is_some());
+            let actual = sc.entities_map().get(&managed_token_id!(token_id)).unwrap();
+
+            assert_eq!(managed_address!(new_entity_wrapper.address_ref()), actual);
         })
         .assert_ok();
 }

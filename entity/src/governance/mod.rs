@@ -46,12 +46,7 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
 
     #[payable("*")]
     #[endpoint(propose)]
-    fn propose_endpoint(
-        &self,
-        title: ManagedBuffer,
-        description: ManagedBuffer,
-        #[var_args] actions: MultiValueManagedVec<Action<Self::Api>>,
-    ) -> u64 {
+    fn propose_endpoint(&self, title: ManagedBuffer, description: ManagedBuffer, actions: MultiValueManagedVec<Action<Self::Api>>) -> u64 {
         self.require_sealed();
         self.require_payment_token_governance_token();
 

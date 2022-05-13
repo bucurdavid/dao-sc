@@ -1,4 +1,5 @@
 use elrond_wasm_debug::*;
+use manager::config::*;
 use manager::*;
 use setup::*;
 mod setup;

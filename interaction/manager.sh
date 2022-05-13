@@ -56,6 +56,7 @@ deploy() {
 }
 
 upgrade() {
+    erdpy --verbose contract clean manager || return
     erdpy --verbose contract build manager || return
     erdpy --verbose contract test manager || return
 
@@ -68,6 +69,7 @@ upgrade() {
 }
 
 upgradeEntityTemplate() {
+    erdpy --verbose contract clean entity || return
     erdpy --verbose contract build entity || return
     erdpy --verbose contract test entity || return
 
@@ -95,6 +97,31 @@ setCostTokenBurnRole() {
         --function="setSpecialRole" \
         --arguments "str:$COST_TOKEN_ID" $MANAGER_ADDRESS "str:ESDTRoleLocalBurn"  \
         --recall-nonce --gas-limit=60000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+# params:
+#   $1 = amount
+setDailyBaseCost() {
+    erdpy --verbose contract call $MANAGER_ADDRESS \
+        --function="setDailyBaseCost" \
+        --arguments $1 \
+        --recall-nonce --gas-limit=5000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+# params:
+#   $1 = feature name
+#   $2 = amount
+setDailyFeatureCost() {
+    erdpy --verbose contract call $MANAGER_ADDRESS \
+        --function="setDailyFeatureCost" \
+        --arguments "str:$1" $2 \
+        --recall-nonce --gas-limit=5000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --ledger \
         --send || return
@@ -153,6 +180,19 @@ clearSetup() {
         --send || return
 }
 
+# params:
+#   $1 = address
+#   $2 = amount
+boost() {
+    erdpy contract call $MANAGER_ADDRESS \
+        --function="ESDTTransfer" \
+        --arguments "str:$COST_TOKEN_ID" $2 "str:boost" $1 \
+        --recall-nonce --gas-limit=80000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
 getEntityTemplateAddress() {
     erdpy contract query $MANAGER_ADDRESS \
         --function="getEntityTemplateAddress" \
@@ -174,5 +214,22 @@ getSetupToken() {
     erdpy contract query $MANAGER_ADDRESS \
         --function="getSetupToken" \
         --arguments $1 \
+        --proxy=$PROXY || return
+}
+
+# params:
+#   $1 = token id
+getBaseDailyCost() {
+    erdpy contract query $MANAGER_ADDRESS \
+        --function="getBaseDailyCost" \
+        --proxy=$PROXY || return
+}
+
+# params:
+#   $1 = token id
+getCredits() {
+    erdpy contract query $MANAGER_ADDRESS \
+        --function="getCredits" \
+        --arguments "str:$1" \
         --proxy=$PROXY || return
 }

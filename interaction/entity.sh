@@ -6,6 +6,16 @@ PROXY=$(erdpy data load --partition $NETWORK_NAME --key=proxy)
 CHAIN_ID=$(erdpy data load --partition $NETWORK_NAME --key=chain-id)
 COST_TOKEN_ID=$(erdpy data load --partition $NETWORK_NAME --key=cost-token-id)
 
+setFeatures() {
+    erdpy contract call $ADDRESS \
+        --function="setFeatures" \
+        --arguments "str:feat1" "str:true" "str:feat2" "str:true" \
+        --recall-nonce --gas-limit=10000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
 # params:
 #   $1 = title
 #   $2 = description
@@ -47,6 +57,12 @@ changeVotingPeriodMinutes() {
 getVersion() {
     erdpy contract query $ADDRESS \
         --function="getVersion" \
+        --proxy=$PROXY || return
+}
+
+getFeatures() {
+    erdpy contract query $ADDRESS \
+        --function="getFeatures" \
         --proxy=$PROXY || return
 }
 
