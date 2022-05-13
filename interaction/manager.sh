@@ -56,6 +56,7 @@ deploy() {
 }
 
 upgrade() {
+    erdpy --verbose contract clean manager || return
     erdpy --verbose contract build manager || return
     erdpy --verbose contract test manager || return
 
@@ -68,6 +69,7 @@ upgrade() {
 }
 
 upgradeEntityTemplate() {
+    erdpy --verbose contract clean entity || return
     erdpy --verbose contract build entity || return
     erdpy --verbose contract test entity || return
 
