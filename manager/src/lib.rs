@@ -18,7 +18,7 @@ pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::Fa
         self.cost_creation_amount().set_if_empty(&cost_entity_creation);
     }
 
-    #[payable("EGLD")]
+    #[payable("*")]
     #[endpoint(deposit)]
     fn deposit_endpoint(&self) {}
 
