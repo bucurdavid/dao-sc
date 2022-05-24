@@ -22,6 +22,12 @@ pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::Fa
     #[endpoint(deposit)]
     fn deposit_endpoint(&self) {}
 
+    #[payable("*")]
+    #[endpoint(executeTicket)]
+    fn execute_ticket_endpoint(&self, ticket_id: ManagedBuffer) {
+        require!(ticket_id.len() > 0, "ticket id is required");
+    }
+
     #[payable("EGLD")]
     #[endpoint(createEntityToken)]
     fn create_entity_token_endpoint(&self, token_name: ManagedBuffer, token_ticker: ManagedBuffer, amount: BigUint) {

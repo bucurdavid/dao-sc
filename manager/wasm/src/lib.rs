@@ -13,6 +13,7 @@ elrond_wasm_node::wasm_endpoints! {
         createEntity
         createEntityToken
         deposit
+        executeTicket
         finalizeEntity
         getBaseDailyCost
         getCredits
