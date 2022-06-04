@@ -43,6 +43,30 @@ execute() {
 }
 
 # params:
+#   $1 = amount
+changeQuorum() {
+    erdpy contract call $ADDRESS \
+        --function="changeQuorum" \
+        --arguments $1 \
+        --recall-nonce --gas-limit=10000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+# params:
+#   $1 = amount
+changeMinProposalVoteWeight() {
+    erdpy contract call $ADDRESS \
+        --function="changeMinProposalVoteWeight" \
+        --arguments $1 \
+        --recall-nonce --gas-limit=10000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+# params:
 #   $1 = minutes
 changeVotingPeriodMinutes() {
     erdpy contract call $ADDRESS \
