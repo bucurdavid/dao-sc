@@ -108,7 +108,7 @@ pub trait ProposalModule: config::ConfigModule {
         let vote_for_percent = &proposal.votes_for * &BigUint::from(100u64) / &total_votes;
         let vote_for_percent_to_pass = BigUint::from(50u64);
 
-        if vote_for_percent > vote_for_percent_to_pass && &proposal.votes_for >= &quorum {
+        if vote_for_percent >= vote_for_percent_to_pass && &proposal.votes_for >= &quorum {
             ProposalStatus::Succeeded
         } else {
             ProposalStatus::Defeated
