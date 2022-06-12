@@ -7,12 +7,11 @@ use crate::config;
 pub struct Proposal<M: ManagedTypeApi> {
     pub id: u64,
     pub proposer: ManagedAddress<M>,
-    pub title: ManagedBuffer<M>,
-    pub description: ManagedBuffer<M>,
+    pub content_hash: ManagedBuffer<M>,
+    pub actions_hash :ManagedBuffer<M>,
     pub starts_at: u64,
     pub ends_at: u64,
     pub was_executed: bool,
-    pub actions: ManagedVec<M, Action<M>>,
     pub votes_for: BigUint<M>,
     pub votes_against: BigUint<M>,
 }
@@ -60,9 +59,8 @@ pub enum ProposalStatus {
 pub trait ProposalModule: config::ConfigModule {
     fn create_proposal(
         &self,
-        title: ManagedBuffer,
-        description: ManagedBuffer,
-        actions: ManagedVec<Action<Self::Api>>,
+        content_hash: ManagedBuffer,
+        actions_hash: ManagedBuffer,
         vote_weight: BigUint,
     ) -> Proposal<Self::Api> {
         let proposer = self.blockchain().get_caller();
@@ -76,12 +74,11 @@ pub trait ProposalModule: config::ConfigModule {
         let proposal = Proposal {
             id: proposal_id.clone(),
             proposer: proposer.clone(),
-            title,
-            description,
+            content_hash,
             starts_at,
             ends_at,
             was_executed: false,
-            actions,
+            actions_hash,
             votes_for: vote_weight.clone(),
             votes_against: BigUint::zero(),
         };
@@ -115,10 +112,10 @@ pub trait ProposalModule: config::ConfigModule {
         }
     }
 
-    fn execute_proposal(&self, proposal: &Proposal<Self::Api>) {
+    fn execute_actions(&self, actions: &ManagedVec<Action<Self::Api>>) {
         let gov_token_id = self.governance_token_id().get();
 
-        for action in proposal.actions.iter() {
+        for action in actions.iter() {
             let mut call = self
                 .send()
                 .contract_call::<()>(action.address, action.endpoint)
@@ -135,6 +132,24 @@ pub trait ProposalModule: config::ConfigModule {
 
             call.transfer_execute()
         }
+    }
+
+    fn calculate_actions_hash(&self, actions: &ManagedVec<Action<Self::Api>>) -> ManagedBuffer<Self::Api> {
+        if actions.is_empty() {
+            return ManagedBuffer::new();
+        }
+
+        let mut serialized = ManagedBuffer::new();
+
+        for action in actions.iter() {
+            serialized.append(&sc_format!("{}{}{}{}{}", action.address.as_managed_buffer(), action.amount, action.token_id, action.token_nonce, action.endpoint));
+
+            for arg in action.arguments.iter() {
+                serialized.append(&arg);
+            }
+        }
+
+        self.crypto().keccak256(&serialized).as_managed_buffer().clone()
     }
 
     fn proposal_exists(&self, proposal_id: u64) -> bool {

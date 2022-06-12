@@ -1,7 +1,7 @@
+use elrond_wasm::elrond_codec::multi_types::OptionalValue;
 use elrond_wasm::types::*;
 use elrond_wasm_debug::*;
 use entity::config::*;
-use entity::governance::proposal::*;
 use entity::governance::vote::*;
 use entity::governance::*;
 use setup::*;
@@ -23,9 +23,9 @@ fn it_creates_a_proposal() {
             &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
             |sc| {
                 sc.propose_endpoint(
-                    managed_buffer!(b"my title"),
-                    managed_buffer!(b"my description"),
-                    MultiValueManagedVec::from(Vec::<Action<DebugApi>>::new()),
+                    managed_buffer!(b"content hash"),
+                    managed_buffer!(b"content signature"),
+                    OptionalValue::None,
                 );
             },
         )
@@ -39,10 +39,9 @@ fn it_creates_a_proposal() {
 
             assert_eq!(0, proposal.id);
             assert_eq!(managed_address!(&owner_address), proposal.proposer);
-            assert_eq!(managed_buffer!(b"my title"), proposal.title);
-            assert_eq!(managed_buffer!(b"my description"), proposal.description);
+            assert_eq!(managed_buffer!(b"content hash"), proposal.content_hash);
+            assert_eq!(managed_buffer!(b""), proposal.actions_hash);
             assert_eq!(false, proposal.was_executed);
-            assert_eq!(0, proposal.actions.len());
             assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL), proposal.votes_for);
             assert_eq!(managed_biguint!(0), proposal.votes_against);
 
@@ -54,7 +53,6 @@ fn it_creates_a_proposal() {
 #[test]
 fn it_creates_a_proposal_with_actions() {
     let mut setup = setup::setup_entity(entity::contract_obj);
-    let user_address = setup.user_address.clone();
 
     setup
         .blockchain
@@ -65,32 +63,10 @@ fn it_creates_a_proposal_with_actions() {
             0,
             &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
             |sc| {
-                let mut actions = Vec::<Action<DebugApi>>::new();
-
-                actions.push(Action::<DebugApi> {
-                    address: managed_address!(&user_address),
-                    endpoint: managed_buffer!(b"func"),
-                    arguments: ManagedVec::from(vec![managed_buffer!(b"arg1")]),
-                    gas_limit: 5_000_000u64,
-                    token_id: managed_token_id!(b"EGLD"),
-                    token_nonce: 0,
-                    amount: managed_biguint!(5),
-                });
-
-                actions.push(Action::<DebugApi> {
-                    address: managed_address!(&user_address),
-                    endpoint: managed_buffer!(b"func"),
-                    arguments: ManagedVec::from(vec![managed_buffer!(b"arg1")]),
-                    gas_limit: 5_000_000u64,
-                    token_id: managed_token_id!(b"EGLD"),
-                    token_nonce: 0,
-                    amount: managed_biguint!(5),
-                });
-
                 sc.propose_endpoint(
-                    managed_buffer!(b"my title"),
-                    managed_buffer!(b"my description"),
-                    MultiValueManagedVec::from(actions),
+                    managed_buffer!(b"content hash"),
+                    managed_buffer!(b"content signature"),
+                    OptionalValue::Some(managed_buffer!(b"actions hash")),
                 );
             },
         )
@@ -102,7 +78,7 @@ fn it_creates_a_proposal_with_actions() {
         .execute_query(&setup.contract, |sc| {
             let proposal = sc.proposals(0).get();
 
-            assert_eq!(2, proposal.actions.len());
+            assert_eq!(managed_buffer!(b"actions hash"), proposal.actions_hash);
         })
         .assert_ok();
 }
@@ -122,9 +98,9 @@ fn it_sends_a_vote_nft_to_the_voter() {
             &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
             |sc| {
                 sc.propose_endpoint(
-                    managed_buffer!(b"my title"),
-                    managed_buffer!(b"my description"),
-                    MultiValueManagedVec::from(Vec::<Action<DebugApi>>::new()),
+                    managed_buffer!(b"content hash"),
+                    managed_buffer!(b"content signature"),
+                    OptionalValue::None,
                 );
             },
         )
@@ -164,7 +140,7 @@ fn it_fails_if_bad_token() {
                 sc.propose_endpoint(
                     managed_buffer!(b""),
                     managed_buffer!(b""),
-                    MultiValueManagedVec::from(Vec::<Action<DebugApi>>::new()),
+                    OptionalValue::None,
                 );
             },
         )
@@ -172,7 +148,7 @@ fn it_fails_if_bad_token() {
 }
 
 #[test]
-fn it_fails_if_bad_amount() {
+fn it_fails_if_bad_vote_weight_amount() {
     let mut setup = setup::setup_entity(entity::contract_obj);
 
     setup
@@ -187,7 +163,7 @@ fn it_fails_if_bad_amount() {
                 sc.propose_endpoint(
                     managed_buffer!(b""),
                     managed_buffer!(b""),
-                    MultiValueManagedVec::from(Vec::<Action<DebugApi>>::new()),
+                    OptionalValue::None,
                 );
             },
         )

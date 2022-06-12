@@ -20,11 +20,10 @@ fn it_returns_active_for_a_newly_created_proposal() {
             let ends_at = starts_at + voting_period_minutes * 60;
 
             let dummy_proposal = Proposal::<DebugApi> {
-                actions: ManagedVec::from(Vec::<Action<DebugApi>>::new()),
+                actions_hash: managed_buffer!(b""),
                 starts_at,
                 ends_at,
-                title: managed_buffer!(b""),
-                description: managed_buffer!(b""),
+                content_hash: managed_buffer!(b""),
                 id: 0,
                 votes_against: managed_biguint!(0),
                 votes_for: managed_biguint!(0),
@@ -57,11 +56,10 @@ fn it_returns_defeated_if_for_votes_quorum_not_met() {
             let ends_at = starts_at + voting_period_seconds;
 
             let dummy_proposal = Proposal::<DebugApi> {
-                actions: ManagedVec::from(Vec::<Action<DebugApi>>::new()),
+                actions_hash: managed_buffer!(b""),
                 starts_at,
                 ends_at,
-                title: managed_buffer!(b""),
-                description: managed_buffer!(b""),
+                content_hash: managed_buffer!(b""),
                 id: 0,
                 votes_against: managed_biguint!(0),
                 votes_for: sc.quorum().get() - BigUint::from(1u64),
@@ -96,11 +94,10 @@ fn it_returns_defeated_if_votes_against_is_more_than_for() {
             let ends_at = starts_at + voting_period_seconds;
 
             let dummy_proposal = Proposal::<DebugApi> {
-                actions: ManagedVec::from(Vec::<Action<DebugApi>>::new()),
+                actions_hash: managed_buffer!(b""),
                 starts_at,
                 ends_at,
-                title: managed_buffer!(b""),
-                description: managed_buffer!(b""),
+                content_hash: managed_buffer!(b""),
                 id: 0,
                 votes_against: sc.quorum().get() + BigUint::from(2u64),
                 votes_for: sc.quorum().get() + BigUint::from(1u64),
@@ -135,11 +132,10 @@ fn it_returns_succeeded_if_for_votes_quorum_met_and_more_for_than_against_votes(
             let ends_at = starts_at + voting_period_seconds;
 
             let dummy_proposal = Proposal::<DebugApi> {
-                actions: ManagedVec::from(Vec::<Action<DebugApi>>::new()),
+                actions_hash: managed_buffer!(b""),
                 starts_at,
                 ends_at,
-                title: managed_buffer!(b""),
-                description: managed_buffer!(b""),
+                content_hash: managed_buffer!(b""),
                 id: 0,
                 votes_against: sc.quorum().get() + BigUint::from(0u64),
                 votes_for: sc.quorum().get() + BigUint::from(5u64),
@@ -174,11 +170,10 @@ fn it_returns_executed_for_an_executed_proposal() {
             let ends_at = starts_at + voting_period_seconds;
 
             let dummy_proposal = Proposal::<DebugApi> {
-                actions: ManagedVec::from(Vec::<Action<DebugApi>>::new()),
+                actions_hash: managed_buffer!(b""),
                 starts_at,
                 ends_at,
-                title: managed_buffer!(b""),
-                description: managed_buffer!(b""),
+                content_hash: managed_buffer!(b""),
                 id: 0,
                 votes_against: sc.quorum().get() + BigUint::from(0u64),
                 votes_for: sc.quorum().get() + BigUint::from(5u64),
@@ -195,7 +190,7 @@ fn it_returns_executed_for_an_executed_proposal() {
     setup
         .blockchain
         .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
-            sc.execute_endpoint(0);
+            sc.execute_endpoint(0, MultiValueManagedVec::new());
         })
         .assert_ok();
 

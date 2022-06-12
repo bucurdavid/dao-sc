@@ -17,8 +17,8 @@ setFeatures() {
 }
 
 # params:
-#   $1 = title
-#   $2 = description
+#   $1 = content hash
+#   $2 = content signature
 #   $3 = token amount
 propose() {
     erdpy contract call $ADDRESS \

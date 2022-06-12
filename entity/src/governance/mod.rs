@@ -46,14 +46,20 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
 
     #[payable("*")]
     #[endpoint(propose)]
-    fn propose_endpoint(&self, title: ManagedBuffer, description: ManagedBuffer, actions: MultiValueManagedVec<Action<Self::Api>>) -> u64 {
+    fn propose_endpoint(&self, content_hash: ManagedBuffer, content_signature: ManagedBuffer, opt_action_hash: OptionalValue<ManagedBuffer>) -> u64 {
         self.require_sealed();
+
+        // if !self.crypto().verify_ed25519_managed(key, content_hash, content_signature) {
+        //     sc_error!("invalid signature");
+        // }
+
         self.require_payment_token_governance_token();
 
         let proposer = self.blockchain().get_caller();
         let payment = self.call_value().payment();
         let vote_weight = payment.amount.clone();
-        let proposal = self.create_proposal(title, description, actions.into_vec(), vote_weight.clone());
+        let actions_hash = opt_action_hash.into_option().unwrap_or_default();
+        let proposal = self.create_proposal(content_hash, actions_hash, vote_weight.clone());
         let proposal_id = proposal.id;
 
         self.protected_vote_tokens().update(|current| *current += &payment.amount);
@@ -76,16 +82,18 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
     }
 
     #[endpoint(execute)]
-    fn execute_endpoint(&self, proposal_id: u64) {
+    fn execute_endpoint(&self, proposal_id: u64, actions: MultiValueManagedVec<Action<Self::Api>>) {
         self.require_sealed();
         require!(!self.proposals(proposal_id).is_empty(), "proposal not found");
 
         let mut proposal = self.proposals(proposal_id).get();
         let status = self.get_proposal_status(&proposal);
+        let actions = actions.into_vec();
 
         require!(status == ProposalStatus::Succeeded, "proposal is not executable");
+        require!(proposal.actions_hash == self.calculate_actions_hash(&actions), "actions have been corrupted");
 
-        self.execute_proposal(&proposal);
+        self.execute_actions(&actions);
         proposal.was_executed = true;
 
         self.proposals(proposal_id).set(&proposal);
@@ -110,8 +118,8 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
             let proposal = self.proposals(proposal_id).get();
             OptionalValue::Some(
                 (
-                    proposal.title,
-                    proposal.description,
+                    proposal.content_hash,
+                    proposal.actions_hash,
                     proposal.proposer,
                     proposal.starts_at,
                     proposal.ends_at,
@@ -134,22 +142,6 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
         let proposal = self.proposals(proposal_id).get();
 
         (proposal.votes_for, proposal.votes_against).into()
-    }
-
-    #[view(getProposalActions)]
-    fn get_proposal_actions_view(&self, proposal_id: u64) -> MultiValueEncoded<ActionAsMultiArg<Self::Api>> {
-        if !self.proposal_exists(proposal_id) {
-            return MultiValueEncoded::new();
-        }
-
-        let actions = self.proposals(proposal_id).get().actions;
-        let mut actions_as_multiarg = MultiValueEncoded::new();
-
-        for action in actions.into_iter() {
-            actions_as_multiarg.push(action.into_multiarg());
-        }
-
-        actions_as_multiarg
     }
 
     #[payable("EGLD")]

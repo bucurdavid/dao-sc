@@ -1,3 +1,4 @@
+use elrond_wasm::elrond_codec::multi_types::OptionalValue;
 use elrond_wasm::types::*;
 use elrond_wasm_debug::*;
 use entity::config::*;
@@ -22,9 +23,9 @@ fn it_redeems_vote_nfts() {
             &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
             |sc| {
                 sc.propose_endpoint(
-                    managed_buffer!(b"my title"),
-                    managed_buffer!(b"my description"),
-                    MultiValueManagedVec::from(Vec::<Action<DebugApi>>::new()),
+                    managed_buffer!(b"content hash"),
+                    managed_buffer!(b"content signature"),
+                    OptionalValue::None,
                 );
             },
         )
@@ -59,9 +60,9 @@ fn it_fails_if_voting_period_has_not_ended() {
             &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
             |sc| {
                 sc.propose_endpoint(
-                    managed_buffer!(b"my title"),
-                    managed_buffer!(b"my description"),
-                    MultiValueManagedVec::from(Vec::<Action<DebugApi>>::new()),
+                    managed_buffer!(b"content hash"),
+                    managed_buffer!(b"content signature"),
+                    OptionalValue::None,
                 );
             },
         )

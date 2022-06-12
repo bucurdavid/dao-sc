@@ -20,11 +20,10 @@ fn it_votes_for_a_proposal() {
             let ends_at = starts_at + voting_period_seconds;
 
             let dummy_proposal = Proposal::<DebugApi> {
-                actions: ManagedVec::from(Vec::<Action<DebugApi>>::new()),
+                actions_hash: managed_buffer!(b""),
                 starts_at,
                 ends_at,
-                title: managed_buffer!(b""),
-                description: managed_buffer!(b""),
+                content_hash: managed_buffer!(b""),
                 id: 0,
                 votes_against: managed_biguint!(0),
                 votes_for: managed_biguint!(0),
@@ -76,11 +75,10 @@ fn it_votes_against_a_proposal() {
             let ends_at = starts_at + voting_period_seconds;
 
             let dummy_proposal = Proposal::<DebugApi> {
-                actions: ManagedVec::from(Vec::<Action<DebugApi>>::new()),
+                actions_hash: managed_buffer!(b""),
                 starts_at,
                 ends_at,
-                title: managed_buffer!(b""),
-                description: managed_buffer!(b""),
+                content_hash: managed_buffer!(b""),
                 id: 0,
                 votes_against: managed_biguint!(0),
                 votes_for: managed_biguint!(0),
@@ -139,11 +137,10 @@ fn it_sends_a_vote_nft_to_the_voter() {
                 let ends_at = starts_at + voting_period_seconds;
 
                 let dummy_proposal = Proposal::<DebugApi> {
-                    actions: ManagedVec::from(Vec::<Action<DebugApi>>::new()),
+                    actions_hash: managed_buffer!(b""),
                     starts_at,
                     ends_at,
-                    title: managed_buffer!(b""),
-                    description: managed_buffer!(b""),
+                    content_hash: managed_buffer!(b""),
                     id: 0,
                     votes_against: managed_biguint!(0),
                     votes_for: managed_biguint!(5),
@@ -193,11 +190,10 @@ fn it_fails_if_proposal_voting_period_has_ended() {
             let ends_at = starts_at + voting_period_seconds;
 
             let dummy_proposal = Proposal::<DebugApi> {
-                actions: ManagedVec::from(Vec::<Action<DebugApi>>::new()),
+                actions_hash: managed_buffer!(b""),
                 starts_at,
                 ends_at,
-                title: managed_buffer!(b""),
-                description: managed_buffer!(b""),
+                content_hash: managed_buffer!(b""),
                 id: 0,
                 votes_against: managed_biguint!(0),
                 votes_for: managed_biguint!(5),
@@ -231,11 +227,10 @@ fn it_fails_if_proposal_is_pending() {
             let ends_at = starts_at + voting_period_seconds;
 
             let dummy_proposal = Proposal::<DebugApi> {
-                actions: ManagedVec::from(Vec::<Action<DebugApi>>::new()),
+                actions_hash: managed_buffer!(b""),
                 starts_at,
                 ends_at,
-                title: managed_buffer!(b""),
-                description: managed_buffer!(b""),
+                content_hash: managed_buffer!(b""),
                 id: 0,
                 votes_against: managed_biguint!(0),
                 votes_for: managed_biguint!(5),
