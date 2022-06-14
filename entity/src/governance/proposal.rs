@@ -8,7 +8,7 @@ pub struct Proposal<M: ManagedTypeApi> {
     pub id: u64,
     pub proposer: ManagedAddress<M>,
     pub content_hash: ManagedBuffer<M>,
-    pub actions_hash :ManagedBuffer<M>,
+    pub actions_hash: ManagedBuffer<M>,
     pub starts_at: u64,
     pub ends_at: u64,
     pub was_executed: bool,
@@ -135,17 +135,16 @@ pub trait ProposalModule: config::ConfigModule {
     }
 
     fn calculate_actions_hash(&self, actions: &ManagedVec<Action<Self::Api>>) -> ManagedBuffer<Self::Api> {
-        if actions.is_empty() {
-            return ManagedBuffer::new();
-        }
-
         let mut serialized = ManagedBuffer::new();
 
         for action in actions.iter() {
-            serialized.append(&sc_format!("{}{}{}{}{}", action.address.as_managed_buffer(), action.amount, action.token_id, action.token_nonce, action.endpoint));
+            let address = action.address.as_managed_buffer();
+            let formatted = sc_format!("{:x}{}{}{}{}", address, action.amount, action.token_id, action.token_nonce, action.endpoint);
 
-            for arg in action.arguments.iter() {
-                serialized.append(&arg);
+            serialized.append(&formatted);
+
+            for arg in action.arguments.into_iter() {
+                serialized.append(&sc_format!("{:x}", arg));
             }
         }
 

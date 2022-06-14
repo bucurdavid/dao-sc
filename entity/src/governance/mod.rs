@@ -86,14 +86,16 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
     #[endpoint(execute)]
     fn execute_endpoint(&self, proposal_id: u64, actions: MultiValueManagedVec<Action<Self::Api>>) {
         self.require_sealed();
+        require!(!actions.is_empty(), "no actions to execute");
         require!(!self.proposals(proposal_id).is_empty(), "proposal not found");
 
         let mut proposal = self.proposals(proposal_id).get();
         let status = self.get_proposal_status(&proposal);
         let actions = actions.into_vec();
+        let actions_hash = self.calculate_actions_hash(&actions);
 
         require!(status == ProposalStatus::Succeeded, "proposal is not executable");
-        require!(proposal.actions_hash == self.calculate_actions_hash(&actions), "actions have been corrupted");
+        require!(proposal.actions_hash == actions_hash, "actions have been corrupted");
 
         self.execute_actions(&actions);
         proposal.was_executed = true;
