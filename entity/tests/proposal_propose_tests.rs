@@ -35,9 +35,9 @@ fn it_creates_a_proposal() {
     setup
         .blockchain
         .execute_query(&setup.contract, |sc| {
-            let proposal = sc.proposals(0).get();
+            let proposal = sc.proposals(1).get();
 
-            assert_eq!(0, proposal.id);
+            assert_eq!(1, proposal.id);
             assert_eq!(managed_address!(&owner_address), proposal.proposer);
             assert_eq!(managed_buffer!(b"content hash"), proposal.content_hash);
             assert_eq!(managed_buffer!(b""), proposal.actions_hash);
@@ -45,7 +45,7 @@ fn it_creates_a_proposal() {
             assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL), proposal.votes_for);
             assert_eq!(managed_biguint!(0), proposal.votes_against);
 
-            assert_eq!(1, sc.next_proposal_id().get());
+            assert_eq!(2, sc.next_proposal_id().get());
         })
         .assert_ok();
 }
@@ -76,7 +76,7 @@ fn it_creates_a_proposal_with_actions() {
     setup
         .blockchain
         .execute_query(&setup.contract, |sc| {
-            let proposal = sc.proposals(0).get();
+            let proposal = sc.proposals(1).get();
 
             assert_eq!(managed_buffer!(b"actions hash"), proposal.actions_hash);
         })
@@ -114,7 +114,7 @@ fn it_sends_a_vote_nft_to_the_voter() {
             1,
             &rust_biguint!(1),
             Some(&VoteNFTAttributes::<DebugApi> {
-                proposal_id: 0,
+                proposal_id: 1,
                 vote_type: VoteType::For,
                 vote_weight: managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
                 voter: managed_address!(&owner_address),

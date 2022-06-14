@@ -24,21 +24,21 @@ fn it_returns_active_for_a_newly_created_proposal() {
                 starts_at,
                 ends_at,
                 content_hash: managed_buffer!(b""),
-                id: 0,
+                id: 1,
                 votes_against: managed_biguint!(0),
                 votes_for: managed_biguint!(0),
                 proposer: managed_address!(&Address::zero()),
                 was_executed: false,
             };
 
-            sc.proposals(0).set(dummy_proposal);
+            sc.proposals(1).set(dummy_proposal);
         })
         .assert_ok();
 
     setup
         .blockchain
         .execute_query(&setup.contract, |sc| {
-            let status = sc.get_proposal_status_view(0);
+            let status = sc.get_proposal_status_view(1);
             assert_eq!(ProposalStatus::Active, status);
         })
         .assert_ok();
@@ -60,14 +60,14 @@ fn it_returns_defeated_if_for_votes_quorum_not_met() {
                 starts_at,
                 ends_at,
                 content_hash: managed_buffer!(b""),
-                id: 0,
+                id: 1,
                 votes_against: managed_biguint!(0),
                 votes_for: sc.quorum().get() - BigUint::from(1u64),
                 proposer: managed_address!(&Address::zero()),
                 was_executed: false,
             };
 
-            sc.proposals(0).set(dummy_proposal);
+            sc.proposals(1).set(dummy_proposal);
         })
         .assert_ok();
 
@@ -76,7 +76,7 @@ fn it_returns_defeated_if_for_votes_quorum_not_met() {
     setup
         .blockchain
         .execute_query(&setup.contract, |sc| {
-            let status = sc.get_proposal_status_view(0);
+            let status = sc.get_proposal_status_view(1);
             assert_eq!(ProposalStatus::Defeated, status);
         })
         .assert_ok();
@@ -98,14 +98,14 @@ fn it_returns_defeated_if_votes_against_is_more_than_for() {
                 starts_at,
                 ends_at,
                 content_hash: managed_buffer!(b""),
-                id: 0,
+                id: 1,
                 votes_against: sc.quorum().get() + BigUint::from(2u64),
                 votes_for: sc.quorum().get() + BigUint::from(1u64),
                 proposer: managed_address!(&Address::zero()),
                 was_executed: false,
             };
 
-            sc.proposals(0).set(dummy_proposal);
+            sc.proposals(1).set(dummy_proposal);
         })
         .assert_ok();
 
@@ -114,7 +114,7 @@ fn it_returns_defeated_if_votes_against_is_more_than_for() {
     setup
         .blockchain
         .execute_query(&setup.contract, |sc| {
-            let status = sc.get_proposal_status_view(0);
+            let status = sc.get_proposal_status_view(1);
             assert_eq!(ProposalStatus::Defeated, status);
         })
         .assert_ok();
@@ -136,14 +136,14 @@ fn it_returns_succeeded_if_for_votes_quorum_met_and_more_for_than_against_votes(
                 starts_at,
                 ends_at,
                 content_hash: managed_buffer!(b""),
-                id: 0,
+                id: 1,
                 votes_against: sc.quorum().get() + BigUint::from(0u64),
                 votes_for: sc.quorum().get() + BigUint::from(5u64),
                 proposer: managed_address!(&Address::zero()),
                 was_executed: false,
             };
 
-            sc.proposals(0).set(dummy_proposal);
+            sc.proposals(1).set(dummy_proposal);
         })
         .assert_ok();
 
@@ -152,7 +152,7 @@ fn it_returns_succeeded_if_for_votes_quorum_met_and_more_for_than_against_votes(
     setup
         .blockchain
         .execute_query(&setup.contract, |sc| {
-            let status = sc.get_proposal_status_view(0);
+            let status = sc.get_proposal_status_view(1);
             assert_eq!(ProposalStatus::Succeeded, status);
         })
         .assert_ok();
@@ -174,14 +174,14 @@ fn it_returns_executed_for_an_executed_proposal() {
                 starts_at,
                 ends_at,
                 content_hash: managed_buffer!(b""),
-                id: 0,
+                id: 1,
                 votes_against: sc.quorum().get() + BigUint::from(0u64),
                 votes_for: sc.quorum().get() + BigUint::from(5u64),
                 proposer: managed_address!(&Address::zero()),
                 was_executed: false,
             };
 
-            sc.proposals(0).set(dummy_proposal);
+            sc.proposals(1).set(dummy_proposal);
         })
         .assert_ok();
 
@@ -190,14 +190,14 @@ fn it_returns_executed_for_an_executed_proposal() {
     setup
         .blockchain
         .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
-            sc.execute_endpoint(0, MultiValueManagedVec::new());
+            sc.execute_endpoint(1, MultiValueManagedVec::new());
         })
         .assert_ok();
 
     setup
         .blockchain
         .execute_query(&setup.contract, |sc| {
-            let status = sc.get_proposal_status_view(0);
+            let status = sc.get_proposal_status_view(1);
             assert_eq!(ProposalStatus::Executed, status);
         })
         .assert_ok();

@@ -1,5 +1,5 @@
 use elrond_wasm::elrond_codec::multi_types::OptionalValue;
-use elrond_wasm::types::*;
+use elrond_wasm::{types::*};
 use elrond_wasm_debug::*;
 use entity::config::*;
 use entity::governance::proposal::*;
@@ -32,7 +32,7 @@ fn it_marks_a_proposal_as_executed() {
                 was_executed: false,
             };
 
-            sc.proposals(0).set(dummy_proposal);
+            sc.proposals(1).set(dummy_proposal);
         })
         .assert_ok();
 
@@ -41,9 +41,9 @@ fn it_marks_a_proposal_as_executed() {
     setup
         .blockchain
         .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
-            sc.execute_endpoint(0, MultiValueManagedVec::new());
+            sc.execute_endpoint(1, MultiValueManagedVec::new());
 
-            let proposal = sc.proposals(0).get();
+            let proposal = sc.proposals(1).get();
             assert_eq!(true, proposal.was_executed);
         })
         .assert_ok();
@@ -73,7 +73,7 @@ fn it_fails_if_attempted_to_execute_again() {
                 was_executed: false,
             };
 
-            sc.proposals(0).set(dummy_proposal);
+            sc.proposals(1).set(dummy_proposal);
         })
         .assert_ok();
 
@@ -82,9 +82,9 @@ fn it_fails_if_attempted_to_execute_again() {
     setup
         .blockchain
         .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
-            sc.execute_endpoint(0, MultiValueManagedVec::new());
+            sc.execute_endpoint(1, MultiValueManagedVec::new());
 
-            sc.execute_endpoint(0, MultiValueManagedVec::new()); // and again
+            sc.execute_endpoint(1, MultiValueManagedVec::new()); // and again
         })
         .assert_user_error("proposal is not executable");
 }
@@ -112,9 +112,9 @@ fn it_fails_if_the_proposal_is_still_active() {
                 was_executed: false,
             };
 
-            sc.proposals(0).set(dummy_proposal);
+            sc.proposals(1).set(dummy_proposal);
 
-            sc.execute_endpoint(0, MultiValueManagedVec::new());
+            sc.execute_endpoint(1, MultiValueManagedVec::new());
         })
         .assert_user_error("proposal is not executable");
 }
@@ -166,7 +166,7 @@ fn it_executes_actions_of_a_proposal() {
                 amount: managed_biguint!(5),
             });
 
-            sc.execute_endpoint(0, MultiValueManagedVec::from(actions));
+            sc.execute_endpoint(1, MultiValueManagedVec::from(actions));
         })
         .assert_ok();
 
@@ -219,7 +219,7 @@ fn it_fails_if_actions_to_execute_are_incongruent_to_actions_proposed() {
                 amount: managed_biguint!(5),
             });
 
-            sc.execute_endpoint(0, MultiValueManagedVec::from(actions));
+            sc.execute_endpoint(1, MultiValueManagedVec::from(actions));
         })
         .assert_user_error("actions have been corrupted");
 }
@@ -264,7 +264,7 @@ fn it_executes_a_contract_call_action() {
                 was_executed: false,
             };
 
-            sc.proposals(0).set(dummy_proposal);
+            sc.proposals(1).set(dummy_proposal);
         })
         .assert_ok();
 
@@ -285,7 +285,7 @@ fn it_executes_a_contract_call_action() {
                 arguments: ManagedVec::from(vec![managed_buffer!(b"arg1"), managed_buffer!(b"arg2")]),
             });
 
-            sc.execute_endpoint(0, MultiValueManagedVec::from(actions));
+            sc.execute_endpoint(1, MultiValueManagedVec::from(actions));
         })
         .assert_ok();
 
@@ -334,7 +334,7 @@ fn it_fails_to_spend_vote_tokens() {
                 was_executed: false,
             };
 
-            sc.proposals(0).set(proposal);
+            sc.proposals(1).set(proposal);
         })
         .assert_ok();
 
@@ -342,7 +342,7 @@ fn it_fails_to_spend_vote_tokens() {
     setup
         .blockchain
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(100), |sc| {
-            sc.vote_for_endpoint(0);
+            sc.vote_for_endpoint(1);
         })
         .assert_ok();
 
@@ -350,7 +350,7 @@ fn it_fails_to_spend_vote_tokens() {
     setup
         .blockchain
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(20), |sc| {
-            sc.vote_against_endpoint(0);
+            sc.vote_against_endpoint(1);
         })
         .assert_ok();
 
@@ -372,7 +372,7 @@ fn it_fails_to_spend_vote_tokens() {
                 arguments: ManagedVec::from(vec![managed_buffer!(b"arg1")]),
             });
 
-            sc.execute_endpoint(0, MultiValueManagedVec::from(actions));
+            sc.execute_endpoint(1, MultiValueManagedVec::from(actions));
         })
         .assert_user_error("not enough governance tokens available");
 }
