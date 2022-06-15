@@ -1,5 +1,6 @@
 elrond_wasm::imports!();
 
+use core::convert::TryFrom;
 use self::{vote::VoteType};
 use crate::config::{self, VOTING_PERIOD_MINUTES_DEFAULT};
 use proposal::{Action, ProposalStatus};
@@ -48,14 +49,10 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
 
     #[payable("*")]
     #[endpoint(propose)]
-    fn propose_endpoint(&self, content_hash: ManagedBuffer, content_signature: ManagedBuffer, opt_action_hash: OptionalValue<ManagedBuffer>) -> u64 {
-        self.require_sealed();
-
-        // if !self.crypto().verify_ed25519_managed(key, content_hash, content_signature) {
-        //     sc_error!("invalid signature");
-        // }
-
+    fn propose_endpoint(&self, content_hash: ManagedBuffer, content_sig: ManagedBuffer, opt_action_hash: OptionalValue<ManagedBuffer>) -> u64 {
+        self.require_called_via_trusted_host(&content_hash, &ManagedByteArray::try_from(content_sig).unwrap());
         self.require_payment_token_governance_token();
+        self.require_sealed();
 
         let proposer = self.blockchain().get_caller();
         let payment = self.call_value().payment();

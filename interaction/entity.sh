@@ -78,6 +78,12 @@ changeVotingPeriodMinutes() {
         --send || return
 }
 
+getTrustedHostAddress() {
+    erdpy contract query $ADDRESS \
+        --function="getTrustedHostAddress" \
+        --proxy=$PROXY || return
+}
+
 getVersion() {
     erdpy contract query $ADDRESS \
         --function="getVersion" \

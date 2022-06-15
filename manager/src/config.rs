@@ -50,6 +50,10 @@ pub trait ConfigModule {
     #[storage_mapper("entity_templ_address")]
     fn entity_templ_address(&self) -> SingleValueMapper<ManagedAddress>;
 
+    #[view(getTrustedHostAddress)]
+    #[storage_mapper("trusted_host_addr")]
+    fn trusted_host_address(&self) -> SingleValueMapper<ManagedAddress>;
+
     #[storage_mapper("cost_token")]
     fn cost_token_id(&self) -> SingleValueMapper<TokenIdentifier>;
 

@@ -1,4 +1,5 @@
 use crate::governance::proposal::Proposal;
+use elrond_wasm::api::{ED25519_SIGNATURE_BYTE_LEN, KECCAK256_RESULT_LEN};
 
 elrond_wasm::imports!();
 
@@ -46,6 +47,15 @@ pub trait ConfigModule {
         require!(amount <= &available, "not enough governance tokens available");
     }
 
+    fn require_called_via_trusted_host(&self, signable: &ManagedBuffer, signature: &ManagedByteArray<Self::Api, ED25519_SIGNATURE_BYTE_LEN>) {
+        require!(!self.trusted_host_address().is_empty(), "trusted host address must be set");
+
+        let trusted_host = self.trusted_host_address().get();
+        let trusted = self.crypto().verify_ed25519_managed::<KECCAK256_RESULT_LEN>(trusted_host.as_managed_byte_array(), &signable, &signature);
+
+        require!(trusted, "not a trusted host");
+    }
+
     fn try_change_governance_token(&self, token_id: TokenIdentifier) {
         require!(token_id.is_valid_esdt_identifier(), "invalid governance token id");
         self.governance_token_id().set(token_id);
@@ -65,6 +75,10 @@ pub trait ConfigModule {
         require!(voting_period != 0, "voting period (in minutes) can not be zero");
         self.voting_period_in_minutes().set(&voting_period);
     }
+
+    #[view(getTrustedHostAddress)]
+    #[storage_mapper("trusted_host_addr")]
+    fn trusted_host_address(&self) -> SingleValueMapper<ManagedAddress>;
 
     #[view(getSealed)]
     #[storage_mapper("sealed")]
