@@ -1,14 +1,16 @@
+use elrond_wasm::elrond_codec::multi_types::OptionalValue;
 use elrond_wasm::types::*;
 use elrond_wasm_debug::*;
 use entity::config::*;
 use entity::governance::proposal::*;
 use entity::governance::*;
+use setup::*;
 
 mod setup;
 
 #[test]
 fn it_returns_active_for_a_newly_created_proposal() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup.blockchain.set_block_timestamp(0);
 
@@ -46,7 +48,7 @@ fn it_returns_active_for_a_newly_created_proposal() {
 
 #[test]
 fn it_returns_defeated_if_for_votes_quorum_not_met() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
 
     setup
@@ -84,7 +86,7 @@ fn it_returns_defeated_if_for_votes_quorum_not_met() {
 
 #[test]
 fn it_returns_defeated_if_votes_against_is_more_than_for() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
 
     setup
@@ -122,7 +124,7 @@ fn it_returns_defeated_if_votes_against_is_more_than_for() {
 
 #[test]
 fn it_returns_succeeded_if_for_votes_quorum_met_and_more_for_than_against_votes() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
 
     setup
@@ -160,44 +162,49 @@ fn it_returns_succeeded_if_for_votes_quorum_met_and_more_for_than_against_votes(
 
 #[test]
 fn it_returns_executed_for_an_executed_proposal() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
+    let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
+    let mut proposal_id = 0;
 
-    setup
-        .blockchain
-        .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
-            let starts_at = 0u64;
-            let ends_at = starts_at + voting_period_seconds;
+    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
+        let mut actions = Vec::<Action<DebugApi>>::new();
+        actions.push(Action::<DebugApi> {
+            address: managed_address!(&action_receiver),
+            endpoint: managed_buffer!(b"myendpoint"),
+            arguments: ManagedVec::new(),
+            gas_limit: 5_000_000u64,
+            token_id: managed_token_id!(b"EGLD"),
+            token_nonce: 0,
+            amount: managed_biguint!(0),
+        });
 
-            let dummy_proposal = Proposal::<DebugApi> {
-                actions_hash: managed_buffer!(b""),
-                starts_at,
-                ends_at,
-                content_hash: managed_buffer!(b""),
-                id: 1,
-                votes_against: sc.quorum().get() + BigUint::from(0u64),
-                votes_for: sc.quorum().get() + BigUint::from(5u64),
-                proposer: managed_address!(&Address::zero()),
-                was_executed: false,
-            };
+        let action_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
 
-            sc.proposals(1).set(dummy_proposal);
-        })
-        .assert_ok();
+        proposal_id = sc.propose_endpoint(managed_buffer!(b""), managed_buffer!(b""), OptionalValue::Some(action_hash));
+    })
+    .assert_ok();
 
     setup.blockchain.set_block_timestamp(voting_period_seconds + 1);
 
-    setup
-        .blockchain
-        .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
-            sc.execute_endpoint(1, MultiValueManagedVec::new());
-        })
-        .assert_ok();
+    setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
+        let mut actions = Vec::<Action<DebugApi>>::new();
+        actions.push(Action::<DebugApi> {
+            address: managed_address!(&action_receiver),
+            endpoint: managed_buffer!(b"myendpoint"),
+            arguments: ManagedVec::new(),
+            gas_limit: 5_000_000u64,
+            token_id: managed_token_id!(b"EGLD"),
+            token_nonce: 0,
+            amount: managed_biguint!(0),
+        });
 
-    setup
-        .blockchain
-        .execute_query(&setup.contract, |sc| {
-            let status = sc.get_proposal_status_view(1);
+        sc.execute_endpoint(proposal_id, MultiValueManagedVec::from(actions));
+    })
+    .assert_ok();
+
+    setup.blockchain.execute_query(&setup.contract, |sc| {
+            let status = sc.get_proposal_status_view(proposal_id);
             assert_eq!(ProposalStatus::Executed, status);
         })
         .assert_ok();

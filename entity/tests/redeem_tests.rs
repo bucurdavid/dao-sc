@@ -10,7 +10,7 @@ mod setup;
 
 #[test]
 fn it_redeems_vote_nfts() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
 
     setup
@@ -48,7 +48,7 @@ fn it_redeems_vote_nfts() {
 
 #[test]
 fn it_fails_if_voting_period_has_not_ended() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup
         .blockchain

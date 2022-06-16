@@ -10,7 +10,7 @@ mod setup;
 
 #[test]
 fn it_votes_for_a_proposal() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
 
     setup
@@ -65,7 +65,7 @@ fn it_votes_for_a_proposal() {
 
 #[test]
 fn it_votes_against_a_proposal() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
 
     setup
@@ -120,7 +120,7 @@ fn it_votes_against_a_proposal() {
 
 #[test]
 fn it_sends_a_vote_nft_to_the_voter() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
     let user_address = setup.user_address.clone();
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
 
@@ -180,7 +180,7 @@ fn it_sends_a_vote_nft_to_the_voter() {
 
 #[test]
 fn it_fails_if_proposal_voting_period_has_ended() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
 
     setup
@@ -217,7 +217,7 @@ fn it_fails_if_proposal_voting_period_has_ended() {
 
 #[test]
 fn it_fails_if_proposal_is_pending() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
 
     setup

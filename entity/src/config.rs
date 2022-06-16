@@ -47,7 +47,7 @@ pub trait ConfigModule {
         require!(amount <= &available, "not enough governance tokens available");
     }
 
-    fn require_called_via_trusted_host(&self, signable: &ManagedBuffer, signature: &ManagedByteArray<Self::Api, ED25519_SIGNATURE_BYTE_LEN>) {
+    fn require_signed_by_trusted_host(&self, signable: &ManagedBuffer, signature: &ManagedByteArray<Self::Api, ED25519_SIGNATURE_BYTE_LEN>) {
         require!(!self.trusted_host_address().is_empty(), "trusted host address must be set");
 
         let trusted_host = self.trusted_host_address().get();

@@ -10,7 +10,7 @@ mod setup;
 
 #[test]
 fn it_creates_a_proposal() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
     let owner_address = setup.owner_address.clone();
 
     setup
@@ -52,7 +52,7 @@ fn it_creates_a_proposal() {
 
 #[test]
 fn it_creates_a_proposal_with_actions() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup
         .blockchain
@@ -85,7 +85,7 @@ fn it_creates_a_proposal_with_actions() {
 
 #[test]
 fn it_sends_a_vote_nft_to_the_voter() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
     let owner_address = setup.owner_address.clone();
 
     setup
@@ -126,7 +126,7 @@ fn it_sends_a_vote_nft_to_the_voter() {
 
 #[test]
 fn it_fails_if_bad_token() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup
         .blockchain
@@ -149,7 +149,7 @@ fn it_fails_if_bad_token() {
 
 #[test]
 fn it_fails_if_bad_vote_weight_amount() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup
         .blockchain
