@@ -2,6 +2,7 @@ elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
 use crate::config;
+use core::convert::TryFrom;
 
 #[derive(TopEncode, TopDecode, TypeAbi)]
 pub struct Proposal<M: ManagedTypeApi> {
@@ -149,6 +150,16 @@ pub trait ProposalModule: config::ConfigModule {
         }
 
         self.crypto().keccak256(&serialized).as_managed_buffer().clone()
+    }
+
+    fn require_proposed_via_trusted_host(&self, content_hash: &ManagedBuffer, content_sig: ManagedBuffer, actions_hash: &ManagedBuffer) {
+        let proposer = self.blockchain().get_caller();
+        let entity_token_id = self.token().get_token_id();
+
+        let trusted_host_signable = sc_format!("{:x}{:x}{:x}{:x}", proposer, entity_token_id, content_hash, actions_hash);
+        let trusted_host_signature = ManagedByteArray::try_from(content_sig).unwrap();
+
+        self.require_signed_by_trusted_host(&trusted_host_signable, &trusted_host_signature);
     }
 
     fn proposal_exists(&self, proposal_id: u64) -> bool {
