@@ -181,7 +181,7 @@ fn it_returns_executed_for_an_executed_proposal() {
 
         let action_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
 
-        proposal_id = sc.propose_endpoint(managed_buffer!(b""), managed_buffer!(b""), OptionalValue::Some(action_hash));
+        proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), OptionalValue::Some(action_hash));
     })
     .assert_ok();
 

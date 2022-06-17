@@ -23,6 +23,7 @@ fn it_creates_a_proposal() {
             &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
             |sc| {
                 sc.propose_endpoint(
+                    managed_buffer!(b"id"),
                     managed_buffer!(b"content hash"),
                     managed_buffer!(b"content signature"),
                     OptionalValue::None,
@@ -64,6 +65,7 @@ fn it_creates_a_proposal_with_actions() {
             &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
             |sc| {
                 sc.propose_endpoint(
+                    managed_buffer!(b"id"),
                     managed_buffer!(b"content hash"),
                     managed_buffer!(b"content signature"),
                     OptionalValue::Some(managed_buffer!(b"actions hash")),
@@ -98,6 +100,7 @@ fn it_sends_a_vote_nft_to_the_voter() {
             &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
             |sc| {
                 sc.propose_endpoint(
+                    managed_buffer!(b"id"),
                     managed_buffer!(b"content hash"),
                     managed_buffer!(b"content signature"),
                     OptionalValue::None,
@@ -138,6 +141,7 @@ fn it_fails_if_bad_token() {
             &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
             |sc| {
                 sc.propose_endpoint(
+                    managed_buffer!(b"id"),
                     managed_buffer!(b""),
                     managed_buffer!(b""),
                     OptionalValue::None,
@@ -161,6 +165,7 @@ fn it_fails_if_bad_vote_weight_amount() {
             &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL - 1),
             |sc| {
                 sc.propose_endpoint(
+                    managed_buffer!(b"id"),
                     managed_buffer!(b""),
                     managed_buffer!(b""),
                     OptionalValue::None,
@@ -168,4 +173,47 @@ fn it_fails_if_bad_vote_weight_amount() {
             },
         )
         .assert_user_error("insufficient vote weight");
+}
+
+#[test]
+fn it_fails_if_trusted_host_db_id_is_already_known() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+
+    setup
+        .blockchain
+        .execute_esdt_transfer(
+            &setup.user_address,
+            &setup.contract,
+            ENTITY_TOKEN_ID,
+            0,
+            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
+            |sc| {
+                sc.propose_endpoint(
+                    managed_buffer!(b"thesame"),
+                    managed_buffer!(b""),
+                    managed_buffer!(b""),
+                    OptionalValue::None,
+                );
+            },
+        )
+        .assert_ok();
+
+    setup
+        .blockchain
+        .execute_esdt_transfer(
+            &setup.user_address,
+            &setup.contract,
+            ENTITY_TOKEN_ID,
+            0,
+            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
+            |sc| {
+                sc.propose_endpoint(
+                    managed_buffer!(b"thesame"),
+                    managed_buffer!(b""),
+                    managed_buffer!(b""),
+                    OptionalValue::None,
+                );
+            },
+        )
+        .assert_user_error("proposal already registered");
 }

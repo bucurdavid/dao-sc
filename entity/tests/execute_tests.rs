@@ -30,7 +30,7 @@ fn it_marks_a_proposal_as_executed() {
 
             let action_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
 
-            proposal_id = sc.propose_endpoint(managed_buffer!(b""), managed_buffer!(b""), OptionalValue::Some(action_hash));
+            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), OptionalValue::Some(action_hash));
         })
         .assert_ok();
 
@@ -78,7 +78,7 @@ fn it_fails_if_attempted_to_execute_again() {
 
         let action_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
 
-        proposal_id = sc.propose_endpoint(managed_buffer!(b""), managed_buffer!(b""), OptionalValue::Some(action_hash));
+        proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), OptionalValue::Some(action_hash));
     })
     .assert_ok();
 
@@ -135,7 +135,7 @@ fn it_fails_if_the_proposal_is_still_active() {
 
         let action_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
 
-        proposal_id = sc.propose_endpoint(managed_buffer!(b""), managed_buffer!(b""), OptionalValue::Some(action_hash));
+        proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), OptionalValue::Some(action_hash));
     })
     .assert_ok();
 
@@ -195,7 +195,7 @@ fn it_executes_actions_of_a_proposal() {
 
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
 
-            sc.propose_endpoint(managed_buffer!(b"a"), managed_buffer!(b"b"), OptionalValue::Some(actions_hash.clone()));
+            sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b"a"), managed_buffer!(b"b"), OptionalValue::Some(actions_hash.clone()));
         })
         .assert_ok();
 
@@ -246,7 +246,7 @@ fn it_fails_if_actions_to_execute_are_incongruent_to_actions_proposed() {
 
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
 
-            sc.propose_endpoint(managed_buffer!(b"a"), managed_buffer!(b"b"), OptionalValue::Some(actions_hash.clone()));
+            sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b"a"), managed_buffer!(b"b"), OptionalValue::Some(actions_hash.clone()));
         })
         .assert_ok();
 
@@ -293,7 +293,7 @@ fn it_executes_a_contract_call_action() {
 
         let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
 
-        sc.propose_endpoint(managed_buffer!(b"a"), managed_buffer!(b"b"), OptionalValue::Some(actions_hash.clone()));
+        sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b"a"), managed_buffer!(b"b"), OptionalValue::Some(actions_hash.clone()));
     })
     .assert_ok();
 
@@ -345,7 +345,7 @@ fn it_fails_to_spend_vote_tokens() {
 
         let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
 
-        proposal_id = sc.propose_endpoint(managed_buffer!(b"a"), managed_buffer!(b"b"), OptionalValue::Some(actions_hash.clone()));
+        proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b"a"), managed_buffer!(b"b"), OptionalValue::Some(actions_hash.clone()));
     })
     .assert_ok();
 
