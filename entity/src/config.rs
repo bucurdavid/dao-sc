@@ -51,7 +51,8 @@ pub trait ConfigModule {
         require!(!self.trusted_host_address().is_empty(), "trusted host address must be set");
 
         let trusted_host = self.trusted_host_address().get();
-        let trusted = self.crypto().verify_ed25519_managed::<KECCAK256_RESULT_LEN>(trusted_host.as_managed_byte_array(), &signable, &signature);
+        let signable_hashed = self.crypto().keccak256(signable).as_managed_buffer().clone();
+        let trusted = self.crypto().verify_ed25519_managed::<KECCAK256_RESULT_LEN>(trusted_host.as_managed_byte_array(), &signable_hashed, &signature);
 
         require!(trusted, "not a trusted host");
     }

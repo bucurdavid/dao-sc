@@ -4,7 +4,6 @@ use core::convert::TryFrom;
 use self::{vote::VoteType};
 use crate::config::{self, VOTING_PERIOD_MINUTES_DEFAULT};
 use proposal::{Action, ProposalStatus};
-use elrond_wasm::api::{ED25519_SIGNATURE_BYTE_LEN};
 
 pub mod events;
 pub mod proposal;
@@ -54,8 +53,8 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
         let proposer = self.blockchain().get_caller();
         let entity_token_id = self.token().get_token_id();
         let actions_hash = opt_actions_hash.into_option().unwrap_or_default();
-        let trusted_host_signable = sc_format!("{:x}{}{}{}", proposer, entity_token_id, content_hash, actions_hash);
-        let trusted_host_signature = ManagedByteArray::<Self::Api, ED25519_SIGNATURE_BYTE_LEN>::try_from(content_sig).unwrap_or_default();
+        let trusted_host_signable = sc_format!("{:x}{:x}{:x}{:x}", proposer, entity_token_id, content_hash, actions_hash);
+        let trusted_host_signature = ManagedByteArray::try_from(content_sig).unwrap();
 
         self.require_signed_by_trusted_host(&trusted_host_signable, &trusted_host_signature);
         self.require_payment_token_governance_token();
