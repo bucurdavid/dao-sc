@@ -6,6 +6,7 @@ MANAGER_ADDRESS=$(erdpy data load --partition $NETWORK_NAME --key=manager--addre
 MANAGER_DEPLOY_TRANSACTION=$(erdpy data load --partition $NETWORK_NAME --key=manager--deploy-transaction)
 PROXY=$(erdpy data load --partition $NETWORK_NAME --key=proxy)
 CHAIN_ID=$(erdpy data load --partition $NETWORK_NAME --key=chain-id)
+TRUSTED_HOST_ADDRESS=$(erdpy data load --partition $NETWORK_NAME --key=trusted-host-address)
 COST_TOKEN_ID=$(erdpy data load --partition $NETWORK_NAME --key=cost-token-id)
 COST_ENTITY_CREATION_AMOUNT=$(erdpy data load --partition $NETWORK_NAME --key=cost-entity-creation-amount)
 
@@ -34,7 +35,7 @@ deploy() {
     sleep 6
 
     erdpy --verbose contract deploy --project manager \
-        --arguments $ENTITY_ADDRESS "str:$COST_TOKEN_ID" $COST_ENTITY_CREATION_AMOUNT \
+        --arguments $ENTITY_ADDRESS $TRUSTED_HOST_ADDRESS "str:$COST_TOKEN_ID" $COST_ENTITY_CREATION_AMOUNT \
         --recall-nonce --gas-limit=80000000 \
         --outfile="deploy-$NETWORK_NAME-manager.interaction.json" \
         --proxy=$PROXY --chain=$CHAIN_ID \
@@ -61,7 +62,7 @@ upgrade() {
     erdpy --verbose contract test manager || return
 
     erdpy --verbose contract upgrade $MANAGER_ADDRESS --project manager \
-        --arguments $ENTITY_ADDRESS "str:$COST_TOKEN_ID" $COST_ENTITY_CREATION_AMOUNT \
+        --arguments $ENTITY_ADDRESS $TRUSTED_HOST_ADDRESS "str:$COST_TOKEN_ID" $COST_ENTITY_CREATION_AMOUNT \
         --recall-nonce --gas-limit=80000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --ledger \
@@ -74,6 +75,7 @@ upgradeEntityTemplate() {
     erdpy --verbose contract test entity || return
 
     erdpy --verbose contract upgrade $ENTITY_ADDRESS --project entity \
+        --arguments $TRUSTED_HOST_ADDRESS \
         --recall-nonce --gas-limit=500000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --ledger \

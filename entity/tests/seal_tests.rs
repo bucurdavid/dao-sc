@@ -7,7 +7,7 @@ mod setup;
 
 #[test]
 fn it_seals_the_entity() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup
         .blockchain

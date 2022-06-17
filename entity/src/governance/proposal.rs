@@ -2,17 +2,17 @@ elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
 use crate::config;
+use core::convert::TryFrom;
 
 #[derive(TopEncode, TopDecode, TypeAbi)]
 pub struct Proposal<M: ManagedTypeApi> {
     pub id: u64,
     pub proposer: ManagedAddress<M>,
-    pub title: ManagedBuffer<M>,
-    pub description: ManagedBuffer<M>,
+    pub content_hash: ManagedBuffer<M>,
+    pub actions_hash: ManagedBuffer<M>,
     pub starts_at: u64,
     pub ends_at: u64,
     pub was_executed: bool,
-    pub actions: ManagedVec<M, Action<M>>,
     pub votes_for: BigUint<M>,
     pub votes_against: BigUint<M>,
 }
@@ -60,9 +60,8 @@ pub enum ProposalStatus {
 pub trait ProposalModule: config::ConfigModule {
     fn create_proposal(
         &self,
-        title: ManagedBuffer,
-        description: ManagedBuffer,
-        actions: ManagedVec<Action<Self::Api>>,
+        content_hash: ManagedBuffer,
+        actions_hash: ManagedBuffer,
         vote_weight: BigUint,
     ) -> Proposal<Self::Api> {
         let proposer = self.blockchain().get_caller();
@@ -76,12 +75,11 @@ pub trait ProposalModule: config::ConfigModule {
         let proposal = Proposal {
             id: proposal_id.clone(),
             proposer: proposer.clone(),
-            title,
-            description,
+            content_hash,
             starts_at,
             ends_at,
             was_executed: false,
-            actions,
+            actions_hash,
             votes_for: vote_weight.clone(),
             votes_against: BigUint::zero(),
         };
@@ -115,10 +113,10 @@ pub trait ProposalModule: config::ConfigModule {
         }
     }
 
-    fn execute_proposal(&self, proposal: &Proposal<Self::Api>) {
+    fn execute_actions(&self, actions: &ManagedVec<Action<Self::Api>>) {
         let gov_token_id = self.governance_token_id().get();
 
-        for action in proposal.actions.iter() {
+        for action in actions.iter() {
             let mut call = self
                 .send()
                 .contract_call::<()>(action.address, action.endpoint)
@@ -135,6 +133,33 @@ pub trait ProposalModule: config::ConfigModule {
 
             call.transfer_execute()
         }
+    }
+
+    fn calculate_actions_hash(&self, actions: &ManagedVec<Action<Self::Api>>) -> ManagedBuffer<Self::Api> {
+        let mut serialized = ManagedBuffer::new();
+
+        for action in actions.iter() {
+            let address = action.address.as_managed_buffer();
+            let formatted = sc_format!("{:x}{}{}{}{}", address, action.amount, action.token_id, action.token_nonce, action.endpoint);
+
+            serialized.append(&formatted);
+
+            for arg in action.arguments.into_iter() {
+                serialized.append(&sc_format!("{:x}", arg));
+            }
+        }
+
+        self.crypto().keccak256(&serialized).as_managed_buffer().clone()
+    }
+
+    fn require_proposed_via_trusted_host(&self, trusted_host_id: &ManagedBuffer, content_hash: &ManagedBuffer, content_sig: ManagedBuffer, actions_hash: &ManagedBuffer) {
+        let proposer = self.blockchain().get_caller();
+        let entity_token_id = self.token().get_token_id();
+
+        let trusted_host_signable = sc_format!("{:x}{:x}{:x}{:x}{:x}", proposer, entity_token_id, trusted_host_id, content_hash, actions_hash);
+        let trusted_host_signature = ManagedByteArray::try_from(content_sig).unwrap();
+
+        self.require_signed_by_trusted_host(&trusted_host_signable, &trusted_host_signature);
     }
 
     fn proposal_exists(&self, proposal_id: u64) -> bool {

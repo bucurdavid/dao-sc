@@ -1,12 +1,13 @@
 use elrond_wasm_debug::*;
 use entity::config::*;
 use entity::governance::*;
+use setup::*;
 
 mod setup;
 
 #[test]
 fn it_changes_min_proposal_vote_weight_on_unsealed_entity() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup
         .blockchain
@@ -22,7 +23,7 @@ fn it_changes_min_proposal_vote_weight_on_unsealed_entity() {
 
 #[test]
 fn it_changes_the_min_proposal_vote_weight_if_entity_is_sealed_but_contract_calls_itself() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup
         .blockchain
@@ -38,7 +39,7 @@ fn it_changes_the_min_proposal_vote_weight_if_entity_is_sealed_but_contract_call
 
 #[test]
 fn it_fails_if_the_entity_is_sealed() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup
         .blockchain

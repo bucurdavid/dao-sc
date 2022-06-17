@@ -17,7 +17,9 @@ pub trait Entity:
     + governance::vote::VoteModule
 {
     #[init]
-    fn init(&self, opt_token: OptionalValue<TokenIdentifier>, opt_initial_tokens: OptionalValue<BigUint>) {
+    fn init(&self, trusted_host_address: ManagedAddress, opt_token: OptionalValue<TokenIdentifier>, opt_initial_tokens: OptionalValue<BigUint>) {
+        self.trusted_host_address().set(&trusted_host_address);
+
         if let (OptionalValue::Some(token_id), OptionalValue::Some(initial_tokens)) = (opt_token, opt_initial_tokens) {
             self.token().set_token_id(&token_id);
             self.init_governance_module(&token_id, &initial_tokens);

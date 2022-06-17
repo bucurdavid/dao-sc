@@ -38,6 +38,7 @@ where
         .execute_tx(&owner_address, &contract, &rust_zero, |sc| {
             sc.init(
                 managed_address!(contract_entity_template.address_ref()),
+                managed_address!(&owner_address),
                 managed_token_id!(COST_TOKEN_ID),
                 managed_biguint!(COST_AMOUNT_ENTITY_CREATION),
             );

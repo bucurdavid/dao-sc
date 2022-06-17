@@ -10,7 +10,7 @@ mod setup;
 
 #[test]
 fn it_votes_for_a_proposal() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
 
     setup
@@ -20,11 +20,10 @@ fn it_votes_for_a_proposal() {
             let ends_at = starts_at + voting_period_seconds;
 
             let dummy_proposal = Proposal::<DebugApi> {
-                actions: ManagedVec::from(Vec::<Action<DebugApi>>::new()),
+                actions_hash: managed_buffer!(b""),
                 starts_at,
                 ends_at,
-                title: managed_buffer!(b""),
-                description: managed_buffer!(b""),
+                content_hash: managed_buffer!(b""),
                 id: 0,
                 votes_against: managed_biguint!(0),
                 votes_for: managed_biguint!(0),
@@ -32,16 +31,16 @@ fn it_votes_for_a_proposal() {
                 was_executed: false,
             };
 
-            sc.proposals(0).set(dummy_proposal);
+            sc.proposals(1).set(dummy_proposal);
         })
         .assert_ok();
 
     setup
         .blockchain
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
-            sc.vote_for_endpoint(0);
+            sc.vote_for_endpoint(1);
 
-            let proposal = sc.proposals(0).get();
+            let proposal = sc.proposals(1).get();
 
             assert_eq!(managed_biguint!(25), proposal.votes_for);
             assert_eq!(managed_biguint!(0), proposal.votes_against);
@@ -53,9 +52,9 @@ fn it_votes_for_a_proposal() {
     setup
         .blockchain
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
-            sc.vote_for_endpoint(0);
+            sc.vote_for_endpoint(1);
 
-            let proposal = sc.proposals(0).get();
+            let proposal = sc.proposals(1).get();
 
             assert_eq!(managed_biguint!(50), proposal.votes_for);
             assert_eq!(managed_biguint!(0), proposal.votes_against);
@@ -66,7 +65,7 @@ fn it_votes_for_a_proposal() {
 
 #[test]
 fn it_votes_against_a_proposal() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
 
     setup
@@ -76,11 +75,10 @@ fn it_votes_against_a_proposal() {
             let ends_at = starts_at + voting_period_seconds;
 
             let dummy_proposal = Proposal::<DebugApi> {
-                actions: ManagedVec::from(Vec::<Action<DebugApi>>::new()),
+                actions_hash: managed_buffer!(b""),
                 starts_at,
                 ends_at,
-                title: managed_buffer!(b""),
-                description: managed_buffer!(b""),
+                content_hash: managed_buffer!(b""),
                 id: 0,
                 votes_against: managed_biguint!(0),
                 votes_for: managed_biguint!(0),
@@ -88,16 +86,16 @@ fn it_votes_against_a_proposal() {
                 was_executed: false,
             };
 
-            sc.proposals(0).set(dummy_proposal);
+            sc.proposals(1).set(dummy_proposal);
         })
         .assert_ok();
 
     setup
         .blockchain
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
-            sc.vote_against_endpoint(0);
+            sc.vote_against_endpoint(1);
 
-            let proposal = sc.proposals(0).get();
+            let proposal = sc.proposals(1).get();
 
             assert_eq!(managed_biguint!(0), proposal.votes_for);
             assert_eq!(managed_biguint!(25), proposal.votes_against);
@@ -109,9 +107,9 @@ fn it_votes_against_a_proposal() {
     setup
         .blockchain
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
-            sc.vote_against_endpoint(0);
+            sc.vote_against_endpoint(1);
 
-            let proposal = sc.proposals(0).get();
+            let proposal = sc.proposals(1).get();
 
             assert_eq!(managed_biguint!(0), proposal.votes_for);
             assert_eq!(managed_biguint!(50), proposal.votes_against);
@@ -122,7 +120,7 @@ fn it_votes_against_a_proposal() {
 
 #[test]
 fn it_sends_a_vote_nft_to_the_voter() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
     let user_address = setup.user_address.clone();
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
 
@@ -139,19 +137,18 @@ fn it_sends_a_vote_nft_to_the_voter() {
                 let ends_at = starts_at + voting_period_seconds;
 
                 let dummy_proposal = Proposal::<DebugApi> {
-                    actions: ManagedVec::from(Vec::<Action<DebugApi>>::new()),
+                    actions_hash: managed_buffer!(b""),
                     starts_at,
                     ends_at,
-                    title: managed_buffer!(b""),
-                    description: managed_buffer!(b""),
-                    id: 0,
+                    content_hash: managed_buffer!(b""),
+                    id: 1,
                     votes_against: managed_biguint!(0),
                     votes_for: managed_biguint!(5),
                     proposer: managed_address!(&Address::zero()),
                     was_executed: false,
                 };
 
-                sc.proposals(0).set(dummy_proposal);
+                sc.proposals(1).set(dummy_proposal);
             },
         )
         .assert_ok();
@@ -159,7 +156,7 @@ fn it_sends_a_vote_nft_to_the_voter() {
     setup
         .blockchain
         .execute_esdt_transfer(&setup.user_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
-            sc.vote_for_endpoint(0);
+            sc.vote_for_endpoint(1);
         })
         .assert_ok();
 
@@ -171,7 +168,7 @@ fn it_sends_a_vote_nft_to_the_voter() {
             1,
             &rust_biguint!(1),
             Some(&VoteNFTAttributes::<DebugApi> {
-                proposal_id: 0,
+                proposal_id: 1,
                 vote_type: VoteType::For,
                 vote_weight: managed_biguint!(25),
                 voter: managed_address!(&user_address),
@@ -183,7 +180,7 @@ fn it_sends_a_vote_nft_to_the_voter() {
 
 #[test]
 fn it_fails_if_proposal_voting_period_has_ended() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
 
     setup
@@ -193,11 +190,10 @@ fn it_fails_if_proposal_voting_period_has_ended() {
             let ends_at = starts_at + voting_period_seconds;
 
             let dummy_proposal = Proposal::<DebugApi> {
-                actions: ManagedVec::from(Vec::<Action<DebugApi>>::new()),
+                actions_hash: managed_buffer!(b""),
                 starts_at,
                 ends_at,
-                title: managed_buffer!(b""),
-                description: managed_buffer!(b""),
+                content_hash: managed_buffer!(b""),
                 id: 0,
                 votes_against: managed_biguint!(0),
                 votes_for: managed_biguint!(5),
@@ -205,7 +201,7 @@ fn it_fails_if_proposal_voting_period_has_ended() {
                 was_executed: false,
             };
 
-            sc.proposals(0).set(dummy_proposal);
+            sc.proposals(1).set(dummy_proposal);
         })
         .assert_ok();
 
@@ -214,14 +210,14 @@ fn it_fails_if_proposal_voting_period_has_ended() {
     setup
         .blockchain
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
-            sc.vote_against_endpoint(0);
+            sc.vote_against_endpoint(1);
         })
         .assert_user_error("proposal is not active");
 }
 
 #[test]
 fn it_fails_if_proposal_is_pending() {
-    let mut setup = setup::setup_entity(entity::contract_obj);
+    let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
 
     setup
@@ -231,11 +227,10 @@ fn it_fails_if_proposal_is_pending() {
             let ends_at = starts_at + voting_period_seconds;
 
             let dummy_proposal = Proposal::<DebugApi> {
-                actions: ManagedVec::from(Vec::<Action<DebugApi>>::new()),
+                actions_hash: managed_buffer!(b""),
                 starts_at,
                 ends_at,
-                title: managed_buffer!(b""),
-                description: managed_buffer!(b""),
+                content_hash: managed_buffer!(b""),
                 id: 0,
                 votes_against: managed_biguint!(0),
                 votes_for: managed_biguint!(5),
@@ -243,14 +238,14 @@ fn it_fails_if_proposal_is_pending() {
                 was_executed: false,
             };
 
-            sc.proposals(0).set(dummy_proposal);
+            sc.proposals(1).set(dummy_proposal);
         })
         .assert_ok();
 
     setup
         .blockchain
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
-            sc.vote_against_endpoint(0);
+            sc.vote_against_endpoint(1);
         })
         .assert_user_error("proposal is not active");
 }
