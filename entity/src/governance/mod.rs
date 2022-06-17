@@ -48,23 +48,23 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
 
     #[payable("*")]
     #[endpoint(propose)]
-    fn propose_endpoint(&self, trusted_host_db_id: ManagedBuffer, content_hash: ManagedBuffer, content_sig: ManagedBuffer, opt_actions_hash: OptionalValue<ManagedBuffer>) -> u64 {
+    fn propose_endpoint(&self, trusted_host_id: ManagedBuffer, content_hash: ManagedBuffer, content_sig: ManagedBuffer, opt_actions_hash: OptionalValue<ManagedBuffer>) -> u64 {
         let payment = self.call_value().payment();
         let proposer = self.blockchain().get_caller();
         let actions_hash = opt_actions_hash.into_option().unwrap_or_default();
 
-        self.require_proposed_via_trusted_host(&trusted_host_db_id, &content_hash, content_sig, &actions_hash);
+        self.require_proposed_via_trusted_host(&trusted_host_id, &content_hash, content_sig, &actions_hash);
         self.require_payment_token_governance_token();
         self.require_sealed();
 
-        require!(!self.known_trusted_host_proposal_db_ids().contains(&trusted_host_db_id), "proposal already registered");
+        require!(!self.known_trusted_host_proposal_ids().contains(&trusted_host_id), "proposal already registered");
 
         let vote_weight = payment.amount.clone();
         let proposal = self.create_proposal(content_hash, actions_hash, vote_weight.clone());
         let proposal_id = proposal.id;
 
         self.protected_vote_tokens().update(|current| *current += &payment.amount);
-        self.known_trusted_host_proposal_db_ids().insert(trusted_host_db_id);
+        self.known_trusted_host_proposal_ids().insert(trusted_host_id);
         self.create_vote_nft_and_send(&proposer, proposal.id, VoteType::For, vote_weight.clone(), payment.clone());
         self.emit_propose_event(proposal, payment, vote_weight);
 

@@ -176,7 +176,7 @@ fn it_fails_if_bad_vote_weight_amount() {
 }
 
 #[test]
-fn it_fails_if_trusted_host_db_id_is_already_known() {
+fn it_fails_if_trusted_host_id_is_already_known() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup

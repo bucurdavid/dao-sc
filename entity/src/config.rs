@@ -100,8 +100,8 @@ pub trait ConfigModule {
     #[storage_mapper("proposals")]
     fn proposals(&self, id: u64) -> SingleValueMapper<Proposal<Self::Api>>;
 
-    #[storage_mapper("known_th_proposals_db_ids")]
-    fn known_trusted_host_proposal_db_ids(&self) -> UnorderedSetMapper<ManagedBuffer<Self::Api>>;
+    #[storage_mapper("known_th_proposals_ids")]
+    fn known_trusted_host_proposal_ids(&self) -> UnorderedSetMapper<ManagedBuffer<Self::Api>>;
 
     #[view(getProposalIdCounter)]
     #[storage_mapper("proposals_id_counter")]

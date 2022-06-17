@@ -152,11 +152,11 @@ pub trait ProposalModule: config::ConfigModule {
         self.crypto().keccak256(&serialized).as_managed_buffer().clone()
     }
 
-    fn require_proposed_via_trusted_host(&self, trusted_host_db_id: &ManagedBuffer, content_hash: &ManagedBuffer, content_sig: ManagedBuffer, actions_hash: &ManagedBuffer) {
+    fn require_proposed_via_trusted_host(&self, trusted_host_id: &ManagedBuffer, content_hash: &ManagedBuffer, content_sig: ManagedBuffer, actions_hash: &ManagedBuffer) {
         let proposer = self.blockchain().get_caller();
         let entity_token_id = self.token().get_token_id();
 
-        let trusted_host_signable = sc_format!("{:x}{:x}{:x}{:x}{:x}", proposer, entity_token_id, trusted_host_db_id, content_hash, actions_hash);
+        let trusted_host_signable = sc_format!("{:x}{:x}{:x}{:x}{:x}", proposer, entity_token_id, trusted_host_id, content_hash, actions_hash);
         let trusted_host_signature = ManagedByteArray::try_from(content_sig).unwrap();
 
         self.require_signed_by_trusted_host(&trusted_host_signable, &trusted_host_signature);
