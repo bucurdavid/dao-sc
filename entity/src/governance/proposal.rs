@@ -2,6 +2,7 @@ elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
 use crate::config;
+use crate::permission;
 use core::convert::TryFrom;
 
 #[derive(TopEncode, TopDecode, TypeAbi)]
@@ -57,7 +58,7 @@ pub enum ProposalStatus {
 }
 
 #[elrond_wasm::module]
-pub trait ProposalModule: config::ConfigModule {
+pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
     fn create_proposal(
         &self,
         content_hash: ManagedBuffer,
@@ -150,6 +151,33 @@ pub trait ProposalModule: config::ConfigModule {
         }
 
         self.crypto().keccak256(&serialized).as_managed_buffer().clone()
+    }
+
+    fn can_execute_actions(&self, actions: &ManagedVec<Action<Self::Api>>) -> bool {
+        let caller = self.blockchain().get_caller();
+        let user_id = self.users().get_user_id(&caller);
+        let user_roles = self.user_roles(user_id);
+
+        for role in user_roles.iter() {
+            for (permission_name, _) in self.policies(&role).iter()  {
+                let permission_details = self.permission_details(&permission_name).get();
+
+                let denied = actions.into_iter()
+                    .map(|action| action.address == permission_details.destination && action.endpoint == permission_details.endpoint)
+                    .find(|permitted| permitted == &false)
+                    .is_some();
+
+                if denied {
+                    return false;
+                }
+            }
+        }
+
+        true
+    }
+
+    fn require_can_execute_actions(&self, actions: &ManagedVec<Action<Self::Api>>) {
+        require!(self.can_execute_actions(actions), "not allowed");
     }
 
     fn require_proposed_via_trusted_host(&self, trusted_host_id: &ManagedBuffer, content_hash: &ManagedBuffer, content_sig: ManagedBuffer, actions_hash: &ManagedBuffer) {

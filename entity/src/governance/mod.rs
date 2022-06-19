@@ -2,6 +2,7 @@ elrond_wasm::imports!();
 
 use self::{vote::VoteType};
 use crate::config::{self, VOTING_PERIOD_MINUTES_DEFAULT};
+use crate::permission;
 use proposal::{Action, ProposalStatus};
 
 pub mod events;
@@ -9,12 +10,12 @@ pub mod proposal;
 pub mod vote;
 
 #[elrond_wasm::module]
-pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + proposal::ProposalModule + vote::VoteModule {
+pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule + events::GovEventsModule + proposal::ProposalModule + vote::VoteModule {
     fn init_governance_module(&self, gov_token_id: &TokenIdentifier, initial_tokens: &BigUint) {
         let initial_quorum = initial_tokens / &BigUint::from(20u64); // 5% of initial tokens
         let initial_min_tokens_for_proposing = initial_tokens / &BigUint::from(1000u64); // 0.1% of initial tokens
 
-        self.next_proposal_id().set(1);
+        self.next_proposal_id().set_if_empty(1);
 
         self.try_change_governance_token(gov_token_id.clone());
         self.try_change_quorum(BigUint::from(initial_quorum));
@@ -85,9 +86,9 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
 
     #[endpoint(execute)]
     fn execute_endpoint(&self, proposal_id: u64, actions: MultiValueManagedVec<Action<Self::Api>>) {
-        self.require_sealed();
         require!(!actions.is_empty(), "no actions to execute");
         require!(!self.proposals(proposal_id).is_empty(), "proposal not found");
+        self.require_sealed();
 
         let mut proposal = self.proposals(proposal_id).get();
         let status = self.get_proposal_status(&proposal);
@@ -96,6 +97,7 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
 
         require!(status == ProposalStatus::Succeeded, "proposal is not executable");
         require!(proposal.actions_hash == actions_hash, "actions have been corrupted");
+        self.require_can_execute_actions(&actions);
 
         self.execute_actions(&actions);
         proposal.was_executed = true;

@@ -77,6 +77,9 @@ pub trait ConfigModule {
         self.voting_period_in_minutes().set(&voting_period);
     }
 
+    #[storage_mapper("users")]
+    fn users(&self) -> UserMapper;
+
     #[view(getTrustedHostAddress)]
     #[storage_mapper("trusted_host_addr")]
     fn trusted_host_address(&self) -> SingleValueMapper<ManagedAddress>;

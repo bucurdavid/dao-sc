@@ -5,6 +5,7 @@ use super::events;
 use super::proposal;
 use super::proposal::ProposalStatus;
 use crate::config;
+use crate::permission;
 
 #[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug, Clone)]
 pub enum VoteType {
@@ -22,7 +23,7 @@ pub struct VoteNFTAttributes<M: ManagedTypeApi> {
 }
 
 #[elrond_wasm::module]
-pub trait VoteModule: config::ConfigModule + proposal::ProposalModule + events::GovEventsModule {
+pub trait VoteModule: config::ConfigModule + permission::PermissionModule + proposal::ProposalModule + events::GovEventsModule {
     fn vote(&self, proposal_id: u64, vote_type: VoteType) {
         self.require_sealed();
         self.require_payment_token_governance_token();

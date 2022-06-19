@@ -1,20 +1,10 @@
 NETWORK_NAME="devnet" # devnet, testnet, mainnet
-ADDRESS="erd1qqqqqqqqqqqqqpgqk0g30cz0dkn3mgr62arnc0khym96u6h827rs0hqp70"
-TOKEN_ID="ALPHA-0ca233"
+ADDRESS="erd1qqqqqqqqqqqqqpgqzs3wrfn6m9tcw2tfl4vdmzyyf2tny6re27rsf62gzl"
+TOKEN_ID="MYDAO-bbbab9"
 
 PROXY=$(erdpy data load --partition $NETWORK_NAME --key=proxy)
 CHAIN_ID=$(erdpy data load --partition $NETWORK_NAME --key=chain-id)
 COST_TOKEN_ID=$(erdpy data load --partition $NETWORK_NAME --key=cost-token-id)
-
-setFeatures() {
-    erdpy contract call $ADDRESS \
-        --function="setFeatures" \
-        --arguments "str:feat1" "str:true" "str:feat2" "str:true" \
-        --recall-nonce --gas-limit=10000000 \
-        --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
-        --send || return
-}
 
 # params:
 #   $1 = content hash
@@ -90,15 +80,62 @@ getVersion() {
         --proxy=$PROXY || return
 }
 
-getFeatures() {
-    erdpy contract query $ADDRESS \
-        --function="getFeatures" \
-        --proxy=$PROXY || return
-}
-
 getTokenId() {
     erdpy contract query $ADDRESS \
         --function="getTokenId" \
+        --proxy=$PROXY || return
+}
+
+# params:
+#   $1 = role name
+createRole() {
+    erdpy contract call $ADDRESS \
+        --function="createRole" \
+        --arguments "str:$1" \
+        --recall-nonce --gas-limit=20000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+getRoles() {
+    erdpy contract query $ADDRESS \
+        --function="getRoles" \
+        --proxy=$PROXY || return
+}
+
+# params:
+#   $1 = permission name
+#   $2 = destination address
+#   $3 = sc endpoint
+createPermission() {
+    erdpy contract call $ADDRESS \
+        --function="createPermission" \
+        --arguments "str:$1" $2 "str:$3" \
+        --recall-nonce --gas-limit=20000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+getPermissions() {
+    erdpy contract query $ADDRESS \
+        --function="getPermissions" \
+        --proxy=$PROXY || return
+}
+
+getPolicies() {
+    erdpy contract query $ADDRESS \
+        --function="getPolicies" \
+        --proxy=$PROXY || return
+}
+
+# params:
+#   $1 = user id
+getUserRoles() {
+    erdpy contract query $ADDRESS \
+        --function="getUserRoles" \
+        --arguments $1 \
         --proxy=$PROXY || return
 }
 
@@ -126,15 +163,15 @@ getQuorum() {
         --proxy=$PROXY || return
 }
 
-getMinTokensForProposing() {
+getMinProposalVoteWeight() {
     erdpy contract query $ADDRESS \
-        --function="getMinTokensForProposing" \
+        --function="getMinProposalVoteWeight" \
         --proxy=$PROXY || return
 }
 
-getVotingPeriodInMinutes() {
+getVotingPeriodMinutes() {
     erdpy contract query $ADDRESS \
-        --function="getVotingPeriodInMinutes" \
+        --function="getVotingPeriodMinutes" \
         --proxy=$PROXY || return
 }
 
@@ -172,14 +209,5 @@ getProposalAddressVotes() {
     erdpy contract query $ADDRESS \
         --function="getProposalAddressVotes" \
         --arguments $1 $2 \
-        --proxy=$PROXY || return
-}
-
-# params:
-#   $1 = proposal id
-getProposalActions() {
-    erdpy contract query $ADDRESS \
-        --function="getProposalActions" \
-        --arguments $1 \
         --proxy=$PROXY || return
 }
