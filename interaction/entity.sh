@@ -22,6 +22,18 @@ propose() {
 
 # params:
 #   $1 = proposal id
+sign() {
+    erdpy contract call $ADDRESS \
+        --function="sign" \
+        --arguments $1 \
+        --recall-nonce --gas-limit=10000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+# params:
+#   $1 = proposal id
 execute() {
     erdpy contract call $ADDRESS \
         --function="execute" \
@@ -131,6 +143,46 @@ getPolicies() {
 }
 
 # params:
+#   $1 = user address
+#   $2 = role name
+assignRole() {
+    erdpy contract call $ADDRESS \
+        --function="assignRole" \
+        --arguments $1 "str:$2" \
+        --recall-nonce --gas-limit=20000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+# params:
+#   $1 = role name
+#   $2 = permission name
+createPolicyForOne() {
+    erdpy contract call $ADDRESS \
+        --function="createPolicyForOne" \
+        --arguments "str:$1" "str:$2" \
+        --recall-nonce --gas-limit=20000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+# params:
+#   $1 = role name
+#   $2 = permission name
+#   $3 = quorum
+createPolicyQuorum() {
+    erdpy contract call $ADDRESS \
+        --function="createPolicyQuorum" \
+        --arguments "str:$1" "str:$2" $3 \
+        --recall-nonce --gas-limit=20000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+# params:
 #   $1 = user id
 getUserRoles() {
     erdpy contract query $ADDRESS \
@@ -198,6 +250,15 @@ getProposalStatus() {
 getProposalVotes() {
     erdpy contract query $ADDRESS \
         --function="getProposalVotes" \
+        --arguments $1 \
+        --proxy=$PROXY || return
+}
+
+# params:
+#   $1 = proposal id
+getProposalSigners() {
+    erdpy contract query $ADDRESS \
+        --function="getProposalSigners" \
         --arguments $1 \
         --proxy=$PROXY || return
 }

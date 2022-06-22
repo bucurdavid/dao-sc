@@ -1,9 +1,9 @@
-use elrond_wasm::elrond_codec::multi_types::OptionalValue;
 use elrond_wasm::{types::*};
 use elrond_wasm_debug::*;
 use entity::config::*;
 use entity::governance::proposal::*;
 use entity::governance::*;
+use entity::permission::{ROLE_BUILTIN_LEADER, PermissionModule};
 use setup::*;
 
 mod setup;
@@ -11,11 +11,15 @@ mod setup;
 #[test]
 fn it_marks_a_proposal_as_executed() {
     let mut setup = EntitySetup::new(entity::contract_obj);
-    let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
+    let proposer_address = &setup.owner_address;
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
 
-    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
+    setup.blockchain.execute_tx(&proposer_address, &setup.contract, &rust_biguint!(0), |sc| {
+        sc.assign_role_endpoint(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+    }).assert_ok();
+
+    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
             let mut actions = Vec::<Action<DebugApi>>::new();
 
             actions.push(Action::<DebugApi> {
@@ -28,13 +32,14 @@ fn it_marks_a_proposal_as_executed() {
                 amount: managed_biguint!(0),
             });
 
-            let action_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
+            let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
+            let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"any")]);
 
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), OptionalValue::Some(action_hash));
+            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
         })
         .assert_ok();
 
-    setup.blockchain.set_block_timestamp(voting_period_seconds + 1);
+    setup.blockchain.set_block_timestamp(VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60 + 1);
 
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
             let mut actions = Vec::<Action<DebugApi>>::new();
@@ -60,8 +65,13 @@ fn it_marks_a_proposal_as_executed() {
 fn it_fails_if_attempted_to_execute_again() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
+    let proposer_address = &setup.owner_address;
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
+
+    setup.blockchain.execute_tx(&proposer_address, &setup.contract, &rust_biguint!(0), |sc| {
+        sc.assign_role_endpoint(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+    }).assert_ok();
 
     setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
@@ -76,9 +86,10 @@ fn it_fails_if_attempted_to_execute_again() {
             amount: managed_biguint!(0),
         });
 
-        let action_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
+        let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
+        let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"any")]);
 
-        proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), OptionalValue::Some(action_hash));
+        proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
     })
     .assert_ok();
 
@@ -117,8 +128,13 @@ fn it_fails_if_attempted_to_execute_again() {
 #[test]
 fn it_fails_if_the_proposal_is_still_active() {
     let mut setup = EntitySetup::new(entity::contract_obj);
+    let proposer_address = &setup.owner_address;
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
+
+    setup.blockchain.execute_tx(&proposer_address, &setup.contract, &rust_biguint!(0), |sc| {
+        sc.assign_role_endpoint(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+    }).assert_ok();
 
     setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
@@ -133,9 +149,10 @@ fn it_fails_if_the_proposal_is_still_active() {
             amount: managed_biguint!(0),
         });
 
-        let action_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
+        let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
+        let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"any")]);
 
-        proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), OptionalValue::Some(action_hash));
+        proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
     })
     .assert_ok();
 
@@ -174,9 +191,14 @@ fn it_fails_if_the_proposal_is_still_active() {
 fn it_executes_actions_of_a_proposal() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
+    let proposer_address = &setup.owner_address;
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
 
     setup.blockchain.set_egld_balance(setup.contract.address_ref(), &rust_biguint!(1000));
+
+    setup.blockchain.execute_tx(&proposer_address, &setup.contract, &rust_biguint!(0), |sc| {
+        sc.assign_role_endpoint(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+    }).assert_ok();
 
     setup
         .blockchain
@@ -194,8 +216,9 @@ fn it_executes_actions_of_a_proposal() {
             });
 
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
+            let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"any")]);
 
-            sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b"a"), managed_buffer!(b"b"), OptionalValue::Some(actions_hash.clone()));
+            sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b"a"), managed_buffer!(b"b"), actions_hash, actions_permissions);
         })
         .assert_ok();
 
@@ -227,9 +250,14 @@ fn it_executes_actions_of_a_proposal() {
 fn it_fails_if_actions_to_execute_are_incongruent_to_actions_proposed() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
+    let proposer_address = &setup.owner_address;
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
 
     setup.blockchain.set_egld_balance(setup.contract.address_ref(), &rust_biguint!(1000));
+
+    setup.blockchain.execute_tx(&proposer_address, &setup.contract, &rust_biguint!(0), |sc| {
+        sc.assign_role_endpoint(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+    }).assert_ok();
 
     setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(ENTITY_TOKEN_SUPPLY), |sc| {
             let mut actions = Vec::<Action<DebugApi>>::new();
@@ -245,8 +273,9 @@ fn it_fails_if_actions_to_execute_are_incongruent_to_actions_proposed() {
             });
 
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
+            let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"any")]);
 
-            sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b"a"), managed_buffer!(b"b"), OptionalValue::Some(actions_hash.clone()));
+            sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b"a"), managed_buffer!(b"b"), actions_hash, actions_permissions);
         })
         .assert_ok();
 
@@ -274,9 +303,14 @@ fn it_fails_if_actions_to_execute_are_incongruent_to_actions_proposed() {
 fn it_executes_a_contract_call_action() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
+    let proposer_address = &setup.owner_address;
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
 
     setup.blockchain.set_esdt_balance(setup.contract.address_ref(), b"ACTION-123456", &rust_biguint!(1000));
+
+    setup.blockchain.execute_tx(&proposer_address, &setup.contract, &rust_biguint!(0), |sc| {
+        sc.assign_role_endpoint(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+    }).assert_ok();
 
     setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(ENTITY_TOKEN_SUPPLY), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
@@ -292,8 +326,9 @@ fn it_executes_a_contract_call_action() {
         });
 
         let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
+        let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"any")]);
 
-        sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b"a"), managed_buffer!(b"b"), OptionalValue::Some(actions_hash.clone()));
+        sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b"a"), managed_buffer!(b"b"), actions_hash, actions_permissions);
     })
     .assert_ok();
 
@@ -323,11 +358,16 @@ fn it_executes_a_contract_call_action() {
 fn it_fails_to_spend_vote_tokens() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
+    let proposer_address = &setup.owner_address;
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
 
     // set available balance to 5
     setup.blockchain.set_esdt_balance(setup.contract.address_ref(), ENTITY_TOKEN_ID, &rust_biguint!(5));
+
+    setup.blockchain.execute_tx(&proposer_address, &setup.contract, &rust_biguint!(0), |sc| {
+        sc.assign_role_endpoint(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+    }).assert_ok();
 
     // but try to spend 6 with a proposal action
     setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
@@ -344,8 +384,9 @@ fn it_fails_to_spend_vote_tokens() {
         });
 
         let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
+        let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"any")]);
 
-        proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b"a"), managed_buffer!(b"b"), OptionalValue::Some(actions_hash.clone()));
+        proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b"a"), managed_buffer!(b"b"), actions_hash, actions_permissions);
     })
     .assert_ok();
 

@@ -1,8 +1,11 @@
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
+use elrond_wasm::api::KECCAK256_RESULT_LEN;
+
 use crate::config;
 use crate::permission;
+use crate::permission::{Policy, PolicyMethod, ROLE_BUILTIN_LEADER};
 use core::convert::TryFrom;
 
 #[derive(TopEncode, TopDecode, TypeAbi)]
@@ -16,6 +19,8 @@ pub struct Proposal<M: ManagedTypeApi> {
     pub was_executed: bool,
     pub votes_for: BigUint<M>,
     pub votes_against: BigUint<M>,
+    pub signers: ManagedVec<M, usize>,
+    pub permissions: ManagedVec<M, ManagedBuffer<M>>,
 }
 
 #[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, TypeAbi, ManagedVecItem)]
@@ -64,14 +69,27 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         content_hash: ManagedBuffer,
         actions_hash: ManagedBuffer,
         vote_weight: BigUint,
+        permissions: ManagedVec<ManagedBuffer>,
+        policies: ManagedVec<Policy<Self::Api>>,
     ) -> Proposal<Self::Api> {
         let proposer = self.blockchain().get_caller();
         let proposal_id = self.next_proposal_id().get();
-        let starts_at = self.blockchain().get_block_timestamp();
-        let voting_period_minutes = self.voting_period_in_minutes().get() as u64;
-        let ends_at = starts_at + voting_period_minutes * 60;
 
-        require!(vote_weight >= self.min_proposal_vote_weight().get(), "insufficient vote weight");
+        let voting_period_minutes = policies.iter()
+            .map(|p| p.voting_period_minutes)
+            .max()
+            .unwrap_or_else(|| self.voting_period_in_minutes().get());
+
+        let starts_at = self.blockchain().get_block_timestamp();
+        let ends_at = starts_at + voting_period_minutes as u64 * 60;
+
+        let is_token_weighted = policies.is_empty() || policies.iter()
+            .find(|p| p.method == PolicyMethod::Weight)
+            .is_some();
+
+        if is_token_weighted {
+            require!(vote_weight >= self.min_proposal_vote_weight().get(), "insufficient vote weight");
+        }
 
         let proposal = Proposal {
             id: proposal_id.clone(),
@@ -83,6 +101,8 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
             actions_hash,
             votes_for: vote_weight.clone(),
             votes_against: BigUint::zero(),
+            signers: ManagedVec::new(),
+            permissions,
         };
 
         self.proposals(proposal_id.clone()).set(&proposal);
@@ -102,12 +122,45 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
             return ProposalStatus::Active;
         }
 
-        let quorum = self.quorum().get();
-        let total_votes = &proposal.votes_for + &proposal.votes_against;
-        let vote_for_percent = &proposal.votes_for * &BigUint::from(100u64) / &total_votes;
-        let vote_for_percent_to_pass = BigUint::from(50u64);
+        let proposer_id = self.users().get_user_id(&proposal.proposer);
+        let global_quorum = self.quorum().get();
+        let global_voting_period_minutes = self.voting_period_in_minutes().get();
 
-        if vote_for_percent >= vote_for_percent_to_pass && &proposal.votes_for >= &quorum {
+        if proposer_id == 0 || proposal.permissions.len() < 1 {
+            return match self.has_sufficient_votes(&proposal, &global_quorum) {
+                true => ProposalStatus::Succeeded,
+                false => ProposalStatus::Defeated,
+            };
+        }
+
+        let mut fulfilled_all = true;
+
+        for permission in proposal.permissions.into_iter() {
+            let mut fulfilled_perm = false;
+
+            for role in self.user_roles(proposer_id).iter() {
+                let policy = self.policies(&role).get(&permission).unwrap_or(Policy {
+                    method: PolicyMethod::Weight,
+                    quorum: global_quorum.clone(),
+                    voting_period_minutes: global_voting_period_minutes,
+                });
+
+                let fulfilled = match policy.method {
+                    PolicyMethod::Weight => self.has_sufficient_votes(&proposal, &policy.quorum),
+                    PolicyMethod::One => false, // unilateral actions are executed without proposal
+                    PolicyMethod::All => proposal.signers.len() >= self.roles_member_amount(&role).get(),
+                    PolicyMethod::Quorum => BigUint::from(proposal.signers.len()) >= policy.quorum,
+                };
+
+                fulfilled_perm = fulfilled_perm || fulfilled;
+            }
+
+            if !fulfilled_perm {
+                fulfilled_all = false;
+            }
+        }
+
+        if fulfilled_all {
             ProposalStatus::Succeeded
         } else {
             ProposalStatus::Defeated
@@ -136,6 +189,35 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         }
     }
 
+    fn can_propose(&self, proposer: &ManagedAddress, actions_hash: &ManagedBuffer, permissions: &ManagedVec<ManagedBuffer>) -> (ManagedVec<Policy<Self::Api>>, bool) {
+        if actions_hash.len() < 1 && permissions.is_empty() {
+            return (ManagedVec::new(), true);
+        }
+
+        require!(actions_hash.len() == KECCAK256_RESULT_LEN && !permissions.is_empty(), "invalid actions");
+
+        let proposer_id = self.users().get_user_id(proposer);
+        let mut allowed = false;
+        let mut policies = ManagedVec::new();
+
+        for role in self.user_roles(proposer_id).iter() {
+            if role == ManagedBuffer::from(ROLE_BUILTIN_LEADER) {
+                allowed = true;
+            }
+
+            for permission in permissions.into_iter() {
+                let policy = self.policies(&role).get(&permission);
+
+                if policy.is_some() {
+                    policies.push(policy.unwrap());
+                    allowed = true;
+                }
+            }
+        }
+
+        (policies, allowed)
+    }
+
     fn calculate_actions_hash(&self, actions: &ManagedVec<Action<Self::Api>>) -> ManagedBuffer<Self::Api> {
         let mut serialized = ManagedBuffer::new();
 
@@ -153,31 +235,12 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         self.crypto().keccak256(&serialized).as_managed_buffer().clone()
     }
 
-    fn can_execute_actions(&self, actions: &ManagedVec<Action<Self::Api>>) -> bool {
-        let caller = self.blockchain().get_caller();
-        let user_id = self.users().get_user_id(&caller);
-        let user_roles = self.user_roles(user_id);
+    fn has_sufficient_votes(&self, proposal: &Proposal<Self::Api>, quorum: &BigUint) -> bool {
+        let total_votes = &proposal.votes_for + &proposal.votes_against;
+        let vote_for_percent = &proposal.votes_for * &BigUint::from(100u64) / &total_votes;
+        let vote_for_percent_to_pass = BigUint::from(50u64);
 
-        for role in user_roles.iter() {
-            for (permission_name, _) in self.policies(&role).iter()  {
-                let permission_details = self.permission_details(&permission_name).get();
-
-                let denied = actions.into_iter()
-                    .map(|action| action.address == permission_details.destination && action.endpoint == permission_details.endpoint)
-                    .find(|permitted| permitted == &false)
-                    .is_some();
-
-                if denied {
-                    return false;
-                }
-            }
-        }
-
-        true
-    }
-
-    fn require_can_execute_actions(&self, actions: &ManagedVec<Action<Self::Api>>) {
-        require!(self.can_execute_actions(actions), "not allowed");
+        return vote_for_percent >= vote_for_percent_to_pass && &proposal.votes_for >= quorum;
     }
 
     fn require_proposed_via_trusted_host(&self, trusted_host_id: &ManagedBuffer, content_hash: &ManagedBuffer, content_sig: ManagedBuffer, actions_hash: &ManagedBuffer) {

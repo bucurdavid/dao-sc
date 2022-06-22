@@ -1,9 +1,10 @@
-use crate::governance::proposal::Proposal;
 use elrond_wasm::api::{ED25519_SIGNATURE_BYTE_LEN, KECCAK256_RESULT_LEN};
+
+use crate::governance::proposal::Proposal;
 
 elrond_wasm::imports!();
 
-pub const VOTING_PERIOD_MINUTES_DEFAULT: u32 = 4320; // 3 days
+pub const VOTING_PERIOD_MINUTES_DEFAULT: usize = 4320; // 3 days
 
 pub const SEALED_NOT_SET: u8 = 0;
 pub const SEALED_ON: u8 = 1;
@@ -72,7 +73,7 @@ pub trait ConfigModule {
         self.min_proposal_vote_weight().set(&vote_weight);
     }
 
-    fn try_change_voting_period_in_minutes(&self, voting_period: u32) {
+    fn try_change_voting_period_in_minutes(&self, voting_period: usize) {
         require!(voting_period != 0, "voting period (in minutes) can not be zero");
         self.voting_period_in_minutes().set(&voting_period);
     }
@@ -100,19 +101,19 @@ pub trait ConfigModule {
     #[storage_mapper("vote_nft_token")]
     fn vote_nft_token(&self) -> NonFungibleTokenMapper<Self::Api>;
 
+    #[view(getProtectedVoteTokens)]
+    #[storage_mapper("protected_vote_tokens")]
+    fn protected_vote_tokens(&self) -> SingleValueMapper<BigUint>;
+
     #[storage_mapper("proposals")]
     fn proposals(&self, id: u64) -> SingleValueMapper<Proposal<Self::Api>>;
-
-    #[storage_mapper("known_th_proposals_ids")]
-    fn known_trusted_host_proposal_ids(&self) -> UnorderedSetMapper<ManagedBuffer<Self::Api>>;
 
     #[view(getProposalIdCounter)]
     #[storage_mapper("proposals_id_counter")]
     fn next_proposal_id(&self) -> SingleValueMapper<u64>;
 
-    #[view(getProtectedVoteTokens)]
-    #[storage_mapper("protected_vote_tokens")]
-    fn protected_vote_tokens(&self) -> SingleValueMapper<BigUint>;
+    #[storage_mapper("known_th_proposals_ids")]
+    fn known_trusted_host_proposal_ids(&self) -> UnorderedSetMapper<ManagedBuffer<Self::Api>>;
 
     #[view(getQuorum)]
     #[storage_mapper("quorum")]
@@ -124,5 +125,5 @@ pub trait ConfigModule {
 
     #[view(getVotingPeriodMinutes)]
     #[storage_mapper("voting_period_minutes")]
-    fn voting_period_in_minutes(&self) -> SingleValueMapper<u32>;
+    fn voting_period_in_minutes(&self) -> SingleValueMapper<usize>;
 }

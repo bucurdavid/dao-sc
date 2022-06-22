@@ -29,24 +29,6 @@ pub trait Entity:
         }
     }
 
-    #[endpoint(createRole)]
-    fn create_role_endpoint(&self, role_name: ManagedBuffer) {
-        self.require_caller_self();
-        self.create_role(role_name);
-    }
-
-    #[endpoint(assignRole)]
-    fn assign_role_endpoint(&self, address: ManagedAddress, role_name: ManagedBuffer) {
-        self.require_caller_self();
-        self.assign_role(address, role_name);
-    }
-
-    #[endpoint(createPermission)]
-    fn create_permission_endpoint(&self, permission_name: ManagedBuffer, destination: ManagedAddress, endpoint: ManagedBuffer) {
-        self.require_caller_self();
-        self.create_permission(permission_name, destination, endpoint);
-    }
-
     #[payable("*")]
     #[endpoint(seal)]
     fn seal_endpoint(&self) {

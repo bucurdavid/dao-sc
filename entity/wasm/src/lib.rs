@@ -14,6 +14,10 @@ elrond_wasm_node::wasm_endpoints! {
         changeQuorum
         changeVotingPeriodMinutes
         createPermission
+        createPolicyForAll
+        createPolicyForOne
+        createPolicyQuorum
+        createPolicyWeighted
         createRole
         execute
         getGovernanceTokenId
@@ -22,6 +26,7 @@ elrond_wasm_node::wasm_endpoints! {
         getPolicies
         getProposal
         getProposalIdCounter
+        getProposalSigners
         getProposalStatus
         getProposalVotes
         getProtectedVoteTokens
@@ -38,6 +43,7 @@ elrond_wasm_node::wasm_endpoints! {
         propose
         redeem
         seal
+        sign
         voteAgainst
         voteFor
     )

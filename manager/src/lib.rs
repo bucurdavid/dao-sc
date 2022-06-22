@@ -129,7 +129,7 @@ pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::Fa
 
     fn send_back_egld(&self, initial_caller: &ManagedAddress) {
         let egld_returned = self.call_value().egld_value();
-        if egld_returned > 0u32 {
+        if egld_returned > 0 {
             self.send().direct_egld(&initial_caller, &egld_returned, &[]);
         }
     }

@@ -42,26 +42,37 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
     }
 
     #[endpoint(changeVotingPeriodMinutes)]
-    fn change_voting_period_in_minutes_endpoint(&self, value: u32) {
+    fn change_voting_period_in_minutes_endpoint(&self, value: usize) {
         self.require_caller_self_or_unsealed();
         self.try_change_voting_period_in_minutes(value);
     }
 
     #[payable("*")]
     #[endpoint(propose)]
-    fn propose_endpoint(&self, trusted_host_id: ManagedBuffer, content_hash: ManagedBuffer, content_sig: ManagedBuffer, opt_actions_hash: OptionalValue<ManagedBuffer>) -> u64 {
+    fn propose_endpoint(
+        &self,
+        trusted_host_id: ManagedBuffer,
+        content_hash: ManagedBuffer,
+        content_sig: ManagedBuffer,
+        actions_hash: ManagedBuffer,
+        permissions: MultiValueManagedVec<ManagedBuffer>,
+    ) -> u64 {
         let payment = self.call_value().payment();
         let proposer = self.blockchain().get_caller();
-        let actions_hash = opt_actions_hash.into_option().unwrap_or_default();
+        let permissions = permissions.into_vec();
 
-        self.require_proposed_via_trusted_host(&trusted_host_id, &content_hash, content_sig, &actions_hash);
+        // TODO: self.require_proposed_via_trusted_host(&trusted_host_id, &content_hash, content_sig, &actions_hash);
         self.require_payment_token_governance_token();
         self.require_sealed();
 
         require!(!self.known_trusted_host_proposal_ids().contains(&trusted_host_id), "proposal already registered");
 
+        let (policies, allowed) = self.can_propose(&proposer, &actions_hash, &permissions);
+
+        require!(allowed, "action not allowed for user");
+
         let vote_weight = payment.amount.clone();
-        let proposal = self.create_proposal(content_hash, actions_hash, vote_weight.clone());
+        let proposal = self.create_proposal(content_hash, actions_hash, vote_weight.clone(), permissions, policies);
         let proposal_id = proposal.id;
 
         self.protected_vote_tokens().update(|current| *current += &payment.amount);
@@ -75,13 +86,24 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
     #[payable("*")]
     #[endpoint(voteFor)]
     fn vote_for_endpoint(&self, proposal_id: u64) {
+        self.require_sealed();
         self.vote(proposal_id, VoteType::For)
     }
 
     #[payable("*")]
     #[endpoint(voteAgainst)]
     fn vote_against_endpoint(&self, proposal_id: u64) {
+        self.require_sealed();
         self.vote(proposal_id, VoteType::Against)
+    }
+
+    #[endpoint(sign)]
+    fn sign_endpoint(&self, proposal_id: u64) {
+        self.require_sealed();
+
+        // TODO: check if has role
+
+        self.sign(proposal_id);
     }
 
     #[endpoint(execute)]
@@ -90,14 +112,31 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
         require!(!self.proposals(proposal_id).is_empty(), "proposal not found");
         self.require_sealed();
 
+        let actions = actions.into_vec();
+
+        // TODO: verify
+        // for role_name in proposer_roles {
+        //     for (permission_name, policy) in self.policies(&role_name).iter()  {
+        //         let permission = self.permission_details(&permission_name).get();
+
+        //         for action in actions.into_iter() {
+        //             if action.address == permission.destination && action.endpoint == permission.endpoint {
+
+        //             } else {
+        //                 return ProposalStatus::Corrupted;
+        //             }
+        //         }
+        //     }
+        // }
+
+
         let mut proposal = self.proposals(proposal_id).get();
         let status = self.get_proposal_status(&proposal);
-        let actions = actions.into_vec();
         let actions_hash = self.calculate_actions_hash(&actions);
 
         require!(status == ProposalStatus::Succeeded, "proposal is not executable");
         require!(proposal.actions_hash == actions_hash, "actions have been corrupted");
-        self.require_can_execute_actions(&actions);
+        // self.require_can_execute_actions(&actions);
 
         self.execute_actions(&actions);
         proposal.was_executed = true;
@@ -150,6 +189,16 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
         (proposal.votes_for, proposal.votes_against).into()
     }
 
+    #[view(getProposalSigners)]
+    fn get_proposal_signers_view(&self, proposal_id: u64) -> MultiValueEncoded<ManagedAddress> {
+        let proposal = self.proposals(proposal_id).get();
+        let mut signers = MultiValueEncoded::new();
+        for signer_id in proposal.signers.iter() {
+            signers.push(self.users().get_user_address_unchecked(signer_id));
+        }
+        signers
+    }
+
     #[payable("EGLD")]
     #[endpoint(issueNftVoteToken)]
     fn issue_nft_vote_token(&self, token_name: ManagedBuffer, token_ticker: ManagedBuffer) {
@@ -171,7 +220,7 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
             ManagedAsyncCallResult::Ok(token_id) => self.vote_nft_token().set_token_id(&token_id),
             ManagedAsyncCallResult::Err(_) => {
                 let egld_returned = self.call_value().egld_value();
-                if egld_returned > 0u32 {
+                if egld_returned > 0 {
                     self.send().direct_egld(&initial_caller, &egld_returned, &[]);
                 }
             }
