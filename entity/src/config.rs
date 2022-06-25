@@ -41,7 +41,7 @@ pub trait ConfigModule {
 
     fn require_governance_tokens_available(&self, amount: &BigUint) {
         let gov_token_id = self.governance_token_id().get();
-        let protected = self.protected_vote_tokens().get();
+        let protected = self.protected_vote_tokens(&gov_token_id).get();
         let balance = self.blockchain().get_sc_balance(&gov_token_id, 0u64);
         let available = balance - protected;
 
@@ -103,7 +103,7 @@ pub trait ConfigModule {
 
     #[view(getProtectedVoteTokens)]
     #[storage_mapper("protected_vote_tokens")]
-    fn protected_vote_tokens(&self) -> SingleValueMapper<BigUint>;
+    fn protected_vote_tokens(&self, token_id: &TokenIdentifier) -> SingleValueMapper<BigUint>;
 
     #[storage_mapper("proposals")]
     fn proposals(&self, id: u64) -> SingleValueMapper<Proposal<Self::Api>>;
@@ -111,6 +111,9 @@ pub trait ConfigModule {
     #[view(getProposalIdCounter)]
     #[storage_mapper("proposals_id_counter")]
     fn next_proposal_id(&self) -> SingleValueMapper<u64>;
+
+    #[storage_mapper("proposal_signers")]
+    fn proposal_signers(&self, proposal_id: u64, role_name: &ManagedBuffer) -> UnorderedSetMapper<usize>;
 
     #[storage_mapper("known_th_proposals_ids")]
     fn known_trusted_host_proposal_ids(&self) -> UnorderedSetMapper<ManagedBuffer<Self::Api>>;

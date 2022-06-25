@@ -19,13 +19,12 @@ pub struct Proposal<M: ManagedTypeApi> {
     pub was_executed: bool,
     pub votes_for: BigUint<M>,
     pub votes_against: BigUint<M>,
-    pub signers: ManagedVec<M, usize>,
     pub permissions: ManagedVec<M, ManagedBuffer<M>>,
 }
 
 #[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, TypeAbi, ManagedVecItem)]
 pub struct Action<M: ManagedTypeApi> {
-    pub address: ManagedAddress<M>,
+    pub destination: ManagedAddress<M>,
     pub endpoint: ManagedBuffer<M>,
     pub arguments: ManagedVec<M, ManagedBuffer<M>>,
     pub gas_limit: u64,
@@ -40,7 +39,7 @@ pub type ActionAsMultiArg<M> =
 impl<M: ManagedTypeApi> Action<M> {
     pub fn into_multiarg(self) -> ActionAsMultiArg<M> {
         (
-            self.address,
+            self.destination,
             self.endpoint,
             self.gas_limit,
             self.token_id,
@@ -101,7 +100,6 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
             actions_hash,
             votes_for: vote_weight.clone(),
             votes_against: BigUint::zero(),
-            signers: ManagedVec::new(),
             permissions,
         };
 
@@ -112,48 +110,40 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
     }
 
     fn get_proposal_status(&self, proposal: &Proposal<Self::Api>) -> ProposalStatus {
+        let current_time = self.blockchain().get_block_timestamp();
+
         if proposal.was_executed {
             return ProposalStatus::Executed;
         }
-
-        let current_time = self.blockchain().get_block_timestamp();
 
         if current_time >= proposal.starts_at && current_time < proposal.ends_at {
             return ProposalStatus::Active;
         }
 
-        let proposer_id = self.users().get_user_id(&proposal.proposer);
-        let global_quorum = self.quorum().get();
-        let global_voting_period_minutes = self.voting_period_in_minutes().get();
-
-        if proposer_id == 0 || proposal.permissions.len() < 1 {
-            return match self.has_sufficient_votes(&proposal, &global_quorum) {
+        if proposal.actions_hash.is_empty() {
+            return match self.has_sufficient_votes(&proposal, &self.quorum().get()) {
                 true => ProposalStatus::Succeeded,
                 false => ProposalStatus::Defeated,
             };
         }
 
+        let proposer_id = self.users().get_user_id(&proposal.proposer);
         let mut fulfilled_all = true;
 
         for permission in proposal.permissions.into_iter() {
-            let mut fulfilled_perm = false;
-
-            for role in self.user_roles(proposer_id).iter() {
-                let policy = self.policies(&role).get(&permission).unwrap_or(Policy {
-                    method: PolicyMethod::Weight,
-                    quorum: global_quorum.clone(),
-                    voting_period_minutes: global_voting_period_minutes,
-                });
-
-                let fulfilled = match policy.method {
-                    PolicyMethod::Weight => self.has_sufficient_votes(&proposal, &policy.quorum),
-                    PolicyMethod::One => false, // unilateral actions are executed without proposal
-                    PolicyMethod::All => proposal.signers.len() >= self.roles_member_amount(&role).get(),
-                    PolicyMethod::Quorum => BigUint::from(proposal.signers.len()) >= policy.quorum,
-                };
-
-                fulfilled_perm = fulfilled_perm || fulfilled;
-            }
+            let fulfilled_perm = self.user_roles(proposer_id).iter()
+                .map(|role| if let Some(policy) = self.policies(&role).get(&permission) {
+                    match policy.method {
+                        PolicyMethod::Weight => self.has_sufficient_votes(&proposal, &policy.quorum),
+                        PolicyMethod::One => false, // unilateral actions are executed without proposal
+                        PolicyMethod::All => self.proposal_signers(proposal.id, &role).len() >= self.roles_member_amount(&role).get(),
+                        PolicyMethod::Quorum => BigUint::from(self.proposal_signers(proposal.id, &role).len()) >= policy.quorum,
+                    }
+                } else {
+                    true
+                })
+                .find(|fulfilled| !fulfilled)
+                .is_none();
 
             if !fulfilled_perm {
                 fulfilled_all = false;
@@ -161,10 +151,10 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         }
 
         if fulfilled_all {
-            ProposalStatus::Succeeded
-        } else {
-            ProposalStatus::Defeated
+            return ProposalStatus::Succeeded;
         }
+
+        ProposalStatus::Defeated
     }
 
     fn execute_actions(&self, actions: &ManagedVec<Action<Self::Api>>) {
@@ -173,7 +163,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         for action in actions.iter() {
             let mut call = self
                 .send()
-                .contract_call::<()>(action.address, action.endpoint)
+                .contract_call::<()>(action.destination, action.endpoint)
                 .with_arguments_raw(ManagedArgBuffer::from(action.arguments))
                 .with_gas_limit(action.gas_limit);
 
@@ -190,17 +180,23 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
     }
 
     fn can_propose(&self, proposer: &ManagedAddress, actions_hash: &ManagedBuffer, permissions: &ManagedVec<ManagedBuffer>) -> (ManagedVec<Policy<Self::Api>>, bool) {
-        if actions_hash.len() < 1 && permissions.is_empty() {
+        if actions_hash.is_empty() && permissions.is_empty() {
             return (ManagedVec::new(), true);
         }
 
-        require!(actions_hash.len() == KECCAK256_RESULT_LEN && !permissions.is_empty(), "invalid actions");
+        require!(actions_hash.len() == KECCAK256_RESULT_LEN, "invalid action hash");
 
         let proposer_id = self.users().get_user_id(proposer);
+        let user_roles = self.user_roles(proposer_id);
+
+        if !actions_hash.is_empty() {
+            require!(!user_roles.is_empty(), "user not allowed to propose actions");
+        }
+
         let mut allowed = false;
         let mut policies = ManagedVec::new();
 
-        for role in self.user_roles(proposer_id).iter() {
+        for role in user_roles.iter() {
             if role == ManagedBuffer::from(ROLE_BUILTIN_LEADER) {
                 allowed = true;
             }
@@ -222,7 +218,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         let mut serialized = ManagedBuffer::new();
 
         for action in actions.iter() {
-            let address = action.address.as_managed_buffer();
+            let address = action.destination.as_managed_buffer();
             let formatted = sc_format!("{:x}{}{}{}{}", address, action.amount, action.token_id, action.token_nonce, action.endpoint);
 
             serialized.append(&formatted);

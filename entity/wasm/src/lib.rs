@@ -26,6 +26,7 @@ elrond_wasm_node::wasm_endpoints! {
         getPolicies
         getProposal
         getProposalIdCounter
+        getProposalSignatureRoleCounts
         getProposalSigners
         getProposalStatus
         getProposalVotes

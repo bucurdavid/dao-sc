@@ -115,7 +115,7 @@ fn it_returns_executed_for_an_executed_proposal() {
     setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
         actions.push(Action::<DebugApi> {
-            address: managed_address!(&action_receiver),
+            destination: managed_address!(&action_receiver),
             endpoint: managed_buffer!(b"myendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
@@ -136,7 +136,7 @@ fn it_returns_executed_for_an_executed_proposal() {
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
         actions.push(Action::<DebugApi> {
-            address: managed_address!(&action_receiver),
+            destination: managed_address!(&action_receiver),
             endpoint: managed_buffer!(b"myendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,

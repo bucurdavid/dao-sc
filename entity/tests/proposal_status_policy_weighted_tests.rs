@@ -25,7 +25,7 @@ fn it_returns_active_when_just_created() {
     setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
         actions.push(Action::<DebugApi> {
-            address: managed_address!(sc_address),
+            destination: managed_address!(sc_address),
             endpoint: managed_buffer!(b"testendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
@@ -62,7 +62,7 @@ fn it_succeeds_if_one_of_one_permission_policies_meets_quorum_and_passed_voting_
     setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
         actions.push(Action::<DebugApi> {
-            address: managed_address!(sc_address),
+            destination: managed_address!(sc_address),
             endpoint: managed_buffer!(b"testendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
@@ -102,7 +102,7 @@ fn it_returns_defeated_if_one_of_one_permission_policies_does_not_meet_quorum() 
     setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
         actions.push(Action::<DebugApi> {
-            address: managed_address!(sc_address),
+            destination: managed_address!(sc_address),
             endpoint: managed_buffer!(b"testendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,

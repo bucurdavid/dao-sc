@@ -23,7 +23,7 @@ fn it_votes_for_a_proposal() {
 
         assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 25), proposal.votes_for);
         assert_eq!(managed_biguint!(0), proposal.votes_against);
-        assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 25), sc.protected_vote_tokens().get());
+        assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 25), sc.protected_vote_tokens(&managed_token_id!(ENTITY_TOKEN_ID)).get());
     })
     .assert_ok();
 
@@ -35,7 +35,7 @@ fn it_votes_for_a_proposal() {
 
         assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 50), proposal.votes_for);
         assert_eq!(managed_biguint!(0), proposal.votes_against);
-        assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 50), sc.protected_vote_tokens().get());
+        assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 50), sc.protected_vote_tokens(&managed_token_id!(ENTITY_TOKEN_ID)).get());
     })
     .assert_ok();
 }
@@ -56,7 +56,7 @@ fn it_votes_against_a_proposal() {
 
         assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL), proposal.votes_for);
         assert_eq!(managed_biguint!(25), proposal.votes_against);
-        assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 25), sc.protected_vote_tokens().get());
+        assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 25), sc.protected_vote_tokens(&managed_token_id!(ENTITY_TOKEN_ID)).get());
     })
     .assert_ok();
 
@@ -68,7 +68,7 @@ fn it_votes_against_a_proposal() {
 
         assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL), proposal.votes_for);
         assert_eq!(managed_biguint!(50), proposal.votes_against);
-        assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 50), sc.protected_vote_tokens().get());
+        assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 50), sc.protected_vote_tokens(&managed_token_id!(ENTITY_TOKEN_ID)).get());
     })
     .assert_ok();
 }

@@ -55,7 +55,7 @@ fn it_creates_a_proposal_with_actions() {
         let mut actions = Vec::<Action<DebugApi>>::new();
 
         actions.push(Action::<DebugApi> {
-            address: managed_address!(&action_receiver),
+            destination: managed_address!(&action_receiver),
             endpoint: managed_buffer!(b"myendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
@@ -75,7 +75,7 @@ fn it_creates_a_proposal_with_actions() {
         let mut actions = Vec::<Action<DebugApi>>::new();
 
         actions.push(Action::<DebugApi> {
-            address: managed_address!(&action_receiver),
+            destination: managed_address!(&action_receiver),
             endpoint: managed_buffer!(b"myendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,

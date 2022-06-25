@@ -136,9 +136,12 @@ getPermissions() {
         --proxy=$PROXY || return
 }
 
+# params:
+#   $1 = role name
 getPolicies() {
     erdpy contract query $ADDRESS \
         --function="getPolicies" \
+        --arguments "str:$1" \
         --proxy=$PROXY || return
 }
 
@@ -149,6 +152,21 @@ assignRole() {
     erdpy contract call $ADDRESS \
         --function="assignRole" \
         --arguments $1 "str:$2" \
+        --recall-nonce --gas-limit=20000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+# params:
+#   $1 = role name
+#   $2 = permission name
+#   $3 = quorum
+#   $4 = voting period minutes
+createPolicyWeighted() {
+    erdpy contract call $ADDRESS \
+        --function="createPolicyWeighted" \
+        --arguments "str:$1" "str:$2" $3 $4 \
         --recall-nonce --gas-limit=20000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --ledger \
@@ -259,6 +277,15 @@ getProposalVotes() {
 getProposalSigners() {
     erdpy contract query $ADDRESS \
         --function="getProposalSigners" \
+        --arguments $1 \
+        --proxy=$PROXY || return
+}
+
+# params:
+#   $1 = proposal id
+getProposalSignatureRoleCounts() {
+    erdpy contract query $ADDRESS \
+        --function="getProposalSignatureRoleCounts" \
         --arguments $1 \
         --proxy=$PROXY || return
 }

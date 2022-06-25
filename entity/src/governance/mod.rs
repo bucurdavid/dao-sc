@@ -75,7 +75,7 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
         let proposal = self.create_proposal(content_hash, actions_hash, vote_weight.clone(), permissions, policies);
         let proposal_id = proposal.id;
 
-        self.protected_vote_tokens().update(|current| *current += &payment.amount);
+        self.protected_vote_tokens(&payment.token_identifier).update(|current| *current += &payment.amount);
         self.known_trusted_host_proposal_ids().insert(trusted_host_id);
         self.create_vote_nft_and_send(&proposer, proposal.id, VoteType::For, vote_weight.clone(), payment.clone());
         self.emit_propose_event(proposal, payment, vote_weight);
@@ -192,9 +192,33 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
     #[view(getProposalSigners)]
     fn get_proposal_signers_view(&self, proposal_id: u64) -> MultiValueEncoded<ManagedAddress> {
         let proposal = self.proposals(proposal_id).get();
+        let proposer_id = self.users().get_user_id(&proposal.proposer);
+        let proposer_roles = self.user_roles(proposer_id);
         let mut signers = MultiValueEncoded::new();
-        for signer_id in proposal.signers.iter() {
-            signers.push(self.users().get_user_address_unchecked(signer_id));
+
+        for role in proposer_roles.iter() {
+            for signer_id in self.proposal_signers(proposal.id, &role).iter() {
+                let address = self.users().get_user_address_unchecked(signer_id);
+                if !signers.to_vec().contains(&address) {
+                    signers.push(address);
+                }
+            }
+        }
+        signers
+    }
+
+    #[view(getProposalSignatureRoleCounts)]
+    fn get_proposal_signature_role_counts_view(&self, proposal_id: u64) -> MultiValueEncoded<MultiValue2<ManagedBuffer, usize>> {
+        let proposal = self.proposals(proposal_id).get();
+        let proposer_id = self.users().get_user_id(&proposal.proposer);
+        let proposer_roles = self.user_roles(proposer_id);
+        let mut signers = MultiValueEncoded::new();
+
+        for role in proposer_roles.iter() {
+            let signer_count = self.proposal_signers(proposal.id, &role).len();
+            if signer_count > 0 {
+                signers.push((role, signer_count).into());
+            }
         }
         signers
     }
