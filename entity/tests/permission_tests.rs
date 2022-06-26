@@ -1,9 +1,43 @@
 use elrond_wasm_debug::*;
 use entity::config::*;
-use entity::permission::PermissionModule;
+use entity::permission::{PermissionModule};
 use setup::*;
 
 mod setup;
+
+#[test]
+fn it_creates_a_role() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+    let user_address = &setup.owner_address;
+
+    setup.blockchain.execute_tx(&user_address, &setup.contract, &rust_biguint!(0), |sc| {
+        sc.create_role_endpoint(managed_buffer!(b"testrole"));
+    }).assert_ok();
+
+    setup.blockchain.execute_query(&setup.contract, |sc| {
+        assert!(sc.roles().contains(&managed_buffer!(b"testrole")));
+    }).assert_ok();
+}
+
+#[test]
+fn it_creates_a_permission() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+    let user_address = &setup.owner_address;
+    let sc_address = setup.contract.address_ref();
+
+    setup.blockchain.execute_tx(&user_address, &setup.contract, &rust_biguint!(0), |sc| {
+        sc.create_permission_endpoint(managed_buffer!(b"testperm"), managed_address!(sc_address), managed_buffer!(b"endpoint"));
+    }).assert_ok();
+
+    setup.blockchain.execute_query(&setup.contract, |sc| {
+        assert!(sc.permissions().contains(&managed_buffer!(b"testperm")));
+
+        let actual_permission_details = sc.permission_details(&managed_buffer!(b"testperm")).get();
+
+        assert_eq!(managed_address!(sc_address), actual_permission_details.destination);
+        assert_eq!(managed_buffer!(b"endpoint"), actual_permission_details.endpoint);
+    }).assert_ok();
+}
 
 #[test]
 fn it_assigns_a_role() {

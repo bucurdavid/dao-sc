@@ -55,43 +55,43 @@ pub trait PermissionModule: config::ConfigModule {
 
     #[endpoint(createRole)]
     fn create_role_endpoint(&self, role_name: ManagedBuffer) {
-        // self.require_caller_self();
+        self.require_caller_self();
         self.create_role(role_name);
     }
 
     #[endpoint(assignRole)]
     fn assign_role_endpoint(&self, address: ManagedAddress, role_name: ManagedBuffer) {
-        // self.require_caller_self();
+        self.require_caller_self();
         self.assign_role(address, role_name);
     }
 
     #[endpoint(createPermission)]
     fn create_permission_endpoint(&self, permission_name: ManagedBuffer, destination: ManagedAddress, endpoint: ManagedBuffer) {
-        // self.require_caller_self();
+        self.require_caller_self();
         self.create_permission(permission_name, destination, endpoint);
     }
 
     #[endpoint(createPolicyWeighted)]
     fn create_policy_weighted_endpoint(&self, role_name: ManagedBuffer, permission_name: ManagedBuffer, quorum: BigUint, voting_period_minutes: usize) {
-        // self.require_caller_self();
+        self.require_caller_self();
         self.create_policy(role_name, permission_name, PolicyMethod::Weight, quorum, voting_period_minutes);
     }
 
     #[endpoint(createPolicyForOne)]
     fn create_policy_one_endpoint(&self, role_name: ManagedBuffer, permission_name: ManagedBuffer) {
-        // self.require_caller_self();
+        self.require_caller_self();
         self.create_policy(role_name, permission_name, PolicyMethod::One, BigUint::from(1u64), 0);
     }
 
     #[endpoint(createPolicyForAll)]
     fn create_policy_all_endpoint(&self, role_name: ManagedBuffer, permission_name: ManagedBuffer) {
-        // self.require_caller_self();
+        self.require_caller_self();
         self.create_policy(role_name, permission_name, PolicyMethod::All, BigUint::zero(), self.voting_period_in_minutes().get());
     }
 
     #[endpoint(createPolicyQuorum)]
     fn create_policy_quorum_endpoint(&self, role_name: ManagedBuffer, permission_name: ManagedBuffer, quorum: usize) {
-        // self.require_caller_self();
+        self.require_caller_self();
         self.create_policy(role_name, permission_name, PolicyMethod::Quorum, BigUint::from(quorum), self.voting_period_in_minutes().get());
     }
 
@@ -164,6 +164,10 @@ pub trait PermissionModule: config::ConfigModule {
 
     fn create_policy(&self, role_name: ManagedBuffer, permission_name: ManagedBuffer, method: PolicyMethod, quorum: BigUint, voting_period_minutes: usize) {
         // TODO: check permission
+
+        require!(self.roles().contains(&role_name), "role does not exist");
+        require!(self.permissions().contains(&permission_name), "role does not exist");
+
         require!(!self.policies(&role_name).contains_key(&permission_name), "policy already exists");
 
         self.policies(&role_name).insert(permission_name, Policy {

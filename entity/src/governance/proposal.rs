@@ -218,13 +218,12 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         let mut serialized = ManagedBuffer::new();
 
         for action in actions.iter() {
-            let address = action.destination.as_managed_buffer();
-            let formatted = sc_format!("{:x}{}{}{}{}", address, action.amount, action.token_id, action.token_nonce, action.endpoint);
+            let formatted = sc_format!("{:x}{}{}{}{}", action.destination.as_managed_buffer(), action.amount, action.token_id, action.token_nonce, action.endpoint);
 
             serialized.append(&formatted);
 
             for arg in action.arguments.into_iter() {
-                serialized.append(&sc_format!("{:x}", arg));
+                serialized.append(&arg);
             }
         }
 
@@ -239,7 +238,14 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         return vote_for_percent >= vote_for_percent_to_pass && &proposal.votes_for >= quorum;
     }
 
-    fn require_proposed_via_trusted_host(&self, trusted_host_id: &ManagedBuffer, content_hash: &ManagedBuffer, content_sig: ManagedBuffer, actions_hash: &ManagedBuffer) {
+    fn require_proposed_via_trusted_host(
+        &self,
+        trusted_host_id: &ManagedBuffer,
+        content_hash: &ManagedBuffer,
+        content_sig: ManagedBuffer,
+        actions_hash: &ManagedBuffer,
+        permissions: &ManagedVec<ManagedBuffer>
+    ) {
         let proposer = self.blockchain().get_caller();
         let entity_token_id = self.token().get_token_id();
 

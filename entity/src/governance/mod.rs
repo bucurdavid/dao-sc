@@ -61,7 +61,7 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
         let proposer = self.blockchain().get_caller();
         let permissions = permissions.into_vec();
 
-        // TODO: self.require_proposed_via_trusted_host(&trusted_host_id, &content_hash, content_sig, &actions_hash);
+        // TODO: self.require_proposed_via_trusted_host(&trusted_host_id, &content_hash, content_sig, &actions_hash, &permissions);
         self.require_payment_token_governance_token();
         self.require_sealed();
 

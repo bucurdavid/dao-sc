@@ -189,6 +189,19 @@ createPolicyForOne() {
 # params:
 #   $1 = role name
 #   $2 = permission name
+createPolicyForAll() {
+    erdpy contract call $ADDRESS \
+        --function="createPolicyForAll" \
+        --arguments "str:$1" "str:$2" \
+        --recall-nonce --gas-limit=20000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+# params:
+#   $1 = role name
+#   $2 = permission name
 #   $3 = quorum
 createPolicyQuorum() {
     erdpy contract call $ADDRESS \
