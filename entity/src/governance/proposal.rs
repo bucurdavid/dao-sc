@@ -223,7 +223,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
             serialized.append(&formatted);
 
             for arg in action.arguments.into_iter() {
-                serialized.append(&arg);
+                serialized.append(&sc_format!("{:x}", arg));
             }
         }
 
