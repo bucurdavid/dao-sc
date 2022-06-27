@@ -8,7 +8,6 @@ mod setup;
 #[test]
 fn it_creates_a_role() {
     let mut setup = EntitySetup::new(entity::contract_obj);
-    let user_address = &setup.user_address;
 
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
         sc.create_role(managed_buffer!(b"testrole"));

@@ -17,13 +17,13 @@ elrond_wasm_node::wasm_endpoints! {
         finalizeEntity
         getBaseDailyCost
         getCredits
-        getEntityAddress
         getEntityTemplateAddress
         getFeatureDailyCost
         getFeatures
         getMinBoostAmount
         getSetupToken
         getSetupTokenAmount
+        getSetupTokenHistoryEntityAddress
         getTrustedHostAddress
         registerEntityToken
         setDailyBaseCost

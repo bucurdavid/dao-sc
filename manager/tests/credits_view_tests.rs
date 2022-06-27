@@ -7,15 +7,13 @@ mod setup;
 #[test]
 fn it_returns_available_credits() {
     let mut setup = setup::setup_manager(manager::contract_obj);
-    let entity_token = b"ENTITY-123456";
     let entity_address = setup.contract_entity_template.address_ref();
 
     // prepare
     setup
         .blockchain
         .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
-            sc.entities_map()
-                .insert(managed_token_id!(entity_token), managed_address!(entity_address));
+            sc.entities().insert(managed_address!(entity_address));
 
             let expand_val = managed_biguint!(1_000000000000000000u64);
             let entry = CreditEntry {
@@ -25,7 +23,7 @@ fn it_returns_available_credits() {
                 last_period_change: 0u64,
             };
 
-            sc.credit_entries(&managed_token_id!(entity_token)).set(entry);
+            sc.credit_entries(&managed_address!(&entity_address)).set(entry);
         })
         .assert_ok();
 
@@ -34,7 +32,7 @@ fn it_returns_available_credits() {
         .execute_query(&setup.contract, |sc| {
             let expand_val = managed_biguint!(1_000000000000000000u64);
 
-            let (available, daily_cost) = sc.get_credits_view(managed_token_id!(entity_token)).into_tuple();
+            let (available, daily_cost) = sc.get_credits_view(managed_address!(entity_address)).into_tuple();
 
             assert!(available > managed_biguint!(99) * &expand_val && available < managed_biguint!(101) * &expand_val);
             assert_eq!(daily_cost, &managed_biguint!(20) * &expand_val)
@@ -48,7 +46,7 @@ fn it_returns_available_credits() {
         .execute_query(&setup.contract, |sc| {
             let expand_val = managed_biguint!(1_000000000000000000u64);
 
-            let (available, daily_cost) = sc.get_credits_view(managed_token_id!(entity_token)).into_tuple();
+            let (available, daily_cost) = sc.get_credits_view(managed_address!(entity_address)).into_tuple();
 
             assert!(available > managed_biguint!(79) * &expand_val && available < managed_biguint!(81) * &expand_val);
             assert_eq!(daily_cost, &managed_biguint!(20) * &expand_val)
@@ -62,7 +60,7 @@ fn it_returns_available_credits() {
         .execute_query(&setup.contract, |sc| {
             let expand_val = managed_biguint!(1_000000000000000000u64);
 
-            let (available, daily_cost) = sc.get_credits_view(managed_token_id!(entity_token)).into_tuple();
+            let (available, daily_cost) = sc.get_credits_view(managed_address!(entity_address)).into_tuple();
 
             assert!(available > managed_biguint!(59) * &expand_val && available < managed_biguint!(61) * &expand_val);
             assert_eq!(daily_cost, &managed_biguint!(20) * &expand_val)

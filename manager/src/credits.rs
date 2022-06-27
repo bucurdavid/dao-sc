@@ -16,47 +16,47 @@ pub struct CreditEntry<M: ManagedTypeApi> {
 pub trait CreditsModule: config::ConfigModule + features::FeaturesModule {
     #[payable("*")]
     #[endpoint(boost)]
-    fn boost_endpoint(&self, entity_token_id: TokenIdentifier) {
+    fn boost_endpoint(&self, entity_address: ManagedAddress) {
         let (payment_token_id, _, payment_amount) = self.call_value().payment_as_tuple();
 
-        self.require_entity_exists(&entity_token_id);
+        self.require_entity_exists(&entity_address);
         require!(payment_token_id == self.cost_token_id().get(), "invalid token");
         require!(payment_amount >= self.cost_boost_min_amount().get(), "invalid amount");
 
-        let mut entry = self.get_or_create_entry(&entity_token_id);
+        let mut entry = self.get_or_create_entry(&entity_address);
         entry.total_amount += &payment_amount;
         entry.period_amount += &payment_amount;
 
-        self.credit_entries(&entity_token_id).set(entry);
+        self.credit_entries(&entity_address).set(entry);
         self.credit_total_deposits_amount().update(|current| *current += &payment_amount);
     }
 
     #[view(getCredits)]
-    fn get_credits_view(&self, entity_token_id: TokenIdentifier) -> MultiValue2<BigUint, BigUint> {
-        if self.credit_entries(&entity_token_id).is_empty() {
+    fn get_credits_view(&self, entity_address: ManagedAddress) -> MultiValue2<BigUint, BigUint> {
+        if self.credit_entries(&entity_address).is_empty() {
             return (BigUint::zero(), BigUint::zero()).into();
         }
 
-        let entry = self.credit_entries(&entity_token_id).get();
+        let entry = self.credit_entries(&entity_address).get();
         let available = self.calculate_available_credits(&entry);
 
         (available, entry.daily_cost).into()
     }
 
-    fn recalculate_daily_cost(&self, entity_token_id: &TokenIdentifier) {
-        let mut entry = self.get_or_create_entry(&entity_token_id);
+    fn recalculate_daily_cost(&self, entity_address: &ManagedAddress) {
+        let mut entry = self.get_or_create_entry(&entity_address);
         let mut daily_cost = self.cost_base_daily_amount().get();
 
         entry.last_period_change = self.blockchain().get_block_timestamp();
         entry.period_amount = self.calculate_available_credits(&entry);
 
-        for feature in self.features(&entity_token_id).iter() {
+        for feature in self.features(&entity_address).iter() {
             daily_cost += self.cost_feature_daily_amount(&feature).get();
         }
 
         entry.daily_cost = daily_cost;
 
-        self.credit_entries(&entity_token_id).set(entry);
+        self.credit_entries(&entity_address).set(entry);
     }
 
     fn calculate_available_credits(&self, entry: &CreditEntry<Self::Api>) -> BigUint {
@@ -72,8 +72,8 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule {
         available_credits
     }
 
-    fn get_or_create_entry(&self, entity_token_id: &TokenIdentifier) -> CreditEntry<Self::Api> {
-        if self.credit_entries(&entity_token_id).is_empty() {
+    fn get_or_create_entry(&self, entity_address: &ManagedAddress) -> CreditEntry<Self::Api> {
+        if self.credit_entries(&entity_address).is_empty() {
             CreditEntry {
                 total_amount: BigUint::zero(),
                 period_amount: BigUint::zero(),
@@ -81,12 +81,12 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule {
                 last_period_change: self.blockchain().get_block_timestamp(),
             }
         } else {
-            self.credit_entries(&entity_token_id).get()
+            self.credit_entries(&entity_address).get()
         }
     }
 
     #[storage_mapper("credits:entries")]
-    fn credit_entries(&self, entity_token_id: &TokenIdentifier) -> SingleValueMapper<CreditEntry<Self::Api>>;
+    fn credit_entries(&self, entity_address: &ManagedAddress) -> SingleValueMapper<CreditEntry<Self::Api>>;
 
     #[storage_mapper("credits:total_deposits")]
     fn credit_total_deposits_amount(&self) -> SingleValueMapper<BigUint>;

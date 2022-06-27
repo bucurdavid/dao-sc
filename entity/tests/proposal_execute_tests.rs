@@ -21,7 +21,6 @@ fn it_marks_a_proposal_as_executed() {
 
     setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
-
         actions.push(Action::<DebugApi> {
             destination: managed_address!(&action_receiver),
             endpoint: managed_buffer!(b"myendpoint"),
@@ -43,7 +42,6 @@ fn it_marks_a_proposal_as_executed() {
 
     setup.blockchain.execute_tx(&proposer_address, &setup.contract, &rust_biguint!(0), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
-
         actions.push(Action::<DebugApi> {
             destination: managed_address!(&action_receiver),
             endpoint: managed_buffer!(b"myendpoint"),
@@ -75,7 +73,6 @@ fn it_fails_if_attempted_to_execute_again() {
 
     setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
-
         actions.push(Action::<DebugApi> {
             destination: managed_address!(&action_receiver),
             endpoint: managed_buffer!(b"myendpoint"),
@@ -96,33 +93,33 @@ fn it_fails_if_attempted_to_execute_again() {
     setup.blockchain.set_block_timestamp(voting_period_seconds + 1);
 
     setup.blockchain.execute_tx(&proposer_address, &setup.contract, &rust_biguint!(0), |sc| {
-            let mut actions = Vec::<Action<DebugApi>>::new();
-            actions.push(Action::<DebugApi> {
-                destination: managed_address!(&action_receiver),
-                endpoint: managed_buffer!(b"myendpoint"),
-                arguments: ManagedVec::new(),
-                gas_limit: 5_000_000u64,
-                token_id: managed_token_id!(b"EGLD"),
-                token_nonce: 0,
-                amount: managed_biguint!(0),
-            });
+        let mut actions = Vec::<Action<DebugApi>>::new();
+        actions.push(Action::<DebugApi> {
+            destination: managed_address!(&action_receiver),
+            endpoint: managed_buffer!(b"myendpoint"),
+            arguments: ManagedVec::new(),
+            gas_limit: 5_000_000u64,
+            token_id: managed_token_id!(b"EGLD"),
+            token_nonce: 0,
+            amount: managed_biguint!(0),
+        });
 
-            sc.execute_endpoint(proposal_id, MultiValueManagedVec::from(actions));
+        sc.execute_endpoint(proposal_id, MultiValueManagedVec::from(actions));
 
-            let mut actions = Vec::<Action<DebugApi>>::new();
-            actions.push(Action::<DebugApi> {
-                destination: managed_address!(&action_receiver),
-                endpoint: managed_buffer!(b"myendpoint"),
-                arguments: ManagedVec::new(),
-                gas_limit: 5_000_000u64,
-                token_id: managed_token_id!(b"EGLD"),
-                token_nonce: 0,
-                amount: managed_biguint!(0),
-            });
+        let mut actions = Vec::<Action<DebugApi>>::new();
+        actions.push(Action::<DebugApi> {
+            destination: managed_address!(&action_receiver),
+            endpoint: managed_buffer!(b"myendpoint"),
+            arguments: ManagedVec::new(),
+            gas_limit: 5_000_000u64,
+            token_id: managed_token_id!(b"EGLD"),
+            token_nonce: 0,
+            amount: managed_biguint!(0),
+        });
 
-            sc.execute_endpoint(proposal_id, MultiValueManagedVec::from(actions)); // and again
-        })
-        .assert_user_error("proposal is not executable");
+        sc.execute_endpoint(proposal_id, MultiValueManagedVec::from(actions)); // and again
+    })
+    .assert_user_error("proposal is not executable");
 }
 
 #[test]

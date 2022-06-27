@@ -14,34 +14,31 @@ fn it_finalizes_an_entity() {
 
     setup.blockchain.set_esdt_balance(&caller, COST_TOKEN_ID, &rust_biguint!(5000));
 
-    setup
-        .blockchain
-        .execute_tx(&caller, &setup.contract, &rust_biguint!(0), |sc| {
-            sc.setup_token_id(&managed_address!(&caller)).set(&managed_token_id!(token_id));
-            sc.setup_token_supply(&managed_address!(&caller)).set(&managed_biguint!(token_supply));
+    setup.blockchain.execute_tx(&caller, &setup.contract, &rust_biguint!(0), |sc| {
+        sc.setup_token_id(&managed_address!(&caller)).set(&managed_token_id!(token_id));
+        sc.setup_token_supply(&managed_address!(&caller)).set(&managed_biguint!(token_supply));
 
-            sc.entities_map()
-                .insert(managed_token_id!(token_id), managed_address!(entity_contract_address));
+        sc.entities()
+            .insert(managed_address!(&entity_contract_address));
 
-            sc.finalize_entity_endpoint(managed_token_id!(token_id));
+        sc.finalize_entity_endpoint(managed_address!(&entity_contract_address));
 
-            assert!(sc.setup_token_id(&managed_address!(&caller)).is_empty());
-            assert!(sc.setup_token_supply(&managed_address!(&caller)).is_empty());
-        })
-        .assert_ok();
+        assert!(sc.setup_token_id(&managed_address!(&caller)).is_empty());
+        assert!(sc.setup_token_supply(&managed_address!(&caller)).is_empty());
+    })
+    .assert_ok();
 }
 
 #[test]
 fn it_fails_if_token_is_not_in_setup_mode() {
     let mut setup = setup::setup_manager(manager::contract_obj);
     let caller = setup.blockchain.create_user_account(&rust_biguint!(1));
+    let entity_contract_address = setup.contract_entity_template.address_ref();
 
     setup.blockchain.set_esdt_balance(&caller, COST_TOKEN_ID, &rust_biguint!(5000));
 
-    setup
-        .blockchain
-        .execute_tx(&caller, &setup.contract, &rust_biguint!(0), |sc| {
-            sc.finalize_entity_endpoint(managed_token_id!(b"Token-123456"));
-        })
-        .assert_user_error("token not in setup");
+    setup.blockchain.execute_tx(&caller, &setup.contract, &rust_biguint!(0), |sc| {
+        sc.finalize_entity_endpoint(managed_address!(&entity_contract_address));
+    })
+    .assert_user_error("not in setup: token");
 }

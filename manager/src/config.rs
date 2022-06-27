@@ -2,25 +2,8 @@ elrond_wasm::imports!();
 
 #[elrond_wasm::module]
 pub trait ConfigModule {
-    fn require_entity_exists(&self, token_id: &TokenIdentifier) {
-        require!(self.entities_map().contains_key(&token_id), "entity does not exist");
-    }
-
-    fn require_token_id_belongs_to_caller(&self, entity_token_id: &TokenIdentifier) {
-        let caller = self.blockchain().get_caller();
-        let entity_address = self.get_entity_address(&entity_token_id);
-
-        require!(entity_address == caller, "given token id does not belong to caller");
-    }
-
-    #[view(getEntityAddress)]
-    fn get_entity_address_view(&self, token_id: TokenIdentifier) -> ManagedAddress {
-        self.entities_map().get(&token_id).unwrap_or_default()
-    }
-
-    fn get_entity_address(&self, token_id: &TokenIdentifier) -> ManagedAddress {
-        self.require_entity_exists(&token_id);
-        self.entities_map().get(&token_id).unwrap()
+    fn require_entity_exists(&self, entity_address: &ManagedAddress) {
+        require!(self.entities().contains(&entity_address), "entity does not exist");
     }
 
     fn get_template_address(&self) -> ManagedAddress {
@@ -44,7 +27,7 @@ pub trait ConfigModule {
     }
 
     #[storage_mapper("entities")]
-    fn entities_map(&self) -> MapMapper<TokenIdentifier, ManagedAddress>;
+    fn entities(&self) -> UnorderedSetMapper<ManagedAddress>;
 
     #[view(getEntityTemplateAddress)]
     #[storage_mapper("entity_templ_address")]

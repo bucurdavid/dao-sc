@@ -18,19 +18,18 @@ fn it_creates_an_entity() {
     let manager_addr = setup.contract.address_ref().clone();
     let new_entity_wrapper = setup.blockchain.prepare_deploy_from_sc(&manager_addr, entity::contract_obj);
 
-    setup
-        .blockchain
-        .execute_esdt_transfer(&caller, &setup.contract, COST_TOKEN_ID, 0, &rust_biguint!(1000), |sc| {
-            sc.setup_token_id(&managed_address!(&caller)).set(&managed_token_id!(token_id));
-            sc.setup_token_supply(&managed_address!(&caller)).set(&managed_biguint!(token_supply));
+    setup.blockchain.execute_esdt_transfer(&caller, &setup.contract, COST_TOKEN_ID, 0, &rust_biguint!(1000), |sc| {
+        sc.setup_token_id(&managed_address!(&caller)).set(&managed_token_id!(&token_id));
+        sc.setup_token_supply(&managed_address!(&caller)).set(&managed_biguint!(token_supply));
 
-            sc.create_entity_endpoint(managed_token_id!(token_id), MultiValueEncoded::new());
+        sc.create_entity_endpoint(MultiValueManagedVec::new());
 
-            let actual = sc.entities_map().get(&managed_token_id!(token_id)).unwrap();
+        let new_entity_address = managed_address!(new_entity_wrapper.address_ref());
 
-            assert_eq!(managed_address!(new_entity_wrapper.address_ref()), actual);
-        })
-        .assert_ok();
+        assert!(sc.entities().contains(&new_entity_address));
+        assert!(new_entity_address, sc.setup_token_entity_history(&managed_token_id!(&token_id)).get());
+    })
+    .assert_ok();
 }
 
 #[test]
@@ -40,12 +39,10 @@ fn it_fails_if_token_is_not_in_setup_mode() {
 
     setup.blockchain.set_esdt_balance(&caller, COST_TOKEN_ID, &rust_biguint!(5000));
 
-    setup
-        .blockchain
-        .execute_esdt_transfer(&caller, &setup.contract, COST_TOKEN_ID, 0, &rust_biguint!(1000), |sc| {
-            sc.create_entity_endpoint(managed_token_id!(b"Token-123456"), MultiValueEncoded::new());
-        })
-        .assert_user_error("token not in setup");
+    setup.blockchain.execute_esdt_transfer(&caller, &setup.contract, COST_TOKEN_ID, 0, &rust_biguint!(1000), |sc| {
+        sc.create_entity_endpoint(MultiValueManagedVec::new());
+    })
+    .assert_user_error("not in setup: token");
 }
 
 #[test]
@@ -58,15 +55,13 @@ fn it_fails_if_wrong_cost_token() {
 
     setup.blockchain.set_esdt_balance(&caller, wrong_cost_token, &rust_biguint!(5000));
 
-    setup
-        .blockchain
-        .execute_esdt_transfer(&caller, &setup.contract, wrong_cost_token, 0, &rust_biguint!(1000), |sc| {
-            sc.setup_token_id(&managed_address!(&caller)).set(&managed_token_id!(token_id));
-            sc.setup_token_supply(&managed_address!(&caller)).set(&managed_biguint!(token_supply));
+    setup.blockchain.execute_esdt_transfer(&caller, &setup.contract, wrong_cost_token, 0, &rust_biguint!(1000), |sc| {
+        sc.setup_token_id(&managed_address!(&caller)).set(&managed_token_id!(token_id));
+        sc.setup_token_supply(&managed_address!(&caller)).set(&managed_biguint!(token_supply));
 
-            sc.create_entity_endpoint(managed_token_id!(b"Token-123456"), MultiValueEncoded::new());
-        })
-        .assert_user_error("invalid cost token");
+        sc.create_entity_endpoint(MultiValueManagedVec::new());
+    })
+    .assert_user_error("invalid cost token");
 }
 
 #[test]
@@ -77,13 +72,11 @@ fn it_fails_if_wrong_cost_amount() {
 
     setup.blockchain.set_esdt_balance(&caller, COST_TOKEN_ID, &rust_biguint!(5000));
 
-    setup
-        .blockchain
-        .execute_esdt_transfer(&caller, &setup.contract, COST_TOKEN_ID, 0, &rust_biguint!(wrong_cost_amount), |sc| {
-            sc.setup_token_id(&managed_address!(&caller)).set(&managed_token_id!(b"Token-123456"));
-            sc.setup_token_supply(&managed_address!(&caller)).set(&managed_biguint!(100_000u64));
+    setup.blockchain.execute_esdt_transfer(&caller, &setup.contract, COST_TOKEN_ID, 0, &rust_biguint!(wrong_cost_amount), |sc| {
+        sc.setup_token_id(&managed_address!(&caller)).set(&managed_token_id!(b"Token-123456"));
+        sc.setup_token_supply(&managed_address!(&caller)).set(&managed_biguint!(100_000u64));
 
-            sc.create_entity_endpoint(managed_token_id!(b"Token-123456"), MultiValueEncoded::new());
-        })
-        .assert_user_error("invalid cost amount");
+        sc.create_entity_endpoint(MultiValueManagedVec::new());
+    })
+    .assert_user_error("invalid cost amount");
 }

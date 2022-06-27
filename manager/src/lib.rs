@@ -57,33 +57,36 @@ pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::Fa
 
     #[payable("*")]
     #[endpoint(createEntity)]
-    fn create_entity_endpoint(&self, token_id: TokenIdentifier, features: MultiValueEncoded<MultiValue2<ManagedBuffer, ManagedBuffer>>) {
+    fn create_entity_endpoint(&self, features: MultiValueManagedVec<ManagedBuffer>) {
+        let caller = self.blockchain().get_caller();
         let (cost_token_id, _, cost_amount) = self.call_value().payment_as_tuple();
 
-        self.require_caller_is_setup_owner(&token_id);
         require!(cost_token_id == self.cost_token_id().get(), "invalid cost token");
         require!(cost_amount >= self.cost_creation_amount().get(), "invalid cost amount");
+        self.require_caller_in_setup(&caller);
 
-        let caller = self.blockchain().get_caller();
+        let token_id = self.setup_token_id(&caller).get();
         let initial_supply = self.setup_token_supply(&caller).get();
+        let features = features.into_vec();
 
         require!(initial_supply > 0, "setup token is not available");
 
-        self.set_features(&token_id, features);
+        let entity_address = self.create_entity(&token_id, &initial_supply, &features);
 
-        let entity_address = self.create_entity(&token_id, &initial_supply);
-
-        self.entities_map().insert(token_id.clone(), entity_address.clone());
-        self.recalculate_daily_cost(&token_id);
+        self.set_features(&entity_address, features);
+        self.entities().insert(entity_address.clone());
+        self.setup_token_entity_history(&token_id).set(entity_address.clone());
+        self.recalculate_daily_cost(&entity_address);
         self.set_entity_edst_roles(&token_id, &entity_address).call_and_exit();
     }
 
     #[endpoint(finalizeEntity)]
-    fn finalize_entity_endpoint(&self, token_id: TokenIdentifier) {
-        self.require_caller_is_setup_owner(&token_id);
-
+    fn finalize_entity_endpoint(&self) {
         let caller = self.blockchain().get_caller();
-        let entity_address = self.get_entity_address(&token_id);
+        self.require_caller_in_setup(&caller);
+
+        let token_id = self.setup_token_id(&caller).get();
+        let entity_address = self.setup_token_entity_history(&token_id).get();
 
         self.setup_token_id(&caller).clear();
         self.setup_token_supply(&caller).clear();
@@ -105,19 +108,17 @@ pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::Fa
     }
 
     #[endpoint(upgradeEntity)]
-    fn upgrade_entity_endpoint(&self, token_id: TokenIdentifier) {
-        let entity_address = self.get_entity_address(&token_id);
-
-        self.recalculate_daily_cost(&token_id);
-
+    fn upgrade_entity_endpoint(&self, entity_address: ManagedAddress) {
+        self.recalculate_daily_cost(&entity_address);
         self.upgrade_entity(entity_address);
     }
 
     #[endpoint(setFeatures)]
-    fn set_features_endpoint(&self, entity_token_id: TokenIdentifier, features: MultiValueEncoded<MultiValue2<ManagedBuffer, ManagedBuffer>>) {
-        self.require_token_id_belongs_to_caller(&entity_token_id);
-        self.set_features(&entity_token_id, features);
-        self.recalculate_daily_cost(&entity_token_id);
+    fn set_features_endpoint(&self, features: MultiValueManagedVec<ManagedBuffer>) {
+        let caller_entity_address = self.blockchain().get_caller();
+        self.require_entity_exists(&caller_entity_address);
+        self.set_features(&caller_entity_address, features.into_vec());
+        self.recalculate_daily_cost(&caller_entity_address);
     }
 
     #[only_owner]
@@ -127,17 +128,16 @@ pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::Fa
         self.setup_token_supply(&address).clear();
     }
 
+    fn require_caller_in_setup(&self, caller: &ManagedAddress) {
+        require!(!self.setup_token_id(&caller).is_empty(), "not in setup: token");
+        require!(!self.setup_token_supply(&caller).is_empty(), "not in setup: supply");
+    }
+
     fn send_back_egld(&self, initial_caller: &ManagedAddress) {
         let egld_returned = self.call_value().egld_value();
         if egld_returned > 0 {
             self.send().direct_egld(&initial_caller, &egld_returned, &[]);
         }
-    }
-
-    fn require_caller_is_setup_owner(&self, token_id: &TokenIdentifier) {
-        let caller = self.blockchain().get_caller();
-        let temp_owner_token_id = self.setup_token_id(&caller).get();
-        require!(&temp_owner_token_id == token_id, "token not in setup");
     }
 
     #[view(getSetupToken)]
@@ -147,4 +147,8 @@ pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::Fa
     #[view(getSetupTokenAmount)]
     #[storage_mapper("setup:token_supply")]
     fn setup_token_supply(&self, owner: &ManagedAddress) -> SingleValueMapper<BigUint>;
+
+    #[view(getSetupTokenHistoryEntityAddress)]
+    #[storage_mapper("setup:token_entity_history")]
+    fn setup_token_entity_history(&self, token_id: &TokenIdentifier) -> SingleValueMapper<ManagedAddress>;
 }
