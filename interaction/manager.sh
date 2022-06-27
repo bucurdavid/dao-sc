@@ -235,3 +235,24 @@ getCredits() {
         --arguments "str:$1" \
         --proxy=$PROXY || return
 }
+
+# params:
+#   $1 = token id
+setFeatures() {
+    erdpy contract call $MANAGER_ADDRESS \
+        --function="setFeatures" \
+        --arguments "str:$1" "str:vault" "str:true" "str:leader" "str:true" \
+        --recall-nonce --gas-limit=10000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+# params:
+#   $1 = token id
+getFeatures() {
+    erdpy contract query $ADDRESS \
+        --function="getFeatures" \
+        --arguments "str:$1" \
+        --proxy=$PROXY || return
+}

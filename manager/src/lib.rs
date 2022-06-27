@@ -69,13 +69,13 @@ pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::Fa
 
         require!(initial_supply > 0, "setup token is not available");
 
+        self.set_features(&token_id, features);
+
         let entity_address = self.create_entity(&token_id, &initial_supply);
 
         self.entities_map().insert(token_id.clone(), entity_address.clone());
-        self.set_features(&token_id, features);
         self.recalculate_daily_cost(&token_id);
-
-        self.set_entity_edst_roles(&token_id, &entity_address).call_and_exit()
+        self.set_entity_edst_roles(&token_id, &entity_address).call_and_exit();
     }
 
     #[endpoint(finalizeEntity)]
@@ -87,8 +87,7 @@ pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::Fa
 
         self.setup_token_id(&caller).clear();
         self.setup_token_supply(&caller).clear();
-
-        self.transfer_entity_esdt_ownership(&token_id, &entity_address).call_and_exit()
+        self.transfer_entity_esdt_ownership(&token_id, &entity_address).call_and_exit();
     }
 
     #[payable("*")]
@@ -111,7 +110,7 @@ pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::Fa
 
         self.recalculate_daily_cost(&token_id);
 
-        self.upgrade_entity(entity_address.clone());
+        self.upgrade_entity(entity_address);
     }
 
     #[endpoint(setFeatures)]
@@ -130,7 +129,7 @@ pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::Fa
 
     fn send_back_egld(&self, initial_caller: &ManagedAddress) {
         let egld_returned = self.call_value().egld_value();
-        if egld_returned > 0u32 {
+        if egld_returned > 0 {
             self.send().direct_egld(&initial_caller, &egld_returned, &[]);
         }
     }

@@ -2,6 +2,7 @@ elrond_wasm::imports!();
 
 use self::{vote::VoteType};
 use crate::config::{self, VOTING_PERIOD_MINUTES_DEFAULT};
+use crate::permission;
 use proposal::{Action, ProposalStatus};
 
 pub mod events;
@@ -9,12 +10,12 @@ pub mod proposal;
 pub mod vote;
 
 #[elrond_wasm::module]
-pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + proposal::ProposalModule + vote::VoteModule {
+pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule + events::GovEventsModule + proposal::ProposalModule + vote::VoteModule {
     fn init_governance_module(&self, gov_token_id: &TokenIdentifier, initial_tokens: &BigUint) {
         let initial_quorum = initial_tokens / &BigUint::from(20u64); // 5% of initial tokens
         let initial_min_tokens_for_proposing = initial_tokens / &BigUint::from(1000u64); // 0.1% of initial tokens
 
-        self.next_proposal_id().set(1);
+        self.next_proposal_id().set_if_empty(1);
 
         self.try_change_governance_token(gov_token_id.clone());
         self.try_change_quorum(BigUint::from(initial_quorum));
@@ -41,29 +42,49 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
     }
 
     #[endpoint(changeVotingPeriodMinutes)]
-    fn change_voting_period_in_minutes_endpoint(&self, value: u32) {
+    fn change_voting_period_in_minutes_endpoint(&self, value: usize) {
         self.require_caller_self_or_unsealed();
         self.try_change_voting_period_in_minutes(value);
     }
 
     #[payable("*")]
     #[endpoint(propose)]
-    fn propose_endpoint(&self, trusted_host_id: ManagedBuffer, content_hash: ManagedBuffer, content_sig: ManagedBuffer, opt_actions_hash: OptionalValue<ManagedBuffer>) -> u64 {
+    fn propose_endpoint(
+        &self,
+        trusted_host_id: ManagedBuffer,
+        content_hash: ManagedBuffer,
+        content_sig: ManagedBuffer,
+        actions_hash: ManagedBuffer,
+        permissions: MultiValueManagedVec<ManagedBuffer>,
+    ) -> u64 {
         let payment = self.call_value().payment();
         let proposer = self.blockchain().get_caller();
-        let actions_hash = opt_actions_hash.into_option().unwrap_or_default();
+        let permissions = permissions.into_vec();
 
-        self.require_proposed_via_trusted_host(&trusted_host_id, &content_hash, content_sig, &actions_hash);
+        self.require_proposed_via_trusted_host(&trusted_host_id, &content_hash, content_sig, &actions_hash, &permissions);
         self.require_payment_token_governance_token();
         self.require_sealed();
 
         require!(!self.known_trusted_host_proposal_ids().contains(&trusted_host_id), "proposal already registered");
 
+        let (policies, allowed) = self.can_propose(&proposer, &actions_hash, &permissions);
         let vote_weight = payment.amount.clone();
-        let proposal = self.create_proposal(content_hash, actions_hash, vote_weight.clone());
+        let has_token_weighted_policy = self.has_token_weighted_policy(&policies);
+
+        require!(allowed, "action not allowed for user");
+
+        if has_token_weighted_policy {
+            require!(vote_weight >= self.min_proposal_vote_weight().get(), "insufficient vote weight");
+        }
+
+        let proposal = self.create_proposal(content_hash, actions_hash, vote_weight.clone(), permissions, policies);
         let proposal_id = proposal.id;
 
-        self.protected_vote_tokens().update(|current| *current += &payment.amount);
+        if !has_token_weighted_policy {
+            self.sign(proposal_id);
+        }
+
+        self.protected_vote_tokens(&payment.token_identifier).update(|current| *current += &payment.amount);
         self.known_trusted_host_proposal_ids().insert(trusted_host_id);
         self.create_vote_nft_and_send(&proposer, proposal.id, VoteType::For, vote_weight.clone(), payment.clone());
         self.emit_propose_event(proposal, payment, vote_weight);
@@ -74,24 +95,32 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
     #[payable("*")]
     #[endpoint(voteFor)]
     fn vote_for_endpoint(&self, proposal_id: u64) {
+        self.require_sealed();
         self.vote(proposal_id, VoteType::For)
     }
 
     #[payable("*")]
     #[endpoint(voteAgainst)]
     fn vote_against_endpoint(&self, proposal_id: u64) {
+        self.require_sealed();
         self.vote(proposal_id, VoteType::Against)
+    }
+
+    #[endpoint(sign)]
+    fn sign_endpoint(&self, proposal_id: u64) {
+        self.require_sealed();
+        self.sign(proposal_id);
     }
 
     #[endpoint(execute)]
     fn execute_endpoint(&self, proposal_id: u64, actions: MultiValueManagedVec<Action<Self::Api>>) {
-        self.require_sealed();
         require!(!actions.is_empty(), "no actions to execute");
         require!(!self.proposals(proposal_id).is_empty(), "proposal not found");
+        self.require_sealed();
 
+        let actions = actions.into_vec();
         let mut proposal = self.proposals(proposal_id).get();
         let status = self.get_proposal_status(&proposal);
-        let actions = actions.into_vec();
         let actions_hash = self.calculate_actions_hash(&actions);
 
         require!(status == ProposalStatus::Succeeded, "proposal is not executable");
@@ -148,6 +177,40 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
         (proposal.votes_for, proposal.votes_against).into()
     }
 
+    #[view(getProposalSigners)]
+    fn get_proposal_signers_view(&self, proposal_id: u64) -> MultiValueEncoded<ManagedAddress> {
+        let proposal = self.proposals(proposal_id).get();
+        let proposer_id = self.users().get_user_id(&proposal.proposer);
+        let proposer_roles = self.user_roles(proposer_id);
+        let mut signers = MultiValueEncoded::new();
+
+        for role in proposer_roles.iter() {
+            for signer_id in self.proposal_signers(proposal.id, &role).iter() {
+                let address = self.users().get_user_address_unchecked(signer_id);
+                if !signers.to_vec().contains(&address) {
+                    signers.push(address);
+                }
+            }
+        }
+        signers
+    }
+
+    #[view(getProposalSignatureRoleCounts)]
+    fn get_proposal_signature_role_counts_view(&self, proposal_id: u64) -> MultiValueEncoded<MultiValue2<ManagedBuffer, usize>> {
+        let proposal = self.proposals(proposal_id).get();
+        let proposer_id = self.users().get_user_id(&proposal.proposer);
+        let proposer_roles = self.user_roles(proposer_id);
+        let mut signers = MultiValueEncoded::new();
+
+        for role in proposer_roles.iter() {
+            let signer_count = self.proposal_signers(proposal.id, &role).len();
+            if signer_count > 0 {
+                signers.push((role, signer_count).into());
+            }
+        }
+        signers
+    }
+
     #[payable("EGLD")]
     #[endpoint(issueNftVoteToken)]
     fn issue_nft_vote_token(&self, token_name: ManagedBuffer, token_ticker: ManagedBuffer) {
@@ -169,7 +232,7 @@ pub trait GovernanceModule: config::ConfigModule + events::GovEventsModule + pro
             ManagedAsyncCallResult::Ok(token_id) => self.vote_nft_token().set_token_id(&token_id),
             ManagedAsyncCallResult::Err(_) => {
                 let egld_returned = self.call_value().egld_value();
-                if egld_returned > 0u32 {
+                if egld_returned > 0 {
                     self.send().direct_egld(&initial_caller, &egld_returned, &[]);
                 }
             }

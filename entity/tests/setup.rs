@@ -35,7 +35,7 @@ where
         let owner_address = blockchain.create_user_account(&rust_zero);
         let user_address = blockchain.create_user_account(&rust_biguint!(1000));
         let trusted_host_address = blockchain.create_user_account(&rust_zero);
-        let contract = blockchain.create_sc_account(&rust_zero, Some(&owner_address), builder, WASM_PATH);
+        let contract = blockchain.create_sc_account(&rust_biguint!(100), Some(&owner_address), builder, WASM_PATH);
 
         blockchain.set_esdt_balance(&owner_address, ENTITY_TOKEN_ID, &rust_biguint!(ENTITY_TOKEN_SUPPLY));
         blockchain.set_esdt_balance(&user_address, ENTITY_TOKEN_ID, &rust_biguint!(ENTITY_TOKEN_SUPPLY));
@@ -47,6 +47,7 @@ where
                     managed_address!(&owner_address),
                     OptionalValue::Some(managed_token_id!(ENTITY_TOKEN_ID)),
                     OptionalValue::Some(managed_biguint!(ENTITY_TOKEN_SUPPLY)),
+                    OptionalValue::None,
                 );
 
                 sc.quorum().set(managed_biguint!(QURUM));

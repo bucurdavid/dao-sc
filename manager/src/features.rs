@@ -2,6 +2,8 @@ elrond_wasm::imports!();
 
 use crate::config;
 
+pub const FEATURE_NAME_LEADER: &[u8] = b"leader";
+
 #[elrond_wasm::module]
 pub trait FeaturesModule: config::ConfigModule {
     fn set_features(&self, entity_token_id: &TokenIdentifier, features: MultiValueEncoded<MultiValue2<ManagedBuffer, ManagedBuffer>>) {

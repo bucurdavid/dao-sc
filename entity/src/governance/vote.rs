@@ -5,6 +5,7 @@ use super::events;
 use super::proposal;
 use super::proposal::ProposalStatus;
 use crate::config;
+use crate::permission;
 
 #[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug, Clone)]
 pub enum VoteType {
@@ -22,9 +23,8 @@ pub struct VoteNFTAttributes<M: ManagedTypeApi> {
 }
 
 #[elrond_wasm::module]
-pub trait VoteModule: config::ConfigModule + proposal::ProposalModule + events::GovEventsModule {
+pub trait VoteModule: config::ConfigModule + permission::PermissionModule + proposal::ProposalModule + events::GovEventsModule {
     fn vote(&self, proposal_id: u64, vote_type: VoteType) {
-        self.require_sealed();
         self.require_payment_token_governance_token();
 
         let voter = self.blockchain().get_caller();
@@ -42,8 +42,24 @@ pub trait VoteModule: config::ConfigModule + proposal::ProposalModule + events::
 
         self.create_vote_nft_and_send(&voter, proposal_id, vote_type.clone(), vote_weight.clone(), payment.clone());
         self.proposals(proposal_id).set(&proposal);
-        self.protected_vote_tokens().update(|current| *current += &payment.amount);
+        self.protected_vote_tokens(&payment.token_identifier).update(|current| *current += &payment.amount);
         self.emit_vote_event(proposal, vote_type, payment, vote_weight);
+    }
+
+    fn sign(&self, proposal_id: u64) {
+        let proposal = self.proposals(proposal_id).get();
+
+        require!(self.get_proposal_status(&proposal) == ProposalStatus::Active, "proposal is not active");
+
+        let signer = self.blockchain().get_caller();
+        let signer_id = self.users().get_or_create_user(&signer);
+        let signer_roles = self.user_roles(signer_id);
+
+        for role in signer_roles.iter() {
+            self.proposal_signers(proposal.id, &role).insert(signer_id);
+        }
+
+        self.emit_sign_event(proposal);
     }
 
     fn redeem_vote_tokens(&self, payment: EsdtTokenPayment<Self::Api>) {
@@ -56,7 +72,7 @@ pub trait VoteModule: config::ConfigModule + proposal::ProposalModule + events::
         require!(payment.token_identifier == vote_nft_id, "invalid vote position");
         require!(status != ProposalStatus::Active, "proposal is still active");
 
-        self.protected_vote_tokens().update(|current| *current -= &attr.payment.amount);
+        self.protected_vote_tokens(&attr.payment.token_identifier).update(|current| *current -= &attr.payment.amount);
         self.vote_nft_token().nft_burn(payment.token_nonce, &payment.amount);
 
         self.send().direct(

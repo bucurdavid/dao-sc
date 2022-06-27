@@ -20,7 +20,7 @@ pub trait GovEventsModule {
     fn emit_vote_event(&self, proposal: Proposal<Self::Api>, vote_type: VoteType, payment: EsdtTokenPayment<Self::Api>, weight: BigUint) {
         match vote_type {
             VoteType::For => {
-                self.upvote_event(
+                self.vote_for_event(
                     self.blockchain().get_caller(),
                     proposal,
                     payment,
@@ -30,7 +30,7 @@ pub trait GovEventsModule {
                 );
             }
             VoteType::Against => {
-                self.downvote_event(
+                self.vote_against_event(
                     self.blockchain().get_caller(),
                     proposal,
                     payment,
@@ -40,6 +40,15 @@ pub trait GovEventsModule {
                 );
             }
         }
+    }
+
+    fn emit_sign_event(&self, proposal: Proposal<Self::Api>) {
+        self.sign_event(
+            self.blockchain().get_caller(),
+            proposal,
+            self.blockchain().get_block_timestamp(),
+            self.blockchain().get_block_nonce(),
+        );
     }
 
     fn emit_execute_event(&self, proposal: Proposal<Self::Api>) {
@@ -73,8 +82,8 @@ pub trait GovEventsModule {
         #[indexed] epoch: u64,
     );
 
-    #[event("upvote")]
-    fn upvote_event(
+    #[event("vote_for")]
+    fn vote_for_event(
         &self,
         #[indexed] caller: ManagedAddress,
         #[indexed] proposal: Proposal<Self::Api>,
@@ -84,13 +93,22 @@ pub trait GovEventsModule {
         #[indexed] epoch: u64,
     );
 
-    #[event("downvote")]
-    fn downvote_event(
+    #[event("vote_against")]
+    fn vote_against_event(
         &self,
         #[indexed] caller: ManagedAddress,
         #[indexed] proposal: Proposal<Self::Api>,
         #[indexed] payment: EsdtTokenPayment<Self::Api>,
         #[indexed] weight: BigUint,
+        #[indexed] timestamp: u64,
+        #[indexed] epoch: u64,
+    );
+
+    #[event("sign")]
+    fn sign_event(
+        &self,
+        #[indexed] caller: ManagedAddress,
+        #[indexed] proposal: Proposal<Self::Api>,
         #[indexed] timestamp: u64,
         #[indexed] epoch: u64,
     );
