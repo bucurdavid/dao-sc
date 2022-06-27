@@ -11,10 +11,11 @@ mod setup;
 #[test]
 fn it_returns_active_for_a_newly_created_proposal() {
     let mut setup = EntitySetup::new(entity::contract_obj);
+    let proposer_address = &setup.user_address;
 
     setup.blockchain.set_block_timestamp(0);
 
-    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
+    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
         sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), managed_buffer!(b""), MultiValueManagedVec::new());
     })
     .assert_ok();
@@ -108,8 +109,8 @@ fn it_returns_executed_for_an_executed_proposal() {
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
 
-    setup.blockchain.execute_tx(&proposer_address, &setup.contract, &rust_biguint!(0), |sc| {
-        sc.assign_role_endpoint(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+    setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
+        sc.assign_role(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
     }).assert_ok();
 
     setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {

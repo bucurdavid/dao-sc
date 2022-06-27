@@ -61,19 +61,28 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
         let proposer = self.blockchain().get_caller();
         let permissions = permissions.into_vec();
 
-        // TODO: self.require_proposed_via_trusted_host(&trusted_host_id, &content_hash, content_sig, &actions_hash, &permissions);
+        // self.require_proposed_via_trusted_host(&trusted_host_id, &content_hash, content_sig, &actions_hash, &permissions);
         self.require_payment_token_governance_token();
         self.require_sealed();
 
         require!(!self.known_trusted_host_proposal_ids().contains(&trusted_host_id), "proposal already registered");
 
         let (policies, allowed) = self.can_propose(&proposer, &actions_hash, &permissions);
+        let vote_weight = payment.amount.clone();
+        let has_token_weighted_policy = self.has_token_weighted_policy(&policies);
 
         require!(allowed, "action not allowed for user");
 
-        let vote_weight = payment.amount.clone();
+        if has_token_weighted_policy {
+            require!(vote_weight >= self.min_proposal_vote_weight().get(), "insufficient vote weight");
+        }
+
         let proposal = self.create_proposal(content_hash, actions_hash, vote_weight.clone(), permissions, policies);
         let proposal_id = proposal.id;
+
+        if !has_token_weighted_policy {
+            self.sign(proposal_id);
+        }
 
         self.protected_vote_tokens(&payment.token_identifier).update(|current| *current += &payment.amount);
         self.known_trusted_host_proposal_ids().insert(trusted_host_id);
@@ -100,9 +109,6 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
     #[endpoint(sign)]
     fn sign_endpoint(&self, proposal_id: u64) {
         self.require_sealed();
-
-        // TODO: check if has role
-
         self.sign(proposal_id);
     }
 

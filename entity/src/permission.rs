@@ -163,10 +163,8 @@ pub trait PermissionModule: config::ConfigModule {
     }
 
     fn create_policy(&self, role_name: ManagedBuffer, permission_name: ManagedBuffer, method: PolicyMethod, quorum: BigUint, voting_period_minutes: usize) {
-        // TODO: check permission
-
         require!(self.roles().contains(&role_name), "role does not exist");
-        require!(self.permissions().contains(&permission_name), "role does not exist");
+        require!(self.permissions().contains(&permission_name), "permission does not exist");
 
         require!(!self.policies(&role_name).contains_key(&permission_name), "policy already exists");
 
@@ -185,6 +183,16 @@ pub trait PermissionModule: config::ConfigModule {
         }
 
         self.user_roles(user_id).contains(&role_name)
+    }
+
+    fn has_token_weighted_policy(&self, policies: &ManagedVec<Policy<Self::Api>>) -> bool {
+        policies.is_empty() || policies.iter()
+            .find(|p| p.method == PolicyMethod::Weight)
+            .is_some()
+    }
+
+    fn does_leader_role_exist(&self) -> bool {
+        self.roles().contains(&ManagedBuffer::from(ROLE_BUILTIN_LEADER))
     }
 
     #[view(getRoles)]

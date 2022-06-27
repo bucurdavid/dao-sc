@@ -74,6 +74,10 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         let proposer = self.blockchain().get_caller();
         let proposal_id = self.next_proposal_id().get();
 
+        if !actions_hash.is_empty() {
+            require!(actions_hash.len() == KECCAK256_RESULT_LEN, "invalid actions hash");
+        }
+
         let voting_period_minutes = policies.iter()
             .map(|p| p.voting_period_minutes)
             .max()
@@ -82,16 +86,8 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         let starts_at = self.blockchain().get_block_timestamp();
         let ends_at = starts_at + voting_period_minutes as u64 * 60;
 
-        let is_token_weighted = policies.is_empty() || policies.iter()
-            .find(|p| p.method == PolicyMethod::Weight)
-            .is_some();
-
-        if is_token_weighted {
-            require!(vote_weight >= self.min_proposal_vote_weight().get(), "insufficient vote weight");
-        }
-
         let proposal = Proposal {
-            id: proposal_id.clone(),
+            id: proposal_id,
             proposer: proposer.clone(),
             content_hash,
             starts_at,
@@ -180,21 +176,19 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
     }
 
     fn can_propose(&self, proposer: &ManagedAddress, actions_hash: &ManagedBuffer, permissions: &ManagedVec<ManagedBuffer>) -> (ManagedVec<Policy<Self::Api>>, bool) {
-        if actions_hash.is_empty() && permissions.is_empty() {
-            return (ManagedVec::new(), true);
-        }
-
-        require!(actions_hash.len() == KECCAK256_RESULT_LEN, "invalid action hash");
-
         let proposer_id = self.users().get_user_id(proposer);
         let user_roles = self.user_roles(proposer_id);
+        let mut policies = ManagedVec::new();
 
-        if !actions_hash.is_empty() {
-            require!(!user_roles.is_empty(), "user not allowed to propose actions");
+        if actions_hash.is_empty() && permissions.is_empty() {
+            return (policies, true);
+        }
+
+        if self.does_leader_role_exist() && user_roles.is_empty() {
+            return (policies, false);
         }
 
         let mut allowed = false;
-        let mut policies = ManagedVec::new();
 
         for role in user_roles.iter() {
             if role == ManagedBuffer::from(ROLE_BUILTIN_LEADER) {

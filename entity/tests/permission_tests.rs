@@ -8,10 +8,10 @@ mod setup;
 #[test]
 fn it_creates_a_role() {
     let mut setup = EntitySetup::new(entity::contract_obj);
-    let user_address = &setup.owner_address;
+    let user_address = &setup.user_address;
 
-    setup.blockchain.execute_tx(&user_address, &setup.contract, &rust_biguint!(0), |sc| {
-        sc.create_role_endpoint(managed_buffer!(b"testrole"));
+    setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
+        sc.create_role(managed_buffer!(b"testrole"));
     }).assert_ok();
 
     setup.blockchain.execute_query(&setup.contract, |sc| {
@@ -22,11 +22,10 @@ fn it_creates_a_role() {
 #[test]
 fn it_creates_a_permission() {
     let mut setup = EntitySetup::new(entity::contract_obj);
-    let user_address = &setup.owner_address;
     let sc_address = setup.contract.address_ref();
 
-    setup.blockchain.execute_tx(&user_address, &setup.contract, &rust_biguint!(0), |sc| {
-        sc.create_permission_endpoint(managed_buffer!(b"testperm"), managed_address!(sc_address), managed_buffer!(b"endpoint"));
+    setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
+        sc.create_permission(managed_buffer!(b"testperm"), managed_address!(sc_address), managed_buffer!(b"endpoint"));
     }).assert_ok();
 
     setup.blockchain.execute_query(&setup.contract, |sc| {
@@ -42,12 +41,12 @@ fn it_creates_a_permission() {
 #[test]
 fn it_assigns_a_role() {
     let mut setup = EntitySetup::new(entity::contract_obj);
-    let user_address = &setup.owner_address;
+    let user_address = &setup.user_address;
 
-    setup.blockchain.execute_tx(&user_address, &setup.contract, &rust_biguint!(0), |sc| {
-        sc.create_role_endpoint(managed_buffer!(b"testrole"));
+    setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
+        sc.create_role(managed_buffer!(b"testrole"));
 
-        sc.assign_role_endpoint(managed_address!(user_address), managed_buffer!(b"testrole"));
+        sc.assign_role(managed_address!(user_address), managed_buffer!(b"testrole"));
     }).assert_ok();
 
     setup.blockchain.execute_query(&setup.contract, |sc| {
