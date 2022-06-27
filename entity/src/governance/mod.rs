@@ -61,7 +61,7 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
         let proposer = self.blockchain().get_caller();
         let permissions = permissions.into_vec();
 
-        // self.require_proposed_via_trusted_host(&trusted_host_id, &content_hash, content_sig, &actions_hash, &permissions);
+        self.require_proposed_via_trusted_host(&trusted_host_id, &content_hash, content_sig, &actions_hash, &permissions);
         self.require_payment_token_governance_token();
         self.require_sealed();
 
@@ -119,30 +119,12 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
         self.require_sealed();
 
         let actions = actions.into_vec();
-
-        // TODO: verify
-        // for role_name in proposer_roles {
-        //     for (permission_name, policy) in self.policies(&role_name).iter()  {
-        //         let permission = self.permission_details(&permission_name).get();
-
-        //         for action in actions.into_iter() {
-        //             if action.address == permission.destination && action.endpoint == permission.endpoint {
-
-        //             } else {
-        //                 return ProposalStatus::Corrupted;
-        //             }
-        //         }
-        //     }
-        // }
-
-
         let mut proposal = self.proposals(proposal_id).get();
         let status = self.get_proposal_status(&proposal);
         let actions_hash = self.calculate_actions_hash(&actions);
 
         require!(status == ProposalStatus::Succeeded, "proposal is not executable");
         require!(proposal.actions_hash == actions_hash, "actions have been corrupted");
-        // self.require_can_execute_actions(&actions);
 
         self.execute_actions(&actions);
         proposal.was_executed = true;
