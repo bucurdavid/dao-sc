@@ -59,7 +59,7 @@ fn it_creates_a_proposal_with_actions() {
             endpoint: managed_buffer!(b"myendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_token_id!(b"EGLD"),
+            token_id: managed_egld_token_id!(),
             token_nonce: 0,
             amount: managed_biguint!(0),
         });
@@ -79,7 +79,7 @@ fn it_creates_a_proposal_with_actions() {
             endpoint: managed_buffer!(b"myendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_token_id!(b"EGLD"),
+            token_id: managed_egld_token_id!(),
             token_nonce: 0,
             amount: managed_biguint!(0),
         });

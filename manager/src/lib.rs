@@ -46,23 +46,22 @@ pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::Fa
     #[endpoint(registerEntityToken)]
     fn register_entity_token_endpoint(&self, supply: BigUint) {
         let caller = self.blockchain().get_caller();
-        let proof = self.call_value().payment();
+        let proof = self.call_value().single_esdt();
 
         self.setup_token_id(&caller).set(&proof.token_identifier);
         self.setup_token_supply(&caller).set(&supply);
 
-        self.send()
-            .direct(&caller, &proof.token_identifier, proof.token_nonce, &proof.amount, &[]);
+        self.send().direct_esdt(&caller, &proof.token_identifier, proof.token_nonce, &proof.amount);
     }
 
     #[payable("*")]
     #[endpoint(createEntity)]
     fn create_entity_endpoint(&self, features: MultiValueManagedVec<ManagedBuffer>) {
         let caller = self.blockchain().get_caller();
-        let (cost_token_id, _, cost_amount) = self.call_value().payment_as_tuple();
+        let payment = self.call_value().single_esdt();
 
-        require!(cost_token_id == self.cost_token_id().get(), "invalid cost token");
-        require!(cost_amount >= self.cost_creation_amount().get(), "invalid cost amount");
+        require!(payment.token_identifier == self.cost_token_id().get(), "invalid cost token");
+        require!(payment.amount >= self.cost_creation_amount().get(), "invalid cost amount");
         self.require_caller_in_setup(&caller);
 
         let token_id = self.setup_token_id(&caller).get();
@@ -98,10 +97,10 @@ pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::Fa
     fn token_issue_callback(&self, initial_caller: &ManagedAddress, #[call_result] result: ManagedAsyncCallResult<()>) {
         match result {
             ManagedAsyncCallResult::Ok(_) => {
-                let payment = self.call_value().payment();
+                let payment = self.call_value().single_esdt();
                 self.setup_token_id(&initial_caller).set(&payment.token_identifier);
                 self.setup_token_supply(&initial_caller).set(&payment.amount);
-                self.send().direct(&initial_caller, &payment.token_identifier, 0, &payment.amount, &[]);
+                self.send().direct_esdt(&initial_caller, &payment.token_identifier, 0, &payment.amount);
             }
             ManagedAsyncCallResult::Err(_) => self.send_back_egld(&initial_caller),
         }
@@ -136,7 +135,7 @@ pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::Fa
     fn send_back_egld(&self, initial_caller: &ManagedAddress) {
         let egld_returned = self.call_value().egld_value();
         if egld_returned > 0 {
-            self.send().direct_egld(&initial_caller, &egld_returned, &[]);
+            self.send().direct_egld(&initial_caller, &egld_returned);
         }
     }
 

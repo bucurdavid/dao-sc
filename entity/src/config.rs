@@ -36,13 +36,13 @@ pub trait ConfigModule {
     }
 
     fn require_payment_token_governance_token(&self) {
-        require!(self.call_value().token() == self.governance_token_id().get(), "invalid token");
+        require!(self.call_value().single_esdt().token_identifier == self.governance_token_id().get(), "invalid token");
     }
 
     fn require_governance_tokens_available(&self, amount: &BigUint) {
         let gov_token_id = self.governance_token_id().get();
         let protected = self.protected_vote_tokens(&gov_token_id).get();
-        let balance = self.blockchain().get_sc_balance(&gov_token_id, 0u64);
+        let balance = self.blockchain().get_sc_balance(&EgldOrEsdtTokenIdentifier::esdt(gov_token_id), 0u64);
         let available = balance - protected;
 
         require!(amount <= &available, "not enough governance tokens available");
@@ -53,7 +53,7 @@ pub trait ConfigModule {
 
         let trusted_host = self.trusted_host_address().get();
         let signable_hashed = self.crypto().keccak256(signable).as_managed_buffer().clone();
-        let trusted = self.crypto().verify_ed25519_managed::<KECCAK256_RESULT_LEN>(trusted_host.as_managed_byte_array(), &signable_hashed, &signature);
+        let trusted = self.crypto().verify_ed25519_legacy_managed::<KECCAK256_RESULT_LEN>(trusted_host.as_managed_byte_array(), &signable_hashed, &signature);
 
         require!(trusted, "not a trusted host");
     }

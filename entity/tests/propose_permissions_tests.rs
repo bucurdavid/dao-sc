@@ -36,7 +36,7 @@ fn it_sets_the_longest_policy_voting_period_for_the_proposal() {
             endpoint: managed_buffer!(b"testendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_token_id!(b"EGLD"),
+            token_id: managed_egld_token_id!(),
             token_nonce: 0,
             amount: managed_biguint!(0),
         });

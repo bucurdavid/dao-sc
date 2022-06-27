@@ -17,18 +17,18 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule {
     #[payable("*")]
     #[endpoint(boost)]
     fn boost_endpoint(&self, entity_address: ManagedAddress) {
-        let (payment_token_id, _, payment_amount) = self.call_value().payment_as_tuple();
+        let payment = self.call_value().single_esdt();
 
         self.require_entity_exists(&entity_address);
-        require!(payment_token_id == self.cost_token_id().get(), "invalid token");
-        require!(payment_amount >= self.cost_boost_min_amount().get(), "invalid amount");
+        require!(payment.token_identifier == self.cost_token_id().get(), "invalid token");
+        require!(payment.amount >= self.cost_boost_min_amount().get(), "invalid amount");
 
         let mut entry = self.get_or_create_entry(&entity_address);
-        entry.total_amount += &payment_amount;
-        entry.period_amount += &payment_amount;
+        entry.total_amount += &payment.amount;
+        entry.period_amount += &payment.amount;
 
         self.credit_entries(&entity_address).set(entry);
-        self.credit_total_deposits_amount().update(|current| *current += &payment_amount);
+        self.credit_total_deposits_amount().update(|current| *current += &payment.amount);
     }
 
     #[view(getCredits)]

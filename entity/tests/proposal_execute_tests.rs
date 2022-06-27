@@ -26,7 +26,7 @@ fn it_marks_a_proposal_as_executed() {
             endpoint: managed_buffer!(b"myendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_token_id!(b"EGLD"),
+            token_id: managed_egld_token_id!(),
             token_nonce: 0,
             amount: managed_biguint!(0),
         });
@@ -47,7 +47,7 @@ fn it_marks_a_proposal_as_executed() {
             endpoint: managed_buffer!(b"myendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_token_id!(b"EGLD"),
+            token_id: managed_egld_token_id!(),
             token_nonce: 0,
             amount: managed_biguint!(0),
         });
@@ -78,7 +78,7 @@ fn it_fails_if_attempted_to_execute_again() {
             endpoint: managed_buffer!(b"myendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_token_id!(b"EGLD"),
+            token_id: managed_egld_token_id!(),
             token_nonce: 0,
             amount: managed_biguint!(0),
         });
@@ -99,7 +99,7 @@ fn it_fails_if_attempted_to_execute_again() {
             endpoint: managed_buffer!(b"myendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_token_id!(b"EGLD"),
+            token_id: managed_egld_token_id!(),
             token_nonce: 0,
             amount: managed_biguint!(0),
         });
@@ -112,7 +112,7 @@ fn it_fails_if_attempted_to_execute_again() {
             endpoint: managed_buffer!(b"myendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_token_id!(b"EGLD"),
+            token_id: managed_egld_token_id!(),
             token_nonce: 0,
             amount: managed_biguint!(0),
         });
@@ -141,7 +141,7 @@ fn it_fails_if_the_proposal_is_still_active() {
             endpoint: managed_buffer!(b"myendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_token_id!(b"EGLD"),
+            token_id: managed_egld_token_id!(),
             token_nonce: 0,
             amount: managed_biguint!(0),
         });
@@ -160,7 +160,7 @@ fn it_fails_if_the_proposal_is_still_active() {
             endpoint: managed_buffer!(b"myendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_token_id!(b"EGLD"),
+            token_id: managed_egld_token_id!(),
             token_nonce: 0,
             amount: managed_biguint!(0),
         });
@@ -173,7 +173,7 @@ fn it_fails_if_the_proposal_is_still_active() {
             endpoint: managed_buffer!(b"myendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_token_id!(b"EGLD"),
+            token_id: managed_egld_token_id!(),
             token_nonce: 0,
             amount: managed_biguint!(0),
         });
@@ -205,7 +205,7 @@ fn it_executes_actions_of_a_proposal() {
             endpoint: managed_buffer!(b"myendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_token_id!(b"EGLD"),
+            token_id: managed_egld_token_id!(),
             token_nonce: 0,
             amount: managed_biguint!(5),
         });
@@ -227,7 +227,7 @@ fn it_executes_actions_of_a_proposal() {
             endpoint: managed_buffer!(b"myendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_token_id!(b"EGLD"),
+            token_id: managed_egld_token_id!(),
             token_nonce: 0,
             amount: managed_biguint!(5),
         });
@@ -260,7 +260,7 @@ fn it_fails_if_actions_to_execute_are_incongruent_to_actions_proposed() {
             endpoint: managed_buffer!(b"myendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_token_id!(b"EGLD"),
+            token_id: managed_egld_token_id!(),
             token_nonce: 0,
             amount: managed_biguint!(5),
         });
@@ -282,7 +282,7 @@ fn it_fails_if_actions_to_execute_are_incongruent_to_actions_proposed() {
             endpoint: managed_buffer!(b"yourendpoint"), // has changed from myendpoint to yourendpoint -> fail
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_token_id!(b"EGLD"),
+            token_id: managed_egld_token_id!(),
             token_nonce: 0,
             amount: managed_biguint!(5),
         });
@@ -310,7 +310,7 @@ fn it_executes_a_contract_call_action() {
 
         actions.push(Action::<DebugApi> {
             destination: managed_address!(&action_receiver),
-            token_id: managed_token_id!(b"ACTION-123456"),
+            token_id: managed_token_id_wrapped!(b"ACTION-123456"),
             token_nonce: 0,
             amount: managed_biguint!(5),
             gas_limit: 5_000_000u64,
@@ -332,7 +332,7 @@ fn it_executes_a_contract_call_action() {
 
         actions.push(Action::<DebugApi> {
             destination: managed_address!(&action_receiver),
-            token_id: managed_token_id!(b"ACTION-123456"),
+            token_id: managed_token_id_wrapped!(b"ACTION-123456"),
             token_nonce: 0,
             amount: managed_biguint!(5),
             gas_limit: 5_000_000u64,
@@ -368,7 +368,7 @@ fn it_fails_to_spend_vote_tokens() {
 
         actions.push(Action::<DebugApi> {
             destination: managed_address!(&action_receiver),
-            token_id: managed_token_id!(ENTITY_TOKEN_ID),
+            token_id: managed_token_id_wrapped!(ENTITY_TOKEN_ID),
             token_nonce: 0,
             amount: managed_biguint!(6),
             gas_limit: 5_000_000u64,
@@ -403,7 +403,7 @@ fn it_fails_to_spend_vote_tokens() {
 
         actions.push(Action::<DebugApi> {
             destination: managed_address!(&action_receiver),
-            token_id: managed_token_id!(ENTITY_TOKEN_ID),
+            token_id: managed_token_id_wrapped!(ENTITY_TOKEN_ID),
             token_nonce: 0,
             amount: managed_biguint!(6),
             gas_limit: 5_000_000u64,

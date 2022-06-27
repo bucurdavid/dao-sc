@@ -28,13 +28,13 @@ pub struct Action<M: ManagedTypeApi> {
     pub endpoint: ManagedBuffer<M>,
     pub arguments: ManagedVec<M, ManagedBuffer<M>>,
     pub gas_limit: u64,
-    pub token_id: TokenIdentifier<M>,
+    pub token_id: EgldOrEsdtTokenIdentifier<M>,
     pub token_nonce: u64,
     pub amount: BigUint<M>,
 }
 
 pub type ActionAsMultiArg<M> =
-    MultiValue8<ManagedAddress<M>, ManagedBuffer<M>, u64, TokenIdentifier<M>, u64, BigUint<M>, usize, MultiValueManagedVec<M, ManagedBuffer<M>>>;
+    MultiValue8<ManagedAddress<M>, ManagedBuffer<M>, u64, EgldOrEsdtTokenIdentifier<M>, u64, BigUint<M>, usize, MultiValueManagedVec<M, ManagedBuffer<M>>>;
 
 impl<M: ManagedTypeApi> Action<M> {
     pub fn into_multiarg(self) -> ActionAsMultiArg<M> {
@@ -168,7 +168,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
                     self.require_governance_tokens_available(&action.amount);
                 }
 
-                call = call.add_token_transfer(action.token_id, action.token_nonce, action.amount)
+                call = call.with_egld_or_single_esdt_token_transfer(action.token_id, action.token_nonce, action.amount)
             }
 
             call.transfer_execute()

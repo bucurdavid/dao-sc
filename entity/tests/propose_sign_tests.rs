@@ -30,7 +30,7 @@ fn it_signs_a_proposal_on_proposing_if_proposal_requires_signing() {
             endpoint: managed_buffer!(b"testendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_token_id!(b"EGLD"),
+            token_id: managed_egld_token_id!(),
             token_nonce: 0,
             amount: managed_biguint!(0),
         });

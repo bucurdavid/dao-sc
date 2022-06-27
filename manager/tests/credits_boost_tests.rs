@@ -45,7 +45,7 @@ fn it_fails_if_the_entity_does_not_exist() {
 
     setup.blockchain.set_esdt_balance(&entity_address, COST_TOKEN_ID, &rust_biguint!(100));
 
-    setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
+    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, COST_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
         sc.boost_endpoint(managed_address!(&entity_address));
     })
     .assert_user_error("entity does not exist");

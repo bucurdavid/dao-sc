@@ -28,7 +28,7 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
         self.require_payment_token_governance_token();
 
         let voter = self.blockchain().get_caller();
-        let payment = self.call_value().payment();
+        let payment = self.call_value().single_esdt();
         let vote_weight = payment.amount.clone();
         let mut proposal = self.proposals(proposal_id).get();
 
@@ -74,15 +74,7 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
 
         self.protected_vote_tokens(&attr.payment.token_identifier).update(|current| *current -= &attr.payment.amount);
         self.vote_nft_token().nft_burn(payment.token_nonce, &payment.amount);
-
-        self.send().direct(
-            &caller,
-            &attr.payment.token_identifier,
-            attr.payment.token_nonce,
-            &attr.payment.amount,
-            &[],
-        );
-
+        self.send().direct_esdt(&caller, &attr.payment.token_identifier, attr.payment.token_nonce, &attr.payment.amount);
         self.emit_redeem_event(proposal, payment, attr);
     }
 

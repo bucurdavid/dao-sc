@@ -57,7 +57,7 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
         actions_hash: ManagedBuffer,
         permissions: MultiValueManagedVec<ManagedBuffer>,
     ) -> u64 {
-        let payment = self.call_value().payment();
+        let payment = self.call_value().single_esdt();
         let proposer = self.blockchain().get_caller();
         let permissions = permissions.into_vec();
 
@@ -233,7 +233,7 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
             ManagedAsyncCallResult::Err(_) => {
                 let egld_returned = self.call_value().egld_value();
                 if egld_returned > 0 {
-                    self.send().direct_egld(&initial_caller, &egld_returned, &[]);
+                    self.send().direct_egld(&initial_caller, &egld_returned);
                 }
             }
         }

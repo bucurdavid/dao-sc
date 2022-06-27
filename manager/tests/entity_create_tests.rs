@@ -19,7 +19,7 @@ fn it_creates_an_entity() {
     let new_entity_wrapper = setup.blockchain.prepare_deploy_from_sc(&manager_addr, entity::contract_obj);
 
     setup.blockchain.execute_esdt_transfer(&caller, &setup.contract, COST_TOKEN_ID, 0, &rust_biguint!(1000), |sc| {
-        sc.setup_token_id(&managed_address!(&caller)).set(&managed_token_id!(&token_id));
+        sc.setup_token_id(&managed_address!(&caller)).set(&managed_token_id!(token_id));
         sc.setup_token_supply(&managed_address!(&caller)).set(&managed_biguint!(token_supply));
 
         sc.create_entity_endpoint(MultiValueManagedVec::new());
@@ -27,7 +27,7 @@ fn it_creates_an_entity() {
         let new_entity_address = managed_address!(new_entity_wrapper.address_ref());
 
         assert!(sc.entities().contains(&new_entity_address));
-        assert!(new_entity_address, sc.setup_token_entity_history(&managed_token_id!(&token_id)).get());
+        assert_eq!(new_entity_address, sc.setup_token_entity_history(&managed_token_id!(token_id)).get());
     })
     .assert_ok();
 }
