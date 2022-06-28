@@ -82,12 +82,12 @@ upgradeEntityTemplate() {
         --send || return
 }
 
-# params:
-#   $1 = token id
+# paras:
+#   $1 = entity address
 upgradeEntity() {
     erdpy --verbose contract call $MANAGER_ADDRESS \
         --function="upgradeEntity" \
-        --arguments "str:$1" \
+        --arguments $1 \
         --recall-nonce --gas-limit=100000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --ledger \
