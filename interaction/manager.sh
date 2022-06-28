@@ -20,6 +20,7 @@ deploy() {
     erdpy --verbose contract test manager || return
 
     erdpy --verbose contract deploy --project entity \
+        --arguments $TRUSTED_HOST_ADDRESS \
         --recall-nonce --gas-limit=200000000 \
         --outfile="deploy-$NETWORK_NAME-entity.interaction.json" \
         --proxy=$PROXY --chain=$CHAIN_ID \
@@ -39,6 +40,8 @@ deploy() {
         --recall-nonce --gas-limit=80000000 \
         --outfile="deploy-$NETWORK_NAME-manager.interaction.json" \
         --proxy=$PROXY --chain=$CHAIN_ID \
+        --metadata-payable \
+        --metadata-payable-by-sc \
         --ledger \
         --send || return
 
@@ -47,9 +50,6 @@ deploy() {
 
     erdpy data store --partition $NETWORK_NAME --key=manager--address --value=$MANAGER_ADDRESS
     erdpy data store --partition $NETWORK_NAME --key=manager--deploy-transaction --value=$MANAGER_TRANSACTION
-
-    sleep 6
-    setCostTokenBurnRole
 
     echo ""
     echo "deployed ENTITY TEMPLATE: $ENTITY_ADDRESS"
@@ -89,16 +89,6 @@ upgradeEntity() {
         --function="upgradeEntity" \
         --arguments "str:$1" \
         --recall-nonce --gas-limit=100000000 \
-        --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
-        --send || return
-}
-
-setCostTokenBurnRole() {
-    erdpy --verbose contract call erd1qqqqqqqqqqqqqqqpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqzllls8a5w6u \
-        --function="setSpecialRole" \
-        --arguments "str:$COST_TOKEN_ID" $MANAGER_ADDRESS "str:ESDTRoleLocalBurn"  \
-        --recall-nonce --gas-limit=60000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --ledger \
         --send || return

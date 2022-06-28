@@ -1,6 +1,6 @@
 NETWORK_NAME="devnet" # devnet, testnet, mainnet
-ADDRESS="erd1qqqqqqqqqqqqqpgqzs3wrfn6m9tcw2tfl4vdmzyyf2tny6re27rsf62gzl"
-TOKEN_ID="MYDAO-bbbab9"
+ADDRESS="erd1qqqqqqqqqqqqqpgqs36pqcnd4m5gqdcefljvypu4rkr097e527rsjycspn"
+TOKEN_ID="ALPHA-69ef77"
 
 PROXY=$(erdpy data load --partition $NETWORK_NAME --key=proxy)
 CHAIN_ID=$(erdpy data load --partition $NETWORK_NAME --key=chain-id)

@@ -1,24 +1,24 @@
 {
-  "devnet": {
-    "proxy": "https://devnet-gateway.elrond.com",
-    "chain-id": "D",
-    "cost-token-id": "DSUPER-9af8df",
-    "cost-entity-creation-amount": 1,
-    "trusted-host-address": "erd1aum55fcd44xfrwelsdma7j5avp263jwrkmr48en0arezkc72hsnq42qa7q",
-    "entity--address": "erd1qqqqqqqqqqqqqpgqw3v88rdpsdegr4c36rgtvcjr00eeajxh27rs5p6774",
-    "entity--deploy-transaction": "26d6fb130bdd4e0698b1e304939a985f84fddd45380cb1a651cb8f8e2e12f567",
-    "manager--address": "erd1qqqqqqqqqqqqqpgqxuumvlqxzfaxv9x0yhwwcfnf6qr9g3mr27rstmzedu",
-    "manager--deploy-transaction": "0d70a3c7fa9a492e71baf37c599672a11ac7fb686ef234b35772c9b00d90adef"
-  },
-  "testnet": {
-    "proxy": "https://testnet-gateway.elrond.com",
-    "chain-id": "T",
-    "cost-token-id": "XSUPER-c19331",
-    "cost-entity-creation-amount": 1,
-    "trusted-host-address": "erd1aum55fcd44xfrwelsdma7j5avp263jwrkmr48en0arezkc72hsnq42qa7q",
-    "entity--address": "erd1qqqqqqqqqqqqqpgqkvs5syrg8ylfl0uaj3gkwd5w0dul29ea27rsc7al69",
-    "entity--deploy-transaction": "dc89bcd3bea872ad40cb875aab5e0b2bd02fb52cd43ff89a7873d2c84caaf9ab",
-    "manager--address": "erd1qqqqqqqqqqqqqpgqsmztqv3aa72d66dsvvmj6ekgszwdhquk27rs952qyh",
-    "manager--deploy-transaction": "ef85866da62056e3009ce87732822ddf0f29a9ba8163aef60f8fb1f6f341c5da"
-  }
+    "devnet": {
+        "proxy": "https://devnet-gateway.elrond.com",
+        "chain-id": "D",
+        "cost-token-id": "DSUPER-9af8df",
+        "cost-entity-creation-amount": 1,
+        "trusted-host-address": "erd1aum55fcd44xfrwelsdma7j5avp263jwrkmr48en0arezkc72hsnq42qa7q",
+        "entity--address": "erd1qqqqqqqqqqqqqpgqsxykwum9lrrn3xs3v6rcs47g6gndywly27rswajv0k",
+        "entity--deploy-transaction": "a4f19547b28c3dfe152d863d5b4aec9ccf863b3b71a266f992a09765f5894979",
+        "manager--address": "erd1qqqqqqqqqqqqqpgqhplgqhep8capp9rlv78aws0lr9v6t2xq27rsrkg59x",
+        "manager--deploy-transaction": "f530feeaec53412ab02ec295eaefb450473106c2dcd15f1f5a147d505c87edab"
+    },
+    "testnet": {
+        "proxy": "https://testnet-gateway.elrond.com",
+        "chain-id": "T",
+        "cost-token-id": "XSUPER-c19331",
+        "cost-entity-creation-amount": 1,
+        "trusted-host-address": "erd1aum55fcd44xfrwelsdma7j5avp263jwrkmr48en0arezkc72hsnq42qa7q",
+        "entity--address": "erd1qqqqqqqqqqqqqpgqkvs5syrg8ylfl0uaj3gkwd5w0dul29ea27rsc7al69",
+        "entity--deploy-transaction": "dc89bcd3bea872ad40cb875aab5e0b2bd02fb52cd43ff89a7873d2c84caaf9ab",
+        "manager--address": "erd1qqqqqqqqqqqqqpgqsmztqv3aa72d66dsvvmj6ekgszwdhquk27rs952qyh",
+        "manager--deploy-transaction": "ef85866da62056e3009ce87732822ddf0f29a9ba8163aef60f8fb1f6f341c5da"
+    }
 }
