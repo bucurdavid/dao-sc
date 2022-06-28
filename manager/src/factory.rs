@@ -34,7 +34,7 @@ pub trait FactoryModule: config::ConfigModule + features::FeaturesModule {
         let template_contract = self.get_template_address();
 
         self.entity_contract_proxy(address)
-            .init(trusted_host_address, OptionalValue::<TokenIdentifier>::None, OptionalValue::<BigUint>::None, OptionalValue::Some(self.blockchain().get_caller()))
+            .init(trusted_host_address, OptionalValue::<TokenIdentifier>::None, OptionalValue::<BigUint>::None, OptionalValue::<ManagedAddress>::None)
             .upgrade_from_source(&template_contract, self.get_deploy_code_metadata());
     }
 
