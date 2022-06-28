@@ -38,3 +38,19 @@ fn it_fails_if_the_entity_does_not_exist() {
     })
     .assert_user_error("entity does not exist");
 }
+
+#[test]
+fn it_fails_to_activate_the_builtin_leader_feature() {
+    let mut setup = setup::setup_manager(manager::contract_obj);
+    let entity_address = setup.contract_entity_template.address_ref();
+
+    setup.blockchain.execute_tx(&entity_address, &setup.contract, &rust_biguint!(0), |sc| {
+        sc.entities().insert(managed_address!(&entity_address));
+
+        let mut args = MultiValueManagedVec::new();
+        args.push(managed_buffer!(FEATURE_NAME_LEADER));
+
+        sc.set_features_endpoint(args);
+    })
+    .assert_user_error("this feature can not be enabled");
+}
