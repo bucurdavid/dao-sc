@@ -270,7 +270,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         let mut trusted_host_signable = sc_format!("{:x}{:x}{:x}{:x}{:x}", proposer, entity_token_id, trusted_host_id, content_hash, actions_hash);
 
         for perm in permissions.into_iter() {
-            trusted_host_signable.append(&perm)
+            trusted_host_signable.append(&sc_format!("{:x}", perm));
         }
 
         self.require_signed_by_trusted_host(&trusted_host_signable, &trusted_host_signature);
