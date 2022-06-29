@@ -65,6 +65,7 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
         self.require_payment_token_governance_token();
         self.require_sealed();
 
+        require!(payment.amount > 0, "token ownership proof required");
         require!(!self.known_trusted_host_proposal_ids().contains(&trusted_host_id), "proposal already registered");
 
         let (policies, allowed) = self.can_propose(&proposer, &actions_hash, &permissions);
