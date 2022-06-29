@@ -3,7 +3,7 @@ use elrond_wasm_debug::*;
 use entity::config::*;
 use entity::governance::proposal::*;
 use entity::governance::*;
-use entity::permission::{PermissionModule, ROLE_BUILTIN_LEADER};
+use entity::permission::*;
 use setup::*;
 
 mod setup;
@@ -111,6 +111,8 @@ fn it_returns_executed_for_an_executed_proposal() {
 
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
         sc.assign_role(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+        sc.create_permission(managed_buffer!(b"perm"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"));
+        sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"perm"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
     }).assert_ok();
 
     setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
@@ -126,7 +128,7 @@ fn it_returns_executed_for_an_executed_proposal() {
         });
 
         let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
-        let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"any")]);
+        let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"perm")]);
 
         proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
     })

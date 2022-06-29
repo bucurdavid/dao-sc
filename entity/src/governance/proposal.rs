@@ -5,6 +5,7 @@ use elrond_wasm::api::KECCAK256_RESULT_LEN;
 
 use crate::config;
 use crate::permission;
+use crate::permission::PermissionDetails;
 use crate::permission::{Policy, PolicyMethod, ROLE_BUILTIN_LEADER};
 use core::convert::TryFrom;
 
@@ -69,7 +70,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         actions_hash: ManagedBuffer,
         vote_weight: BigUint,
         permissions: ManagedVec<ManagedBuffer>,
-        policies: ManagedVec<Policy<Self::Api>>,
+        policies: &ManagedVec<Policy<Self::Api>>,
     ) -> Proposal<Self::Api> {
         let proposer = self.blockchain().get_caller();
         let proposal_id = self.next_proposal_id().get();
@@ -224,12 +225,35 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         self.crypto().keccak256(&serialized).as_managed_buffer().clone()
     }
 
+    fn get_actual_permissions(&self, proposal: &Proposal<Self::Api>, actions: &ManagedVec<Action<Self::Api>>) -> ManagedVec<ManagedBuffer> {
+        let proposer_id = self.users().get_user_id(&proposal.proposer);
+        let mut actual_permissions = ManagedVec::new();
+
+        for role in self.user_roles(proposer_id).iter() {
+            for permission in self.policies(&role).keys() {
+                let permission_details = self.permission_details(&permission).get();
+
+                for action in actions.into_iter() {
+                    if self.does_permission_apply_to_action(&permission_details, &action) && !actual_permissions.contains(&permission) {
+                        actual_permissions.push(permission.clone());
+                    }
+                }
+            }
+        }
+
+        actual_permissions
+    }
+
+    fn does_permission_apply_to_action(&self, permission_details: &PermissionDetails<Self::Api>, action: &Action<Self::Api>) -> bool {
+        action.destination == permission_details.destination && action.endpoint == permission_details.endpoint
+    }
+
     fn has_sufficient_votes(&self, proposal: &Proposal<Self::Api>, quorum: &BigUint) -> bool {
         let total_votes = &proposal.votes_for + &proposal.votes_against;
         let vote_for_percent = &proposal.votes_for * &BigUint::from(100u64) / &total_votes;
         let vote_for_percent_to_pass = BigUint::from(50u64);
 
-        return vote_for_percent >= vote_for_percent_to_pass && &proposal.votes_for >= quorum;
+        vote_for_percent >= vote_for_percent_to_pass && &proposal.votes_for >= quorum
     }
 
     fn require_proposed_via_trusted_host(

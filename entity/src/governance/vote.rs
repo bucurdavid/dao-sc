@@ -3,6 +3,7 @@ elrond_wasm::derive_imports!();
 
 use super::events;
 use super::proposal;
+use super::proposal::Proposal;
 use super::proposal::ProposalStatus;
 use crate::config;
 use crate::permission;
@@ -48,18 +49,20 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
 
     fn sign(&self, proposal_id: u64) {
         let proposal = self.proposals(proposal_id).get();
-
         require!(self.get_proposal_status(&proposal) == ProposalStatus::Active, "proposal is not active");
 
         let signer = self.blockchain().get_caller();
+        self.sign_for_all_roles(&signer, &proposal);
+        self.emit_sign_event(proposal);
+    }
+
+    fn sign_for_all_roles(&self, signer: &ManagedAddress, proposal: &Proposal<Self::Api>) {
         let signer_id = self.users().get_or_create_user(&signer);
         let signer_roles = self.user_roles(signer_id);
 
         for role in signer_roles.iter() {
             self.proposal_signers(proposal.id, &role).insert(signer_id);
         }
-
-        self.emit_sign_event(proposal);
     }
 
     fn redeem_vote_tokens(&self, payment: EsdtTokenPayment<Self::Api>) {

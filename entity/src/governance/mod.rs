@@ -69,19 +69,17 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
 
         let (policies, allowed) = self.can_propose(&proposer, &actions_hash, &permissions);
         let vote_weight = payment.amount.clone();
-        let has_token_weighted_policy = self.has_token_weighted_policy(&policies);
-
         require!(allowed, "action not allowed for user");
 
-        if has_token_weighted_policy {
+        if self.has_token_weighted_policy(&policies) {
             require!(vote_weight >= self.min_proposal_vote_weight().get(), "insufficient vote weight");
         }
 
-        let proposal = self.create_proposal(content_hash, actions_hash, vote_weight.clone(), permissions, policies);
+        let proposal = self.create_proposal(content_hash, actions_hash, vote_weight.clone(), permissions, &policies);
         let proposal_id = proposal.id;
 
-        if !has_token_weighted_policy {
-            self.sign(proposal_id);
+        if !policies.is_empty() {
+            self.sign_for_all_roles(&proposer, &proposal);
         }
 
         self.protected_vote_tokens(&payment.token_identifier).update(|current| *current += &payment.amount);
@@ -119,12 +117,16 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
         self.require_sealed();
 
         let actions = actions.into_vec();
-        let mut proposal = self.proposals(proposal_id).get();
-        let status = self.get_proposal_status(&proposal);
         let actions_hash = self.calculate_actions_hash(&actions);
+        let mut proposal = self.proposals(proposal_id).get();
+        let actual_permissions = self.get_actual_permissions(&proposal, &actions);
+
+        require!(proposal.actions_hash == actions_hash, "actions have been corrupted");
+        require!(proposal.permissions.eq(&actual_permissions), "untruthful permissions announced");
+
+        let status = self.get_proposal_status(&proposal);
 
         require!(status == ProposalStatus::Succeeded, "proposal is not executable");
-        require!(proposal.actions_hash == actions_hash, "actions have been corrupted");
 
         self.execute_actions(&actions);
         proposal.was_executed = true;

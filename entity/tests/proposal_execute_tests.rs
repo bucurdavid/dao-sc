@@ -3,7 +3,7 @@ use elrond_wasm_debug::*;
 use entity::config::*;
 use entity::governance::proposal::*;
 use entity::governance::*;
-use entity::permission::{ROLE_BUILTIN_LEADER, PermissionModule};
+use entity::permission::*;
 use setup::*;
 
 mod setup;
@@ -17,6 +17,8 @@ fn it_marks_a_proposal_as_executed() {
 
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
         sc.assign_role(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+        sc.create_permission(managed_buffer!(b"perm"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"));
+        sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"perm"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
     }).assert_ok();
 
     setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
@@ -32,7 +34,7 @@ fn it_marks_a_proposal_as_executed() {
         });
 
         let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
-        let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"any")]);
+        let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"perm")]);
 
         proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
     })
@@ -54,7 +56,7 @@ fn it_marks_a_proposal_as_executed() {
 
         sc.execute_endpoint(proposal_id, MultiValueManagedVec::from(actions));
 
-        assert_eq!(true, sc.proposals(proposal_id).get().was_executed);
+        assert!(sc.proposals(proposal_id).get().was_executed);
     })
     .assert_ok();
 }
@@ -69,6 +71,8 @@ fn it_fails_if_attempted_to_execute_again() {
 
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
         sc.assign_role(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+        sc.create_permission(managed_buffer!(b"perm"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"));
+        sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"perm"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
     }).assert_ok();
 
     setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
@@ -84,7 +88,7 @@ fn it_fails_if_attempted_to_execute_again() {
         });
 
         let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
-        let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"any")]);
+        let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"perm")]);
 
         proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
     })
@@ -131,6 +135,8 @@ fn it_fails_if_the_proposal_is_still_active() {
 
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
         sc.assign_role(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+        sc.create_permission(managed_buffer!(b"perm"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"));
+        sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"perm"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
     }).assert_ok();
 
     setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
@@ -147,7 +153,7 @@ fn it_fails_if_the_proposal_is_still_active() {
         });
 
         let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
-        let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"any")]);
+        let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"perm")]);
 
         proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
     })
@@ -195,6 +201,8 @@ fn it_executes_actions_of_a_proposal() {
 
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
         sc.assign_role(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+        sc.create_permission(managed_buffer!(b"perm"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"));
+        sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"perm"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
     }).assert_ok();
 
     setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(ENTITY_TOKEN_SUPPLY), |sc| {
@@ -211,7 +219,7 @@ fn it_executes_actions_of_a_proposal() {
         });
 
         let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
-        let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"any")]);
+        let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"perm")]);
 
         sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b"a"), managed_buffer!(b"b"), actions_hash, actions_permissions);
     })
@@ -250,6 +258,8 @@ fn it_fails_if_actions_to_execute_are_incongruent_to_actions_proposed() {
 
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
         sc.assign_role(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+        sc.create_permission(managed_buffer!(b"perm"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"));
+        sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"perm"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
     }).assert_ok();
 
     setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(ENTITY_TOKEN_SUPPLY), |sc| {
@@ -266,7 +276,7 @@ fn it_fails_if_actions_to_execute_are_incongruent_to_actions_proposed() {
         });
 
         let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
-        let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"any")]);
+        let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"perm")]);
 
         sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b"a"), managed_buffer!(b"b"), actions_hash, actions_permissions);
     })
@@ -303,6 +313,8 @@ fn it_executes_a_contract_call_action() {
 
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
         sc.assign_role(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+        sc.create_permission(managed_buffer!(b"perm"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"));
+        sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"perm"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
     }).assert_ok();
 
     setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(ENTITY_TOKEN_SUPPLY), |sc| {
@@ -319,7 +331,7 @@ fn it_executes_a_contract_call_action() {
         });
 
         let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
-        let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"any")]);
+        let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"perm")]);
 
         sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b"a"), managed_buffer!(b"b"), actions_hash, actions_permissions);
     })
@@ -360,6 +372,8 @@ fn it_fails_to_spend_vote_tokens() {
 
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
         sc.assign_role(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+        sc.create_permission(managed_buffer!(b"perm"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"));
+        sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"perm"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
     }).assert_ok();
 
     // but try to spend 6 with a proposal action
@@ -377,7 +391,7 @@ fn it_fails_to_spend_vote_tokens() {
         });
 
         let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
-        let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"any")]);
+        let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"perm")]);
 
         proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b"a"), managed_buffer!(b"b"), actions_hash, actions_permissions);
     })
