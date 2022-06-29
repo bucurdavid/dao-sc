@@ -137,6 +137,19 @@ createEntityToken() {
 
 # params:
 #   $1 = token id
+#   $2 = supply
+registerEntityToken() {
+    erdpy --verbose contract call $MANAGER_ADDRESS \
+        --function="ESDTTransfer" \
+        --arguments "str:$1" "1000000000000000000" "str:registerEntityToken" $2 \
+        --recall-nonce --gas-limit=10000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+# params:
+#   $1 = token id
 #   $2 = feature1
 #   $3 = feature2
 createEntity() {
