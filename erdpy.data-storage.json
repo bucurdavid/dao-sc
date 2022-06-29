@@ -16,9 +16,9 @@
         "cost-token-id": "XSUPER-c19331",
         "cost-entity-creation-amount": 1,
         "trusted-host-address": "erd1aum55fcd44xfrwelsdma7j5avp263jwrkmr48en0arezkc72hsnq42qa7q",
-        "entity--address": "erd1qqqqqqqqqqqqqpgqkvs5syrg8ylfl0uaj3gkwd5w0dul29ea27rsc7al69",
-        "entity--deploy-transaction": "dc89bcd3bea872ad40cb875aab5e0b2bd02fb52cd43ff89a7873d2c84caaf9ab",
-        "manager--address": "erd1qqqqqqqqqqqqqpgqsmztqv3aa72d66dsvvmj6ekgszwdhquk27rs952qyh",
-        "manager--deploy-transaction": "ef85866da62056e3009ce87732822ddf0f29a9ba8163aef60f8fb1f6f341c5da"
+        "entity--address": "erd1qqqqqqqqqqqqqpgqxtlpz8er2yl7acfh7pch7hg8y8flqxjn27rs63cl7f",
+        "entity--deploy-transaction": "fd0393ed2010c7b36796cf5da29e2773311064f81a9b0b80743ddd3416d722cb",
+        "manager--address": "erd1qqqqqqqqqqqqqpgq5gt0hcs9s68qela3ju0tsncuu32w6emc27rs4tcfvp",
+        "manager--deploy-transaction": "e6d898664516a42a4ec06d7121c8999bfa6e33c881c4aca29396f9d9966825f9"
     }
 }

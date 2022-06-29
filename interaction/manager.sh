@@ -16,6 +16,7 @@ deploy() {
 
     erdpy --verbose contract build entity || return
     erdpy --verbose contract build manager || return
+
     erdpy --verbose contract test entity || return
     erdpy --verbose contract test manager || return
 
