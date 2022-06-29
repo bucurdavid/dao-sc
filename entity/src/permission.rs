@@ -186,7 +186,7 @@ pub trait PermissionModule: config::ConfigModule {
     }
 
     fn has_token_weighted_policy(&self, policies: &ManagedVec<Policy<Self::Api>>) -> bool {
-        policies.is_empty() || policies.iter()
+        policies.iter()
             .find(|p| p.method == PolicyMethod::Weight)
             .is_some()
     }

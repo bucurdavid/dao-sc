@@ -71,7 +71,7 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
         let vote_weight = payment.amount.clone();
         require!(allowed, "action not allowed for user");
 
-        if self.has_token_weighted_policy(&policies) {
+        if policies.is_empty() || self.has_token_weighted_policy(&policies) {
             require!(vote_weight >= self.min_proposal_vote_weight().get(), "insufficient vote weight");
         }
 

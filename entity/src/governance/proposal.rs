@@ -117,7 +117,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
             return ProposalStatus::Active;
         }
 
-        if proposal.actions_hash.is_empty() {
+        if proposal.actions_hash.is_empty() || proposal.permissions.is_empty() {
             return match self.has_sufficient_votes(&proposal, &self.quorum().get()) {
                 true => ProposalStatus::Succeeded,
                 false => ProposalStatus::Defeated,
