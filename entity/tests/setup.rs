@@ -9,7 +9,7 @@ pub const ENTITY_TOKEN_ID: &[u8] = b"SUPER-abcdef";
 pub const ENTITY_TOKEN_SUPPLY: u64 = 1_000;
 pub const VOTE_NFT_TOKEN_ID: &[u8] = b"SUPERVOTE-abcdef";
 pub const ENTITY_FAKE_TOKEN_ID: &[u8] = b"FAKE-abcdef";
-pub const MIN_WEIGHT_FOR_PROPOSAL: u64 = 1;
+pub const MIN_WEIGHT_FOR_PROPOSAL: u64 = 2;
 pub const QURUM: u64 = 50;
 pub const WASM_PATH: &'static str = "output/entity.wasm";
 
