@@ -132,7 +132,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
                 .map(|role| if let Some(policy) = self.policies(&role).get(&permission) {
                     match policy.method {
                         PolicyMethod::Weight => self.has_sufficient_votes(&proposal, &policy.quorum),
-                        PolicyMethod::One => false, // unilateral actions are executed without proposal
+                        PolicyMethod::One => self.proposal_signers(proposal.id, &role).contains(&proposer_id),
                         PolicyMethod::All => self.proposal_signers(proposal.id, &role).len() >= self.roles_member_amount(&role).get(),
                         PolicyMethod::Quorum => BigUint::from(self.proposal_signers(proposal.id, &role).len()) >= policy.quorum,
                     }
