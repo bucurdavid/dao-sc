@@ -47,7 +47,7 @@ where
                     managed_address!(&owner_address),
                     OptionalValue::Some(managed_token_id!(ENTITY_TOKEN_ID)),
                     OptionalValue::Some(managed_biguint!(ENTITY_TOKEN_SUPPLY)),
-                    OptionalValue::None,
+                    OptionalValue::Some(managed_address!(&owner_address)),
                 );
 
                 sc.quorum().set(managed_biguint!(QURUM));

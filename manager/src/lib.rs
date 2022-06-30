@@ -72,7 +72,7 @@ pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::Fa
 
         require!(initial_supply > 0, "setup token is not available");
 
-        let entity_address = self.create_entity(&token_id, &initial_supply, &features);
+        let entity_address = self.create_entity(token_id.clone(), initial_supply.clone());
 
         self.set_features(&entity_address, features);
         self.entities().insert(entity_address.clone());

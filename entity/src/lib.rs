@@ -20,8 +20,11 @@ pub trait Entity:
 {
     #[init]
     fn init(&self, trusted_host_address: ManagedAddress, opt_token: OptionalValue<TokenIdentifier>, opt_initial_tokens: OptionalValue<BigUint>, opt_leader: OptionalValue<ManagedAddress>) {
-        self.init_permission_module(opt_leader);
         self.trusted_host_address().set(&trusted_host_address);
+
+        if let OptionalValue::Some(leader) = opt_leader {
+            self.init_permission_module(leader);
+        }
 
         if let (OptionalValue::Some(token_id), OptionalValue::Some(initial_tokens)) = (opt_token, opt_initial_tokens) {
             self.token().set_token_id(&token_id);

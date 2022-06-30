@@ -43,9 +43,9 @@ fn it_signs_a_proposal_on_proposing_if_proposal_requires_signing() {
     .assert_ok();
 
     setup.blockchain.execute_query(&setup.contract, |sc| {
-        let expected: usize = 1;
+        let expected_signer_id = sc.users().get_user_id(&managed_address!(&proposer_address));
 
-        assert!(sc.proposal_signers(proposal_id, &managed_buffer!(b"builder")).contains(&expected));
+        assert!(sc.proposal_signers(proposal_id, &managed_buffer!(b"builder")).contains(&expected_signer_id));
     })
     .assert_ok();
 }

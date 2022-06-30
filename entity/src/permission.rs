@@ -39,18 +39,9 @@ impl PolicyMethod {
 
 #[elrond_wasm::module]
 pub trait PermissionModule: config::ConfigModule {
-    fn init_permission_module(&self, opt_leader: OptionalValue<ManagedAddress>) {
-        let has_initialized = !self.roles().is_empty() || !self.permissions().is_empty();
-
-        if has_initialized {
-            return;
-        }
-
+    fn init_permission_module(&self, leader: ManagedAddress) {
         self.create_role(ManagedBuffer::from(ROLE_BUILTIN_LEADER));
-
-        if let OptionalValue::Some(leader) = opt_leader {
-            self.assign_role(leader, ManagedBuffer::from(ROLE_BUILTIN_LEADER));
-        }
+        self.assign_role(leader, ManagedBuffer::from(ROLE_BUILTIN_LEADER));
     }
 
     #[endpoint(createRole)]
