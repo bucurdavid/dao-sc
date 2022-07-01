@@ -36,11 +36,11 @@ pub trait ConfigModule {
     }
 
     fn require_payment_token_governance_token(&self) {
-        require!(self.call_value().single_esdt().token_identifier == self.governance_token_id().get(), "invalid token");
+        require!(self.call_value().single_esdt().token_identifier == self.gov_token_id().get(), "invalid token");
     }
 
     fn require_governance_tokens_available(&self, amount: &BigUint) {
-        let gov_token_id = self.governance_token_id().get();
+        let gov_token_id = self.gov_token_id().get();
         let protected = self.protected_vote_tokens(&gov_token_id).get();
         let balance = self.blockchain().get_sc_balance(&EgldOrEsdtTokenIdentifier::esdt(gov_token_id), 0u64);
         let available = balance - protected;
@@ -60,7 +60,7 @@ pub trait ConfigModule {
 
     fn try_change_governance_token(&self, token_id: TokenIdentifier) {
         require!(token_id.is_valid_esdt_identifier(), "invalid governance token id");
-        self.governance_token_id().set(token_id);
+        self.gov_token_id().set(token_id);
     }
 
     fn try_change_quorum(&self, quorum: BigUint) {
@@ -89,9 +89,13 @@ pub trait ConfigModule {
     #[storage_mapper("sealed")]
     fn sealed(&self) -> SingleValueMapper<u8>;
 
-    #[view(getGovernanceTokenId)]
-    #[storage_mapper("governance_token_id")]
-    fn governance_token_id(&self) -> SingleValueMapper<TokenIdentifier>;
+    #[view(getGovTokenId)]
+    #[storage_mapper("gov_token_id")]
+    fn gov_token_id(&self) -> SingleValueMapper<TokenIdentifier>;
+
+    #[view(getGovTokenSupply)]
+    #[storage_mapper("gove_token_supply")]
+    fn gov_token_supply(&self) -> SingleValueMapper<BigUint>;
 
     #[view(getProtectedVoteTokens)]
     #[storage_mapper("protected_vote_tokens")]

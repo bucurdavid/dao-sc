@@ -14,7 +14,9 @@ fn it_creates_a_proposal() {
     let owner_address = setup.owner_address.clone();
     let mut proposal_id = 0;
 
-    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL), |sc| {
+    setup.configure_gov_token();
+
+    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL), |sc| {
         proposal_id = sc.propose_endpoint(
             managed_buffer!(b"id"),
             managed_buffer!(b"content hash"),
@@ -47,15 +49,17 @@ fn it_creates_a_proposal() {
 #[test]
 fn it_creates_a_proposal_with_actions() {
     let mut setup = EntitySetup::new(entity::contract_obj);
-    let proposer_address = &setup.user_address;
+    let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
 
+    setup.configure_gov_token();
+
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
-        sc.assign_role(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+        sc.assign_role(managed_address!(&proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
     }).assert_ok();
 
-    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL), |sc| {
+    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
 
         actions.push(Action::<DebugApi> {
@@ -101,6 +105,8 @@ fn it_creates_a_proposal_with_actions() {
 fn it_fails_if_bad_token() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
+    setup.configure_gov_token();
+
     setup.blockchain.execute_esdt_transfer(&setup.user_address, &setup.contract, ENTITY_FAKE_TOKEN_ID, 0, &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL), |sc| {
         sc.propose_endpoint(
             managed_buffer!(b"id"),
@@ -117,7 +123,9 @@ fn it_fails_if_bad_token() {
 fn it_fails_if_bad_vote_weight_amount() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
-    setup.blockchain.execute_esdt_transfer(&setup.user_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL - 1), |sc| {
+    setup.configure_gov_token();
+
+    setup.blockchain.execute_esdt_transfer(&setup.user_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL - 1), |sc| {
         sc.propose_endpoint(
             managed_buffer!(b"id"),
             managed_buffer!(b""),
@@ -133,7 +141,9 @@ fn it_fails_if_bad_vote_weight_amount() {
 fn it_fails_if_trusted_host_id_is_already_known() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
-    setup.blockchain.execute_esdt_transfer(&setup.user_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL), |sc| {
+    setup.configure_gov_token();
+
+    setup.blockchain.execute_esdt_transfer(&setup.user_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL), |sc| {
         sc.propose_endpoint(
             managed_buffer!(b"thesame"),
             managed_buffer!(b""),
@@ -144,7 +154,7 @@ fn it_fails_if_trusted_host_id_is_already_known() {
     })
     .assert_ok();
 
-    setup.blockchain.execute_esdt_transfer(&setup.user_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL), |sc| {
+    setup.blockchain.execute_esdt_transfer(&setup.user_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL), |sc| {
         sc.propose_endpoint(
             managed_buffer!(b"thesame"),
             managed_buffer!(b""),

@@ -222,9 +222,9 @@ getUserRoles() {
         --proxy=$PROXY || return
 }
 
-getGovernanceTokenId() {
+getGovTokenId() {
     erdpy contract query $ADDRESS \
-        --function="getGovernanceTokenId" \
+        --function="getGovTokenId" \
         --proxy=$PROXY || return
 }
 

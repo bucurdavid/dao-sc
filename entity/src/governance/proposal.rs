@@ -156,7 +156,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
     }
 
     fn execute_actions(&self, actions: &ManagedVec<Action<Self::Api>>) {
-        let gov_token_id = self.governance_token_id().get();
+        let gov_token_id = self.gov_token_id().get();
 
         for action in actions.iter() {
             let mut call = self
@@ -266,9 +266,9 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         permissions: &ManagedVec<ManagedBuffer>
     ) {
         let proposer = self.blockchain().get_caller();
-        let gov_token_id = self.governance_token_id().get();
+        let entity_address = self.blockchain().get_sc_address();
         let trusted_host_signature = ManagedByteArray::try_from(content_sig).unwrap();
-        let mut trusted_host_signable = sc_format!("{:x}{:x}{:x}{:x}{:x}", proposer, gov_token_id, trusted_host_id, content_hash, actions_hash);
+        let mut trusted_host_signable = sc_format!("{:x}{:x}{:x}{:x}{:x}", proposer, entity_address, trusted_host_id, content_hash, actions_hash);
 
         for perm in permissions.into_iter() {
             trusted_host_signable.append(&sc_format!("{:x}", perm));

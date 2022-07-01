@@ -63,7 +63,7 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
 
         require!(status != ProposalStatus::Active, "proposal is still active");
 
-        let gov_token_id = self.governance_token_id().get();
+        let gov_token_id = self.gov_token_id().get();
         let votes_mapper = self.votes(proposal_id, &caller);
         let votes = votes_mapper.get();
 

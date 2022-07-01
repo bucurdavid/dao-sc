@@ -11,7 +11,7 @@ fn it_seals_the_entity() {
 
     setup
         .blockchain
-        .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(1), |sc| {
+        .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(1), |sc| {
             sc.sealed().set(SEALED_NOT_SET);
 
             sc.seal_endpoint();

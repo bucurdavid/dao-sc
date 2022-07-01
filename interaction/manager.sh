@@ -17,8 +17,7 @@ deploy() {
     erdpy --verbose contract build entity || return
     erdpy --verbose contract build manager || return
 
-    erdpy --verbose contract test entity || return
-    erdpy --verbose contract test manager || return
+    cargo test || return
 
     erdpy --verbose contract deploy --project entity \
         --arguments $TRUSTED_HOST_ADDRESS \
@@ -60,11 +59,12 @@ deploy() {
 upgrade() {
     erdpy --verbose contract clean manager || return
     erdpy --verbose contract build manager || return
-    erdpy --verbose contract test manager || return
+
+    # cargo test || return
 
     erdpy --verbose contract upgrade $MANAGER_ADDRESS --project manager \
         --arguments $ENTITY_ADDRESS $TRUSTED_HOST_ADDRESS "str:$COST_TOKEN_ID" $COST_ENTITY_CREATION_AMOUNT \
-        --recall-nonce --gas-limit=80000000 \
+        --recall-nonce --gas-limit=100000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --ledger \
         --send || return
@@ -73,11 +73,12 @@ upgrade() {
 upgradeEntityTemplate() {
     erdpy --verbose contract clean entity || return
     erdpy --verbose contract build entity || return
-    erdpy --verbose contract test entity || return
+
+    # cargo test || return
 
     erdpy --verbose contract upgrade $ENTITY_ADDRESS --project entity \
         --arguments $TRUSTED_HOST_ADDRESS \
-        --recall-nonce --gas-limit=500000000 \
+        --recall-nonce --gas-limit=200000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --ledger \
         --send || return
@@ -223,8 +224,6 @@ getSetupToken() {
         --proxy=$PROXY || return
 }
 
-# params:
-#   $1 = token id
 getBaseDailyCost() {
     erdpy contract query $MANAGER_ADDRESS \
         --function="getBaseDailyCost" \
@@ -232,7 +231,7 @@ getBaseDailyCost() {
 }
 
 # params:
-#   $1 = token id
+#   $1 = entity address
 getCredits() {
     erdpy contract query $MANAGER_ADDRESS \
         --function="getCredits" \

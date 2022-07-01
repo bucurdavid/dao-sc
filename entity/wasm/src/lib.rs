@@ -9,7 +9,7 @@ elrond_wasm_node::wasm_endpoints! {
     (
         callBack
         assignRole
-        changeGovernanceToken
+        changeGovToken
         changeMinProposalVoteWeight
         changeQuorum
         changeVotingPeriodMinutes
@@ -20,7 +20,8 @@ elrond_wasm_node::wasm_endpoints! {
         createPolicyWeighted
         createRole
         execute
-        getGovernanceTokenId
+        getGovTokenId
+        getGovTokenSupply
         getMinProposalVoteWeight
         getPermissions
         getPolicies
@@ -37,14 +38,14 @@ elrond_wasm_node::wasm_endpoints! {
         getTrustedHostAddress
         getUserRoles
         getVersion
-        getVoteNftTokenId
         getVotingPeriodMinutes
-        issueNftVoteToken
+        issueGovToken
         propose
-        redeem
         seal
+        setGovTokenLocalRoles
         sign
         voteAgainst
         voteFor
+        withdraw
     )
 }

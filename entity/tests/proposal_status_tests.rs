@@ -11,12 +11,14 @@ mod setup;
 #[test]
 fn it_returns_active_for_a_newly_created_proposal() {
     let mut setup = EntitySetup::new(entity::contract_obj);
-    let proposer_address = &setup.user_address;
+    let proposer_address = setup.user_address.clone();
     let mut proposal_id = 0;
+
+    setup.configure_gov_token();
 
     setup.blockchain.set_block_timestamp(0);
 
-    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
+    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
         proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), managed_buffer!(b""), MultiValueManagedVec::new());
     })
     .assert_ok();
@@ -32,12 +34,14 @@ fn it_returns_defeated_if_for_votes_quorum_not_met() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let mut proposal_id = 0;
 
-    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM - 10), |sc| {
+    setup.configure_gov_token();
+
+    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM - 10), |sc| {
         proposal_id= sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), managed_buffer!(b""), MultiValueManagedVec::new());
     })
     .assert_ok();
 
-    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(9), |sc| {
+    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(9), |sc| {
         sc.vote_for_endpoint(proposal_id);
     })
     .assert_ok();
@@ -55,17 +59,19 @@ fn it_returns_defeated_if_quorum_met_but_votes_against_is_more_than_for() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let mut proposal_id = 0;
 
-    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(10), |sc| {
+    setup.configure_gov_token();
+
+    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(10), |sc| {
         proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), managed_buffer!(b""), MultiValueManagedVec::new());
     })
     .assert_ok();
 
-    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
+    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
         sc.vote_for_endpoint(proposal_id);
     })
     .assert_ok();
 
-    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM * 2), |sc| {
+    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM * 2), |sc| {
         sc.vote_against_endpoint(proposal_id);
     })
     .assert_ok();
@@ -81,15 +87,17 @@ fn it_returns_defeated_if_quorum_met_but_votes_against_is_more_than_for() {
 #[test]
 fn it_applies_the_default_quorum_to_proposals_with_actions_that_do_not_require_any_permissions() {
     let mut setup = EntitySetup::new(entity::contract_obj);
-    let proposer_address = &setup.user_address;
+    let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
 
+    setup.configure_gov_token();
+
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
-        sc.assign_role(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+        sc.assign_role(managed_address!(&proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
     }).assert_ok();
 
-    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(10), |sc| {
+    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(10), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
         actions.push(Action::<DebugApi> {
             destination: managed_address!(&action_receiver),
@@ -116,7 +124,7 @@ fn it_applies_the_default_quorum_to_proposals_with_actions_that_do_not_require_a
 
     setup.blockchain.set_block_timestamp(1); // go back in time
 
-    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
+    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
         sc.vote_for_endpoint(proposal_id);
     })
     .assert_ok();
@@ -134,17 +142,19 @@ fn it_returns_succeeded_if_for_votes_quorum_met_and_more_for_than_against_votes(
     let mut setup = EntitySetup::new(entity::contract_obj);
     let mut proposal_id = 0;
 
-    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
+    setup.configure_gov_token();
+
+    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
         proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), managed_buffer!(b""), MultiValueManagedVec::new());
     })
     .assert_ok();
 
-    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(20), |sc| {
+    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(20), |sc| {
         sc.vote_for_endpoint(proposal_id);
     })
     .assert_ok();
 
-    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(10), |sc| {
+    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(10), |sc| {
         sc.vote_against_endpoint(proposal_id);
     })
     .assert_ok();
@@ -170,7 +180,7 @@ fn it_returns_executed_for_an_executed_proposal() {
         sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"perm"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
     }).assert_ok();
 
-    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
+    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
         actions.push(Action::<DebugApi> {
             destination: managed_address!(&action_receiver),

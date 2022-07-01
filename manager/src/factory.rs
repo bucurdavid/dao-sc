@@ -4,7 +4,7 @@ use crate::config;
 
 #[elrond_wasm::module]
 pub trait FactoryModule: config::ConfigModule {
-    fn create_entity(&self, token_id: TokenIdentifier, initial_tokens: BigUint) -> ManagedAddress {
+    fn create_entity(&self) -> ManagedAddress {
         require!(!self.trusted_host_address().is_empty(), "trusted host address needs to be configured");
 
         let trusted_host_address = self.trusted_host_address().get();
@@ -13,7 +13,7 @@ pub trait FactoryModule: config::ConfigModule {
 
         let (address, _) = self
             .entity_contract_proxy(ManagedAddress::zero())
-            .init(trusted_host_address, OptionalValue::Some(token_id), OptionalValue::Some(initial_tokens), OptionalValue::Some(leader))
+            .init(trusted_host_address, OptionalValue::Some(leader))
             .deploy_from_source::<()>(&template_contract, self.get_deploy_code_metadata());
 
         require!(!address.is_zero(), "address is zero");
@@ -28,7 +28,7 @@ pub trait FactoryModule: config::ConfigModule {
         let template_contract = self.get_template_address();
 
         self.entity_contract_proxy(address)
-            .init(trusted_host_address, OptionalValue::<TokenIdentifier>::None, OptionalValue::<BigUint>::None, OptionalValue::<ManagedAddress>::None)
+            .init(trusted_host_address, OptionalValue::<ManagedAddress>::None)
             .upgrade_from_source(&template_contract, self.get_deploy_code_metadata());
     }
 

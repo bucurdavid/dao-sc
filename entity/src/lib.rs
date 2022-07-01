@@ -17,31 +17,23 @@ pub trait Entity:
     + governance::events::GovEventsModule
     + governance::proposal::ProposalModule
     + governance::vote::VoteModule
+    + governance::token::TokenModule
 {
     #[init]
-    fn init(&self, trusted_host_address: ManagedAddress, opt_token: OptionalValue<TokenIdentifier>, opt_initial_tokens: OptionalValue<BigUint>, opt_leader: OptionalValue<ManagedAddress>) {
+    fn init(&self, trusted_host_address: ManagedAddress, opt_leader: OptionalValue<ManagedAddress>) {
         self.trusted_host_address().set(&trusted_host_address);
+        self.init_governance_module();
 
         if let OptionalValue::Some(leader) = opt_leader {
             self.init_permission_module(leader);
         }
-
-        if let (OptionalValue::Some(token_id), OptionalValue::Some(initial_tokens)) = (opt_token, opt_initial_tokens) {
-            self.init_governance_module(&token_id, &initial_tokens);
-        }
     }
 
-    #[payable("*")]
     #[endpoint(seal)]
     fn seal_endpoint(&self) {
-        let caller = self.blockchain().get_caller();
-        let (proof_token_id, proof_amount) = self.call_value().single_fungible_esdt();
-
         self.require_not_sealed();
-        require!(proof_token_id == self.governance_token_id().get(), "invalid token proof");
-
+        self.require_caller_has_leader_role();
         self.sealed().set(SEALED_ON);
-        self.send().direct_esdt(&caller, &proof_token_id, 0, &proof_amount);
     }
 
     #[view(getVersion)]

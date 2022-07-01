@@ -11,28 +11,30 @@ mod setup;
 #[test]
 fn it_sets_the_longest_policy_voting_period_for_the_proposal() {
     let mut setup = EntitySetup::new(entity::contract_obj);
-    let sc_address = setup.contract.address_ref();
-    let proposer_address = &setup.user_address;
+    let sc_address = setup.contract.address_ref().clone();
+    let proposer_address = setup.user_address.clone();
     let longest_voting_period_minutes: usize = 180;
+
+    setup.configure_gov_token();
 
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
         sc.create_role(managed_buffer!(b"testrole"));
 
-        sc.create_permission(managed_buffer!(b"testperm1"), managed_address!(sc_address), managed_buffer!(b"testendpoint"));
-        sc.create_permission(managed_buffer!(b"testperm2"), managed_address!(sc_address), managed_buffer!(b"testendpoint"));
-        sc.create_permission(managed_buffer!(b"testperm3"), managed_address!(sc_address), managed_buffer!(b"testendpoint"));
+        sc.create_permission(managed_buffer!(b"testperm1"), managed_address!(&sc_address), managed_buffer!(b"testendpoint"));
+        sc.create_permission(managed_buffer!(b"testperm2"), managed_address!(&sc_address), managed_buffer!(b"testendpoint"));
+        sc.create_permission(managed_buffer!(b"testperm3"), managed_address!(&sc_address), managed_buffer!(b"testendpoint"));
 
         sc.create_policy(managed_buffer!(b"testrole"), managed_buffer!(b"testperm1"), PolicyMethod::Weight, managed_biguint!(2u64), 60);
         sc.create_policy(managed_buffer!(b"testrole"), managed_buffer!(b"testperm2"), PolicyMethod::Weight, managed_biguint!(5u64), longest_voting_period_minutes);
         sc.create_policy(managed_buffer!(b"testrole"), managed_buffer!(b"testperm3"), PolicyMethod::Weight, managed_biguint!(8u64), 120);
 
-        sc.assign_role(managed_address!(proposer_address), managed_buffer!(b"testrole"));
+        sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"testrole"));
     }).assert_ok();
 
-    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL), |sc| {
+    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
         actions.push(Action::<DebugApi> {
-            destination: managed_address!(sc_address),
+            destination: managed_address!(&sc_address),
             endpoint: managed_buffer!(b"testendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,

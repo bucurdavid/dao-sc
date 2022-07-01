@@ -23,7 +23,7 @@ fn it_signs_a_proposal_on_proposing_if_proposal_requires_signing() {
         sc.create_policy(managed_buffer!(b"builder"), managed_buffer!(b"testperm"), PolicyMethod::Quorum, managed_biguint!(QURUM), VOTING_PERIOD_MINUTES_DEFAULT);
     }).assert_ok();
 
-    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL), |sc| {
+    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
         actions.push(Action::<DebugApi> {
             destination: managed_address!(sc_address),
@@ -53,15 +53,17 @@ fn it_signs_a_proposal_on_proposing_if_proposal_requires_signing() {
 #[test]
 fn it_does_not_sign_a_proposal_if_not_guarded_by_policies() {
     let mut setup = EntitySetup::new(entity::contract_obj);
-    let proposer_address = setup.owner_address;
+    let proposer_address = setup.owner_address.clone();
     let mut proposal_id: u64 = 0;
+
+    setup.configure_gov_token();
 
     setup.blockchain.execute_tx(&proposer_address, &setup.contract, &rust_biguint!(0), |sc| {
         sc.create_role(managed_buffer!(b"builder"));
         sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"builder"));
     }).assert_ok();
 
-    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL), |sc| {
+    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL), |sc| {
         proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), managed_buffer!(b""), MultiValueManagedVec::new());
     })
     .assert_ok();

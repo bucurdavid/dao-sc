@@ -15,7 +15,7 @@ fn it_changes_the_governance_token_on_unsealed_entity() {
             sc.sealed().set(SEALED_NOT_SET);
             sc.change_gov_token_endpoint(managed_token_id!(b"GOV-123456"));
 
-            assert_eq!(sc.governance_token_id().get(), managed_token_id!(b"GOV-123456"));
+            assert_eq!(sc.gov_token_id().get(), managed_token_id!(b"GOV-123456"));
         })
         .assert_ok();
 }

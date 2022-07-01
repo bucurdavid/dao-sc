@@ -8,22 +8,28 @@ use proposal::{Action, ProposalStatus};
 pub mod events;
 pub mod proposal;
 pub mod vote;
+pub mod token;
 
 #[elrond_wasm::module]
-pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule + events::GovEventsModule + proposal::ProposalModule + vote::VoteModule {
-    fn init_governance_module(&self, gov_token_id: &TokenIdentifier, initial_tokens: &BigUint) {
-        let initial_quorum = initial_tokens / &BigUint::from(20u64); // 5% of initial tokens
-        let initial_min_tokens_for_proposing = initial_tokens / &BigUint::from(1000u64); // 0.1% of initial tokens
-
+pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule + events::GovEventsModule + proposal::ProposalModule + vote::VoteModule + token::TokenModule {
+    fn init_governance_module(&self) {
         self.next_proposal_id().set_if_empty(1);
-
-        self.try_change_governance_token(gov_token_id.clone());
-        self.try_change_quorum(BigUint::from(initial_quorum));
-        self.try_change_min_proposal_vote_weight(BigUint::from(initial_min_tokens_for_proposing));
-        self.try_change_voting_period_in_minutes(VOTING_PERIOD_MINUTES_DEFAULT);
+        self.voting_period_in_minutes().set_if_empty(VOTING_PERIOD_MINUTES_DEFAULT);
     }
 
-    #[endpoint(changeGovernanceToken)]
+    fn configure_governance_token(&self, gov_token_id: TokenIdentifier, supply: BigUint) {
+        let initial_quorum = &supply / &BigUint::from(20u64); // 5% of supply
+        let initial_min_tokens_for_proposing = &supply / &BigUint::from(1000u64); // 0.1% of supply
+
+        self.gov_token_id().set(&gov_token_id);
+        self.gov_token_supply().set(&supply);
+
+        self.try_change_governance_token(gov_token_id);
+        self.try_change_quorum(BigUint::from(initial_quorum));
+        self.try_change_min_proposal_vote_weight(BigUint::from(initial_min_tokens_for_proposing));
+    }
+
+    #[endpoint(changeGovToken)]
     fn change_gov_token_endpoint(&self, token_id: TokenIdentifier) {
         self.require_not_sealed();
         self.try_change_governance_token(token_id);
@@ -62,9 +68,7 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
         let permissions = permissions.into_vec();
 
         self.require_proposed_via_trusted_host(&trusted_host_id, &content_hash, content_sig, &actions_hash, &permissions);
-        self.require_payment_token_governance_token();
         self.require_sealed();
-
         require!(payment.amount > 0, "token ownership proof required");
         require!(!self.known_trusted_host_proposal_ids().contains(&trusted_host_id), "proposal already registered");
 
@@ -73,6 +77,7 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
         require!(allowed, "action not allowed for user");
 
         if policies.is_empty() || self.has_token_weighted_policy(&policies) {
+            self.require_payment_token_governance_token();
             require!(vote_weight >= self.min_proposal_vote_weight().get(), "insufficient vote weight");
         }
 
@@ -85,7 +90,6 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
 
         self.protected_vote_tokens(&payment.token_identifier).update(|current| *current += &payment.amount);
         self.known_trusted_host_proposal_ids().insert(trusted_host_id);
-
         self.emit_propose_event(proposal, payment, vote_weight);
 
         proposal_id
@@ -140,6 +144,39 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
     fn withdraw_endpoint(&self, proposal_ids: MultiValueManagedVec<u64>) {
         for proposal_id in proposal_ids.iter() {
             self.withdraw_tokens(proposal_id);
+        }
+    }
+
+    #[payable("EGLD")]
+    #[endpoint(issueGovToken)]
+    fn issue_gov_token_endpoint(&self, token_name: ManagedBuffer, token_ticker: ManagedBuffer, supply: BigUint) {
+        let caller = self.blockchain().get_caller();
+
+        self.issue_gov_token(token_name, token_ticker, supply)
+            .with_callback(self.callbacks().gov_token_issue_callback(&caller))
+            .call_and_exit();
+    }
+
+    #[endpoint(setGovTokenLocalRoles)]
+    fn set_gov_token_local_roles_endpoint(&self, token_id: TokenIdentifier, entity_address: ManagedAddress) {
+        let roles = [EsdtLocalRole::Mint, EsdtLocalRole::Burn];
+
+        self.send().esdt_system_sc_proxy()
+            .set_special_roles(&entity_address, &token_id, (&roles[..]).into_iter().cloned())
+            .async_call()
+            .call_and_exit();
+    }
+
+    #[payable("*")]
+    #[callback]
+    fn gov_token_issue_callback(&self, initial_caller: &ManagedAddress, #[call_result] result: ManagedAsyncCallResult<()>) {
+        match result {
+            ManagedAsyncCallResult::Ok(_) => {
+                let payment = self.call_value().single_esdt();
+                self.send().direct_esdt(&initial_caller, &payment.token_identifier, 0, &payment.amount);
+                self.configure_governance_token(payment.token_identifier, payment.amount);
+            }
+            ManagedAsyncCallResult::Err(_) => self.send_received_egld(&initial_caller),
         }
     }
 

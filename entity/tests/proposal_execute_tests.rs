@@ -11,17 +11,19 @@ mod setup;
 #[test]
 fn it_marks_a_proposal_as_executed() {
     let mut setup = EntitySetup::new(entity::contract_obj);
-    let proposer_address = &setup.user_address;
+    let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
 
+    setup.configure_gov_token();
+
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
-        sc.assign_role(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+        sc.assign_role(managed_address!(&proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
         sc.create_permission(managed_buffer!(b"perm"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"));
         sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"perm"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
     }).assert_ok();
 
-    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
+    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
         actions.push(Action::<DebugApi> {
             destination: managed_address!(&action_receiver),
@@ -65,17 +67,19 @@ fn it_marks_a_proposal_as_executed() {
 fn it_fails_if_attempted_to_execute_again() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
-    let proposer_address = &setup.user_address;
+    let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
 
+    setup.configure_gov_token();
+
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
-        sc.assign_role(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+        sc.assign_role(managed_address!(&proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
         sc.create_permission(managed_buffer!(b"perm"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"));
         sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"perm"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
     }).assert_ok();
 
-    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
+    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
         actions.push(Action::<DebugApi> {
             destination: managed_address!(&action_receiver),
@@ -129,17 +133,19 @@ fn it_fails_if_attempted_to_execute_again() {
 #[test]
 fn it_fails_if_the_proposal_is_still_active() {
     let mut setup = EntitySetup::new(entity::contract_obj);
-    let proposer_address = &setup.user_address;
+    let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
 
+    setup.configure_gov_token();
+
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
-        sc.assign_role(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+        sc.assign_role(managed_address!(&proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
         sc.create_permission(managed_buffer!(b"perm"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"));
         sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"perm"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
     }).assert_ok();
 
-    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
+    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
 
         actions.push(Action::<DebugApi> {
@@ -194,18 +200,20 @@ fn it_fails_if_the_proposal_is_still_active() {
 fn it_executes_actions_of_a_proposal() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
-    let proposer_address = &setup.user_address;
+    let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
+
+    setup.configure_gov_token();
 
     setup.blockchain.set_egld_balance(setup.contract.address_ref(), &rust_biguint!(1000));
 
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
-        sc.assign_role(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+        sc.assign_role(managed_address!(&proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
         sc.create_permission(managed_buffer!(b"perm"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"));
         sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"perm"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
     }).assert_ok();
 
-    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(ENTITY_TOKEN_SUPPLY), |sc| {
+    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(ENTITY_GOV_TOKEN_SUPPLY), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
 
         actions.push(Action::<DebugApi> {
@@ -251,18 +259,20 @@ fn it_executes_actions_of_a_proposal() {
 fn it_fails_if_actions_to_execute_are_incongruent_to_actions_proposed() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
-    let proposer_address = &setup.user_address;
+    let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
+
+    setup.configure_gov_token();
 
     setup.blockchain.set_egld_balance(setup.contract.address_ref(), &rust_biguint!(1000));
 
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
-        sc.assign_role(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+        sc.assign_role(managed_address!(&proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
         sc.create_permission(managed_buffer!(b"perm"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"));
         sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"perm"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
     }).assert_ok();
 
-    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(ENTITY_TOKEN_SUPPLY), |sc| {
+    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(ENTITY_GOV_TOKEN_SUPPLY), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
 
         actions.push(Action::<DebugApi> {
@@ -306,18 +316,20 @@ fn it_fails_if_actions_to_execute_are_incongruent_to_actions_proposed() {
 fn it_executes_a_contract_call_action() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
-    let proposer_address = &setup.user_address;
+    let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
+
+    setup.configure_gov_token();
 
     setup.blockchain.set_esdt_balance(setup.contract.address_ref(), b"ACTION-123456", &rust_biguint!(1000));
 
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
-        sc.assign_role(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+        sc.assign_role(managed_address!(&proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
         sc.create_permission(managed_buffer!(b"perm"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"));
         sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"perm"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
     }).assert_ok();
 
-    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(ENTITY_TOKEN_SUPPLY), |sc| {
+    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(ENTITY_GOV_TOKEN_SUPPLY), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
 
         actions.push(Action::<DebugApi> {
@@ -363,26 +375,28 @@ fn it_executes_a_contract_call_action() {
 fn it_fails_to_spend_vote_tokens() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let voting_period_seconds = VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60;
-    let proposer_address = &setup.user_address;
+    let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
 
+    setup.configure_gov_token();
+
     // set available balance to 5
-    setup.blockchain.set_esdt_balance(setup.contract.address_ref(), ENTITY_TOKEN_ID, &rust_biguint!(5));
+    setup.blockchain.set_esdt_balance(setup.contract.address_ref(), ENTITY_GOV_TOKEN_ID, &rust_biguint!(5));
 
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
-        sc.assign_role(managed_address!(proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+        sc.assign_role(managed_address!(&proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
         sc.create_permission(managed_buffer!(b"perm"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"));
         sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"perm"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
     }).assert_ok();
 
     // but try to spend 6 with a proposal action
-    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
+    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
 
         actions.push(Action::<DebugApi> {
             destination: managed_address!(&action_receiver),
-            token_id: managed_token_id_wrapped!(ENTITY_TOKEN_ID),
+            token_id: managed_token_id_wrapped!(ENTITY_GOV_TOKEN_ID),
             token_nonce: 0,
             amount: managed_biguint!(6),
             gas_limit: 5_000_000u64,
@@ -398,13 +412,13 @@ fn it_fails_to_spend_vote_tokens() {
     .assert_ok();
 
     // add to the sc token balance: vote for with 100 tokens
-    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(100), |sc| {
+    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(100), |sc| {
             sc.vote_for_endpoint(proposal_id);
         })
         .assert_ok();
 
     // add to the sc token balance: vote against with 100 tokens
-    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_TOKEN_ID, 0, &rust_biguint!(20), |sc| {
+    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(20), |sc| {
             sc.vote_against_endpoint(proposal_id);
         })
         .assert_ok();
@@ -417,7 +431,7 @@ fn it_fails_to_spend_vote_tokens() {
 
         actions.push(Action::<DebugApi> {
             destination: managed_address!(&action_receiver),
-            token_id: managed_token_id_wrapped!(ENTITY_TOKEN_ID),
+            token_id: managed_token_id_wrapped!(ENTITY_GOV_TOKEN_ID),
             token_nonce: 0,
             amount: managed_biguint!(6),
             gas_limit: 5_000_000u64,

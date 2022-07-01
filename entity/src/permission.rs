@@ -166,7 +166,7 @@ pub trait PermissionModule: config::ConfigModule {
         });
     }
 
-    fn has_role(&self, address: ManagedAddress, role_name: ManagedBuffer) -> bool {
+    fn has_role(&self, address: &ManagedAddress, role_name: &ManagedBuffer) -> bool {
         let user_id = self.users().get_user_id(&address);
 
         if user_id == 0 {
@@ -184,6 +184,13 @@ pub trait PermissionModule: config::ConfigModule {
 
     fn does_leader_role_exist(&self) -> bool {
         self.roles().contains(&ManagedBuffer::from(ROLE_BUILTIN_LEADER))
+    }
+
+    fn require_caller_has_leader_role(&self) {
+        let caller = self.blockchain().get_caller();
+        let leader_role = ManagedBuffer::from(ROLE_BUILTIN_LEADER);
+
+        require!(self.has_role(&caller, &leader_role), "caller must be leader");
     }
 
     #[view(getRoles)]
