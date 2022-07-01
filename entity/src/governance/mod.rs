@@ -85,7 +85,7 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
 
         self.protected_vote_tokens(&payment.token_identifier).update(|current| *current += &payment.amount);
         self.known_trusted_host_proposal_ids().insert(trusted_host_id);
-        self.create_vote_nft_and_send(&proposer, proposal.id, VoteType::For, vote_weight.clone(), payment.clone());
+
         self.emit_propose_event(proposal, payment, vote_weight);
 
         proposal_id
@@ -136,13 +136,10 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
         self.emit_execute_event(proposal);
     }
 
-    #[payable("*")]
-    #[endpoint(redeem)]
-    fn redeem_endpoint(&self) {
-        let payments = self.call_value().all_esdt_transfers();
-
-        for payment in payments.into_iter() {
-            self.redeem_vote_tokens(payment);
+    #[endpoint(withdraw)]
+    fn withdraw_endpoint(&self, proposal_ids: MultiValueManagedVec<u64>) {
+        for proposal_id in proposal_ids.iter() {
+            self.withdraw_tokens(proposal_id);
         }
     }
 
@@ -212,33 +209,5 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
             }
         }
         signers
-    }
-
-    #[payable("EGLD")]
-    #[endpoint(issueNftVoteToken)]
-    fn issue_nft_vote_token(&self, token_name: ManagedBuffer, token_ticker: ManagedBuffer) {
-        let caller = self.blockchain().get_caller();
-
-        self.vote_nft_token().issue(
-            EsdtTokenType::NonFungible,
-            self.call_value().egld_value(),
-            token_name,
-            token_ticker,
-            18usize,
-            Option::Some(self.callbacks().vote_nft_issue_callback(&caller)),
-        );
-    }
-
-    #[callback]
-    fn vote_nft_issue_callback(&self, initial_caller: &ManagedAddress, #[call_result] result: ManagedAsyncCallResult<TokenIdentifier>) {
-        match result {
-            ManagedAsyncCallResult::Ok(token_id) => self.vote_nft_token().set_token_id(&token_id),
-            ManagedAsyncCallResult::Err(_) => {
-                let egld_returned = self.call_value().egld_value();
-                if egld_returned > 0 {
-                    self.send().direct_egld(&initial_caller, &egld_returned);
-                }
-            }
-        }
     }
 }

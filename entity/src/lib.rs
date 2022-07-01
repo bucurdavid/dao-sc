@@ -38,14 +38,10 @@ pub trait Entity:
         let (proof_token_id, proof_amount) = self.call_value().single_fungible_esdt();
 
         self.require_not_sealed();
-        require!(!self.vote_nft_token().is_empty(), "vote nft token must be set");
         require!(proof_token_id == self.governance_token_id().get(), "invalid token proof");
 
         self.sealed().set(SEALED_ON);
         self.send().direct_esdt(&caller, &proof_token_id, 0, &proof_amount);
-        self.vote_nft_token().set_local_roles(&[EsdtLocalRole::NftCreate, EsdtLocalRole::NftBurn][..], None);
-
-        // TODO: upgrade token to disallow transferring ownership & remove upgradability with controlChanges
     }
 
     #[view(getVersion)]

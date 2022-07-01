@@ -7,7 +7,6 @@ use entity::*;
 
 pub const ENTITY_TOKEN_ID: &[u8] = b"SUPER-abcdef";
 pub const ENTITY_TOKEN_SUPPLY: u64 = 1_000;
-pub const VOTE_NFT_TOKEN_ID: &[u8] = b"SUPERVOTE-abcdef";
 pub const ENTITY_FAKE_TOKEN_ID: &[u8] = b"FAKE-abcdef";
 pub const MIN_WEIGHT_FOR_PROPOSAL: u64 = 2;
 pub const QURUM: u64 = 50;
@@ -53,13 +52,9 @@ where
                 sc.quorum().set(managed_biguint!(QURUM));
                 sc.min_proposal_vote_weight().set(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL));
                 sc.voting_period_in_minutes().set(VOTING_PERIOD_MINUTES_DEFAULT);
-                sc.vote_nft_token().set_token_id(&managed_token_id!(VOTE_NFT_TOKEN_ID));
                 sc.sealed().set(SEALED_ON);
             })
             .assert_ok();
-
-        let vote_nft_roles = [EsdtLocalRole::NftCreate, EsdtLocalRole::NftBurn, EsdtLocalRole::NftUpdateAttributes];
-        blockchain.set_esdt_local_roles(contract.address_ref(), VOTE_NFT_TOKEN_ID, &vote_nft_roles[..]);
 
         Self {
             blockchain,

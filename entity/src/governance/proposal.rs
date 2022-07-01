@@ -100,7 +100,8 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
             permissions,
         };
 
-        self.proposals(proposal_id.clone()).set(&proposal);
+        self.proposals(proposal_id).set(&proposal);
+        self.votes(proposal_id, &proposer).set(vote_weight);
         self.next_proposal_id().set(proposal_id + 1);
 
         proposal

@@ -93,10 +93,6 @@ pub trait ConfigModule {
     #[storage_mapper("governance_token_id")]
     fn governance_token_id(&self) -> SingleValueMapper<TokenIdentifier>;
 
-    #[view(getVoteNftTokenId)]
-    #[storage_mapper("vote_nft_token")]
-    fn vote_nft_token(&self) -> NonFungibleTokenMapper<Self::Api>;
-
     #[view(getProtectedVoteTokens)]
     #[storage_mapper("protected_vote_tokens")]
     fn protected_vote_tokens(&self, token_id: &TokenIdentifier) -> SingleValueMapper<BigUint>;
@@ -110,6 +106,9 @@ pub trait ConfigModule {
 
     #[storage_mapper("proposal_signers")]
     fn proposal_signers(&self, proposal_id: u64, role_name: &ManagedBuffer) -> UnorderedSetMapper<usize>;
+
+    #[storage_mapper("votes")]
+    fn votes(&self, proposal_id: u64, voter: &ManagedAddress) -> SingleValueMapper<BigUint>;
 
     #[storage_mapper("known_th_proposals_ids")]
     fn known_trusted_host_proposal_ids(&self) -> UnorderedSetMapper<ManagedBuffer<Self::Api>>;

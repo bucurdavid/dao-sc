@@ -52,7 +52,6 @@ pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::Fa
 
         self.setup_token_id(&caller).set(&proof.token_identifier);
         self.setup_token_supply(&caller).set(&supply);
-
         self.send().direct_esdt(&caller, &proof.token_identifier, proof.token_nonce, &proof.amount);
     }
 
