@@ -78,7 +78,7 @@ fn it_initializes_the_contract() {
     setup
         .blockchain
         .execute_query(&setup.contract, |sc| {
-            assert_eq!(managed_token_id!(ENTITY_TOKEN_ID), sc.token().get_token_id());
+            assert_eq!(managed_token_id!(ENTITY_TOKEN_ID), sc.governance_token_id().get());
         })
         .assert_ok();
 }

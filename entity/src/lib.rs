@@ -27,7 +27,6 @@ pub trait Entity:
         }
 
         if let (OptionalValue::Some(token_id), OptionalValue::Some(initial_tokens)) = (opt_token, opt_initial_tokens) {
-            self.token().set_token_id(&token_id);
             self.init_governance_module(&token_id, &initial_tokens);
         }
     }
@@ -40,7 +39,7 @@ pub trait Entity:
 
         self.require_not_sealed();
         require!(!self.vote_nft_token().is_empty(), "vote nft token must be set");
-        require!(proof_token_id == self.token().get_token_id(), "invalid token proof");
+        require!(proof_token_id == self.governance_token_id().get(), "invalid token proof");
 
         self.sealed().set(SEALED_ON);
         self.send().direct_esdt(&caller, &proof_token_id, 0, &proof_amount);

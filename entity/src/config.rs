@@ -89,10 +89,6 @@ pub trait ConfigModule {
     #[storage_mapper("sealed")]
     fn sealed(&self) -> SingleValueMapper<u8>;
 
-    #[view(getTokenId)]
-    #[storage_mapper("token")]
-    fn token(&self) -> FungibleTokenMapper<Self::Api>;
-
     #[view(getGovernanceTokenId)]
     #[storage_mapper("governance_token_id")]
     fn governance_token_id(&self) -> SingleValueMapper<TokenIdentifier>;

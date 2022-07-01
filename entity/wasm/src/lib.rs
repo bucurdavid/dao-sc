@@ -34,7 +34,6 @@ elrond_wasm_node::wasm_endpoints! {
         getQuorum
         getRoles
         getSealed
-        getTokenId
         getTrustedHostAddress
         getUserRoles
         getVersion

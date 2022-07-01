@@ -265,9 +265,9 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         permissions: &ManagedVec<ManagedBuffer>
     ) {
         let proposer = self.blockchain().get_caller();
-        let entity_token_id = self.token().get_token_id();
+        let gov_token_id = self.governance_token_id().get();
         let trusted_host_signature = ManagedByteArray::try_from(content_sig).unwrap();
-        let mut trusted_host_signable = sc_format!("{:x}{:x}{:x}{:x}{:x}", proposer, entity_token_id, trusted_host_id, content_hash, actions_hash);
+        let mut trusted_host_signable = sc_format!("{:x}{:x}{:x}{:x}{:x}", proposer, gov_token_id, trusted_host_id, content_hash, actions_hash);
 
         for perm in permissions.into_iter() {
             trusted_host_signable.append(&sc_format!("{:x}", perm));
