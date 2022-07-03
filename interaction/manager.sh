@@ -60,7 +60,7 @@ upgrade() {
     erdpy --verbose contract clean manager || return
     erdpy --verbose contract build manager || return
 
-    # cargo test || return
+    cargo test || return
 
     erdpy --verbose contract upgrade $MANAGER_ADDRESS --project manager \
         --arguments $ENTITY_ADDRESS $TRUSTED_HOST_ADDRESS "str:$COST_TOKEN_ID" $COST_ENTITY_CREATION_AMOUNT \
@@ -121,67 +121,11 @@ setDailyFeatureCost() {
         --send || return
 }
 
-# params:
-#   $1 = token name
-#   $2 = token ticker
-#   $3 = initial supply
-createEntityToken() {
-    erdpy --verbose contract call $MANAGER_ADDRESS \
-        --function="createEntityToken" \
-        --arguments "str:$1" "str:$2" $3 \
-        --value=50000000000000000 \
-        --recall-nonce --gas-limit=100000000 \
-        --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
-        --send || return
-}
-
-# params:
-#   $1 = token id
-#   $2 = supply
-registerEntityToken() {
-    erdpy --verbose contract call $MANAGER_ADDRESS \
-        --function="ESDTTransfer" \
-        --arguments "str:$1" "1000000000000000000" "str:registerEntityToken" $2 \
-        --recall-nonce --gas-limit=10000000 \
-        --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
-        --send || return
-}
-
-# params:
-#   $1 = token id
-#   $2 = feature1
-#   $3 = feature2
 createEntity() {
     erdpy contract call $MANAGER_ADDRESS \
         --function="ESDTTransfer" \
-        --arguments "str:$COST_TOKEN_ID" $COST_ENTITY_CREATION_AMOUNT "str:createEntity" "str:$1" "str:$1" "str:$2" \
+        --arguments "str:$COST_TOKEN_ID" $COST_ENTITY_CREATION_AMOUNT "str:createEntity" \
         --recall-nonce --gas-limit=80000000 \
-        --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
-        --send || return
-}
-
-# params:
-#   $1 = token id
-finalizeEntity() {
-    erdpy contract call $MANAGER_ADDRESS \
-        --function="finalizeEntity" \
-        --arguments "str:$1" \
-        --recall-nonce --gas-limit=500000000 \
-        --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
-        --send || return
-}
-
-# params:
-#   $1 = address
-clearSetup() {
-    erdpy contract call $MANAGER_ADDRESS \
-        --function="clearSetup" \
-        --arguments $1 \
-        --recall-nonce --gas-limit=500000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --ledger \
         --send || return
@@ -203,24 +147,6 @@ boost() {
 getEntityTemplateAddress() {
     erdpy contract query $MANAGER_ADDRESS \
         --function="getEntityTemplateAddress" \
-        --proxy=$PROXY || return
-}
-
-# params:
-#   $1 = token id
-getEntityAddress() {
-    erdpy contract query $MANAGER_ADDRESS \
-        --function="getEntityAddress" \
-        --arguments "str:$1" \
-        --proxy=$PROXY || return
-}
-
-# params:
-#   $1 = address
-getSetupToken() {
-    erdpy contract query $MANAGER_ADDRESS \
-        --function="getSetupToken" \
-        --arguments $1 \
         --proxy=$PROXY || return
 }
 
