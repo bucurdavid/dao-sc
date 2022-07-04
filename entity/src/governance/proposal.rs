@@ -115,10 +115,11 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         }
 
         let proposer_id = self.users().get_user_id(&proposal.proposer);
+        let proposer_roles = self.user_roles(proposer_id);
         let mut fulfilled_all = true;
 
         for permission in proposal.permissions.into_iter() {
-            let fulfilled_perm = self.user_roles(proposer_id).iter()
+            let fulfilled_perm = proposer_roles.iter()
                 .map(|role| if let Some(policy) = self.policies(&role).get(&permission) {
                     match policy.method {
                         PolicyMethod::Weight => self.has_sufficient_votes(&proposal, &policy.quorum),
@@ -127,7 +128,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
                         PolicyMethod::Quorum => BigUint::from(self.proposal_signers(proposal.id, &role).len()) >= policy.quorum,
                     }
                 } else {
-                    true
+                    self.proposal_signers(proposal.id, &role).len() > self.roles_member_amount(&role).get() / 2
                 })
                 .find(|fulfilled| !fulfilled)
                 .is_none();
@@ -172,22 +173,29 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         }
     }
 
-    fn can_propose(&self, proposer: &ManagedAddress, actions_hash: &ManagedBuffer, permissions: &ManagedVec<ManagedBuffer>) -> (ManagedVec<Policy<Self::Api>>, bool) {
+    fn can_propose(&self, proposer: &ManagedAddress, actions_hash: &ManagedBuffer, permissions: &ManagedVec<ManagedBuffer>) -> (bool, ManagedVec<Policy<Self::Api>>) {
         let proposer_id = self.users().get_user_id(proposer);
-        let user_roles = self.user_roles(proposer_id);
+        let proposer_roles = self.user_roles(proposer_id);
         let mut policies = ManagedVec::new();
 
+        // no actions -> always allowed
         if actions_hash.is_empty() && permissions.is_empty() {
-            return (policies, true);
+            return (true, policies);
         }
 
-        if self.does_leader_role_exist() && user_roles.is_empty() {
-            return (policies, false);
+        // has roles -> always allowed
+        if !proposer_roles.is_empty() {
+            return (true, policies);
+        }
+
+        // if fellowship has leaders, only allow if has a role
+        if self.does_leader_role_exist() && proposer_roles.is_empty() {
+            return (false, policies);
         }
 
         let mut allowed = false;
 
-        for role in user_roles.iter() {
+        for role in proposer_roles.iter() {
             if role == ManagedBuffer::from(ROLE_BUILTIN_LEADER) {
                 allowed = true;
             }
@@ -202,7 +210,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
             }
         }
 
-        (policies, allowed)
+        (allowed, policies)
     }
 
     fn calculate_actions_hash(&self, actions: &ManagedVec<Action<Self::Api>>) -> ManagedBuffer<Self::Api> {

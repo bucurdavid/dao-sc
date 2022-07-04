@@ -72,11 +72,14 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
         require!(payment.amount > 0, "token ownership proof required");
         require!(!self.known_trusted_host_proposal_ids().contains(&trusted_host_id), "proposal already registered");
 
-        let (policies, allowed) = self.can_propose(&proposer, &actions_hash, &permissions);
-        let vote_weight = payment.amount.clone();
+        let (allowed, policies) = self.can_propose(&proposer, &actions_hash, &permissions);
         require!(allowed, "action not allowed for user");
 
-        if policies.is_empty() || self.has_token_weighted_policy(&policies) {
+        let vote_weight = payment.amount.clone();
+        let proposer_id = self.users().get_user_id(&proposer);
+        let proposer_roles = self.user_roles(proposer_id);
+
+        if proposer_roles.is_empty() || self.has_token_weighted_policy(&policies) {
             self.require_payment_token_governance_token();
             require!(vote_weight >= self.min_proposal_vote_weight().get(), "insufficient vote weight");
         }
@@ -84,7 +87,7 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
         let proposal = self.create_proposal(content_hash, actions_hash, vote_weight.clone(), permissions, &policies);
         let proposal_id = proposal.id;
 
-        if !policies.is_empty() {
+        if !proposer_roles.is_empty() {
             self.sign_for_all_roles(&proposer, &proposal);
         }
 
@@ -128,10 +131,7 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
 
         require!(proposal.actions_hash == actions_hash, "actions have been corrupted");
         require!(proposal.permissions.eq(&actual_permissions), "untruthful permissions announced");
-
-        let status = self.get_proposal_status(&proposal);
-
-        require!(status == ProposalStatus::Succeeded, "proposal is not executable");
+        require!(self.get_proposal_status(&proposal) == ProposalStatus::Succeeded, "proposal is not executable");
 
         self.execute_actions(&actions);
         proposal.was_executed = true;

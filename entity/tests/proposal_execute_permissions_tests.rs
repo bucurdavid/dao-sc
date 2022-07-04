@@ -16,16 +16,15 @@ fn it_executes_a_proposal_with_truthfully_announced_permissions() {
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
-
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
-        sc.assign_role(managed_address!(&proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+        sc.create_role(managed_buffer!(b"builder"));
+        sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"builder"));
 
         sc.create_permission(managed_buffer!(b"announced1"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint1"), ManagedVec::new());
         sc.create_permission(managed_buffer!(b"announced2"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint2"), ManagedVec::new());
 
-        sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"announced1"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
-        sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"announced2"),  PolicyMethod::Weight, BigUint::from(1u64), 12);
+        sc.create_policy(managed_buffer!(b"builder"), managed_buffer!(b"announced1"), PolicyMethod::Quorum, BigUint::from(1u64), 1);
+        sc.create_policy(managed_buffer!(b"builder"), managed_buffer!(b"announced2"),  PolicyMethod::Weight, BigUint::from(1u64), 1);
     }).assert_ok();
 
     setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
