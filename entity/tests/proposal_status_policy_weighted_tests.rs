@@ -19,7 +19,7 @@ fn it_returns_active_when_just_created() {
 
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
         sc.create_role(managed_buffer!(b"testrole"));
-        sc.create_permission(managed_buffer!(b"testperm"), managed_address!(&sc_address), managed_buffer!(b"testendpoint"));
+        sc.create_permission(managed_buffer!(b"testperm"), managed_address!(&sc_address), managed_buffer!(b"testendpoint"), ManagedVec::new());
         sc.create_policy(managed_buffer!(b"testrole"), managed_buffer!(b"testperm"), PolicyMethod::Weight, managed_biguint!(QURUM), VOTING_PERIOD_MINUTES_DEFAULT);
         sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"testrole"));
     }).assert_ok();
@@ -31,9 +31,8 @@ fn it_returns_active_when_just_created() {
             endpoint: managed_buffer!(b"testendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_egld_token_id!(),
-            token_nonce: 0,
-            amount: managed_biguint!(0),
+            value: managed_biguint!(0),
+            payments: ManagedVec::new(),
         });
 
         let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
@@ -58,7 +57,7 @@ fn it_succeeds_if_one_of_one_permission_policies_meets_quorum_and_passed_voting_
 
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
         sc.create_role(managed_buffer!(b"testrole"));
-        sc.create_permission(managed_buffer!(b"testperm"), managed_address!(&sc_address), managed_buffer!(b"testendpoint"));
+        sc.create_permission(managed_buffer!(b"testperm"), managed_address!(&sc_address), managed_buffer!(b"testendpoint"), ManagedVec::new());
         sc.create_policy(managed_buffer!(b"testrole"), managed_buffer!(b"testperm"), PolicyMethod::Weight, managed_biguint!(QURUM), VOTING_PERIOD_MINUTES_DEFAULT);
         sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"testrole"));
     }).assert_ok();
@@ -70,9 +69,8 @@ fn it_succeeds_if_one_of_one_permission_policies_meets_quorum_and_passed_voting_
             endpoint: managed_buffer!(b"testendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_egld_token_id!(),
-            token_nonce: 0,
-            amount: managed_biguint!(0),
+            value: managed_biguint!(0),
+            payments: ManagedVec::new(),
         });
 
         let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
@@ -99,7 +97,7 @@ fn it_returns_defeated_if_one_of_one_permission_policies_does_not_meet_quorum() 
 
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
         sc.create_role(managed_buffer!(b"testrole"));
-        sc.create_permission(managed_buffer!(b"testperm"), managed_address!(&sc_address), managed_buffer!(b"testendpoint"));
+        sc.create_permission(managed_buffer!(b"testperm"), managed_address!(&sc_address), managed_buffer!(b"testendpoint"), ManagedVec::new());
         sc.create_policy(managed_buffer!(b"testrole"), managed_buffer!(b"testperm"), PolicyMethod::Weight, managed_biguint!(QURUM * 2), VOTING_PERIOD_MINUTES_DEFAULT);
         sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"testrole"));
     }).assert_ok();
@@ -112,9 +110,8 @@ fn it_returns_defeated_if_one_of_one_permission_policies_does_not_meet_quorum() 
             endpoint: managed_buffer!(b"testendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_egld_token_id!(),
-            token_nonce: 0,
-            amount: managed_biguint!(0),
+            value: managed_biguint!(0),
+            payments: ManagedVec::new(),
         });
 
         let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));

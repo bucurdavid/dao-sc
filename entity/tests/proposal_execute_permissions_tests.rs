@@ -21,8 +21,8 @@ fn it_executes_a_proposal_with_truthfully_announced_permissions() {
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
         sc.assign_role(managed_address!(&proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
 
-        sc.create_permission(managed_buffer!(b"announced1"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint1"));
-        sc.create_permission(managed_buffer!(b"announced2"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint2"));
+        sc.create_permission(managed_buffer!(b"announced1"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint1"), ManagedVec::new());
+        sc.create_permission(managed_buffer!(b"announced2"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint2"), ManagedVec::new());
 
         sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"announced1"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
         sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"announced2"),  PolicyMethod::Weight, BigUint::from(1u64), 12);
@@ -35,18 +35,16 @@ fn it_executes_a_proposal_with_truthfully_announced_permissions() {
             endpoint: managed_buffer!(b"myendpoint1"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_egld_token_id!(),
-            token_nonce: 0,
-            amount: managed_biguint!(0),
+            value: managed_biguint!(0),
+            payments: ManagedVec::new(),
         });
         actions.push(Action::<DebugApi> {
             destination: managed_address!(&action_receiver),
             endpoint: managed_buffer!(b"myendpoint2"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_egld_token_id!(),
-            token_nonce: 0,
-            amount: managed_biguint!(0),
+            value: managed_biguint!(0),
+            payments: ManagedVec::new(),
         });
 
         let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
@@ -65,18 +63,16 @@ fn it_executes_a_proposal_with_truthfully_announced_permissions() {
             endpoint: managed_buffer!(b"myendpoint1"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_egld_token_id!(),
-            token_nonce: 0,
-            amount: managed_biguint!(0),
+            value: managed_biguint!(0),
+            payments: ManagedVec::new(),
         });
         actions.push(Action::<DebugApi> {
             destination: managed_address!(&action_receiver),
             endpoint: managed_buffer!(b"myendpoint2"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_egld_token_id!(),
-            token_nonce: 0,
-            amount: managed_biguint!(0),
+            value: managed_biguint!(0),
+            payments: ManagedVec::new(),
         });
 
         sc.execute_endpoint(proposal_id, MultiValueManagedVec::from(actions));
@@ -98,8 +94,8 @@ fn it_fails_to_executes_a_proposal_with_untruthfully_announced_permissions() {
 
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
         sc.assign_role(managed_address!(&proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
-        sc.create_permission(managed_buffer!(b"announced"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint1"));
-        sc.create_permission(managed_buffer!(b"unannounced"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint2"));
+        sc.create_permission(managed_buffer!(b"announced"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint1"), ManagedVec::new());
+        sc.create_permission(managed_buffer!(b"unannounced"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint2"), ManagedVec::new());
 
         sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"announced"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
         sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"unannounced"),  PolicyMethod::Weight, BigUint::from(1u64), 12);
@@ -112,18 +108,16 @@ fn it_fails_to_executes_a_proposal_with_untruthfully_announced_permissions() {
             endpoint: managed_buffer!(b"myendpoint1"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_egld_token_id!(),
-            token_nonce: 0,
-            amount: managed_biguint!(0),
+            value: managed_biguint!(0),
+            payments: ManagedVec::new(),
         });
         actions.push(Action::<DebugApi> {
             destination: managed_address!(&action_receiver),
             endpoint: managed_buffer!(b"myendpoint2"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_egld_token_id!(),
-            token_nonce: 0,
-            amount: managed_biguint!(0),
+            value: managed_biguint!(0),
+            payments: ManagedVec::new(),
         });
 
         let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
@@ -142,18 +136,16 @@ fn it_fails_to_executes_a_proposal_with_untruthfully_announced_permissions() {
             endpoint: managed_buffer!(b"myendpoint1"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_egld_token_id!(),
-            token_nonce: 0,
-            amount: managed_biguint!(0),
+            value: managed_biguint!(0),
+            payments: ManagedVec::new(),
         });
         actions.push(Action::<DebugApi> {
             destination: managed_address!(&action_receiver),
             endpoint: managed_buffer!(b"myendpoint2"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_egld_token_id!(),
-            token_nonce: 0,
-            amount: managed_biguint!(0),
+            value: managed_biguint!(0),
+            payments: ManagedVec::new(),
         });
 
         sc.execute_endpoint(proposal_id, MultiValueManagedVec::from(actions));

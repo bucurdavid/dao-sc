@@ -104,9 +104,8 @@ fn it_applies_the_default_quorum_to_proposals_with_actions_that_do_not_require_a
             endpoint: managed_buffer!(b"myendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_egld_token_id!(),
-            token_nonce: 0,
-            amount: managed_biguint!(0),
+            value: managed_biguint!(0),
+            payments: ManagedVec::new(),
         });
 
         let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
@@ -176,7 +175,7 @@ fn it_returns_executed_for_an_executed_proposal() {
 
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
         sc.assign_role(managed_address!(&proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
-        sc.create_permission(managed_buffer!(b"perm"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"));
+        sc.create_permission(managed_buffer!(b"perm"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"), ManagedVec::new());
         sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"perm"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
     }).assert_ok();
 
@@ -187,9 +186,8 @@ fn it_returns_executed_for_an_executed_proposal() {
             endpoint: managed_buffer!(b"myendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_egld_token_id!(),
-            token_nonce: 0,
-            amount: managed_biguint!(0),
+            value: managed_biguint!(0),
+            payments: ManagedVec::new(),
         });
 
         let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
@@ -208,9 +206,8 @@ fn it_returns_executed_for_an_executed_proposal() {
             endpoint: managed_buffer!(b"myendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_egld_token_id!(),
-            token_nonce: 0,
-            amount: managed_biguint!(0),
+            value: managed_biguint!(0),
+            payments: ManagedVec::new(),
         });
 
         sc.execute_endpoint(proposal_id, MultiValueManagedVec::from(actions));

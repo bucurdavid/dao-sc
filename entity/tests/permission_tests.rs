@@ -1,6 +1,7 @@
 use elrond_wasm_debug::*;
 use entity::config::*;
-use entity::permission::{PermissionModule};
+use elrond_wasm::types::*;
+use entity::permission::*;
 use setup::*;
 
 mod setup;
@@ -24,7 +25,7 @@ fn it_creates_a_permission() {
     let sc_address = setup.contract.address_ref();
 
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
-        sc.create_permission(managed_buffer!(b"testperm"), managed_address!(sc_address), managed_buffer!(b"endpoint"));
+        sc.create_permission(managed_buffer!(b"testperm"), managed_address!(sc_address), managed_buffer!(b"endpoint"), ManagedVec::new());
     }).assert_ok();
 
     setup.blockchain.execute_query(&setup.contract, |sc| {

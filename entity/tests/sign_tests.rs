@@ -18,7 +18,7 @@ fn it_signs_a_proposal() {
 
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
         sc.create_role(managed_buffer!(b"builder"));
-        sc.create_permission(managed_buffer!(b"perm"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"));
+        sc.create_permission(managed_buffer!(b"perm"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"), ManagedVec::new());
         sc.create_policy(managed_buffer!(b"builder"), managed_buffer!(b"perm"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
         sc.assign_role(managed_address!(&owner_address), managed_buffer!(b"builder"));
     }).assert_ok();
@@ -30,9 +30,8 @@ fn it_signs_a_proposal() {
             endpoint: managed_buffer!(b"myendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_egld_token_id!(),
-            token_nonce: 0,
-            amount: managed_biguint!(0),
+            value: managed_biguint!(0),
+            payments: ManagedVec::new(),
         });
 
         let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));

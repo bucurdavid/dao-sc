@@ -18,7 +18,7 @@ fn it_signs_a_proposal_on_proposing_if_proposal_requires_signing() {
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
         sc.create_role(managed_buffer!(b"builder"));
         sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"builder"));
-        sc.create_permission(managed_buffer!(b"testperm"), managed_address!(sc_address), managed_buffer!(b"testendpoint"));
+        sc.create_permission(managed_buffer!(b"testperm"), managed_address!(sc_address), managed_buffer!(b"testendpoint"), ManagedVec::new());
 
         sc.create_policy(managed_buffer!(b"builder"), managed_buffer!(b"testperm"), PolicyMethod::Quorum, managed_biguint!(QURUM), VOTING_PERIOD_MINUTES_DEFAULT);
     }).assert_ok();
@@ -30,9 +30,8 @@ fn it_signs_a_proposal_on_proposing_if_proposal_requires_signing() {
             endpoint: managed_buffer!(b"testendpoint"),
             arguments: ManagedVec::new(),
             gas_limit: 5_000_000u64,
-            token_id: managed_egld_token_id!(),
-            token_nonce: 0,
-            amount: managed_biguint!(0),
+            value: managed_biguint!(0),
+            payments: ManagedVec::new(),
         });
 
         let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
