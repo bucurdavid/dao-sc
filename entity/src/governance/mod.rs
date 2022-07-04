@@ -158,11 +158,15 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
     }
 
     #[endpoint(setGovTokenLocalRoles)]
-    fn set_gov_token_local_roles_endpoint(&self, token_id: TokenIdentifier, entity_address: ManagedAddress) {
+    fn set_gov_token_local_roles_endpoint(&self) {
+        require!(!self.gov_token_id().is_empty(), "gov token must be set");
+
+        let gov_token_id = self.gov_token_id().get();
+        let entity_address = self.blockchain().get_sc_address();
         let roles = [EsdtLocalRole::Mint, EsdtLocalRole::Burn];
 
         self.send().esdt_system_sc_proxy()
-            .set_special_roles(&entity_address, &token_id, (&roles[..]).into_iter().cloned())
+            .set_special_roles(&entity_address, &gov_token_id, (&roles[..]).into_iter().cloned())
             .async_call()
             .call_and_exit();
     }
