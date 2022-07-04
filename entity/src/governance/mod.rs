@@ -1,6 +1,6 @@
 elrond_wasm::imports!();
 
-use self::{vote::VoteType};
+use self::vote::VoteType;
 use crate::config::{self, VOTING_PERIOD_MINUTES_DEFAULT};
 use crate::permission;
 use proposal::{Action, ProposalStatus};

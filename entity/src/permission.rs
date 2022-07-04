@@ -156,7 +156,6 @@ pub trait PermissionModule: config::ConfigModule {
     fn create_policy(&self, role_name: ManagedBuffer, permission_name: ManagedBuffer, method: PolicyMethod, quorum: BigUint, voting_period_minutes: usize) {
         require!(self.roles().contains(&role_name), "role does not exist");
         require!(self.permissions().contains(&permission_name), "permission does not exist");
-
         require!(!self.policies(&role_name).contains_key(&permission_name), "policy already exists");
 
         self.policies(&role_name).insert(permission_name, Policy {
