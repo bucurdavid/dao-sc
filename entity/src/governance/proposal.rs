@@ -27,31 +27,20 @@ pub struct Proposal<M: ManagedTypeApi> {
 pub struct Action<M: ManagedTypeApi> {
     pub destination: ManagedAddress<M>,
     pub endpoint: ManagedBuffer<M>,
+    pub value: BigUint<M>,
+    pub payments: ManagedVec<M, EsdtTokenPayment<M>>,
     pub arguments: ManagedVec<M, ManagedBuffer<M>>,
     pub gas_limit: u64,
-    pub token_id: EgldOrEsdtTokenIdentifier<M>,
-    pub token_nonce: u64,
-    pub amount: BigUint<M>,
 }
 
-pub type ActionAsMultiArg<M> =
-    MultiValue8<ManagedAddress<M>, ManagedBuffer<M>, u64, EgldOrEsdtTokenIdentifier<M>, u64, BigUint<M>, usize, MultiValueManagedVec<M, ManagedBuffer<M>>>;
-
-impl<M: ManagedTypeApi> Action<M> {
-    pub fn into_multiarg(self) -> ActionAsMultiArg<M> {
-        (
-            self.destination,
-            self.endpoint,
-            self.gas_limit,
-            self.token_id,
-            self.token_nonce,
-            self.amount,
-            self.arguments.len(),
-            MultiValueManagedVec::from(self.arguments),
-        )
-            .into()
-    }
-}
+pub type ActionAsMultiArg<M> = MultiValue6<
+    ManagedAddress<M>,
+    ManagedBuffer<M>,
+    BigUint<M>,
+    ManagedVec<M, EsdtTokenPayment<M>>,
+    ManagedVec<M, ManagedBuffer<M>>,
+    u64
+>;
 
 #[derive(TypeAbi, TopEncode, TopDecode, PartialEq, Debug)]
 pub enum ProposalStatus {
@@ -165,12 +154,18 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
                 .with_arguments_raw(ManagedArgBuffer::from(action.arguments))
                 .with_gas_limit(action.gas_limit);
 
-            if action.amount > 0 {
-                if action.token_id == gov_token_id {
-                    self.require_governance_tokens_available(&action.amount);
+            if action.value > 0 {
+                call = call.with_egld_transfer(action.value);
+                call.transfer_execute();
+                break;
+            }
+
+            for payment in action.payments.iter() {
+                if payment.token_identifier == gov_token_id {
+                    self.require_governance_tokens_available(&payment.amount);
                 }
 
-                call = call.with_egld_or_single_esdt_token_transfer(action.token_id, action.token_nonce, action.amount)
+                call = call.add_esdt_token_transfer(payment.token_identifier, payment.token_nonce, payment.amount);
             }
 
             call.transfer_execute()
@@ -214,9 +209,11 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         let mut serialized = ManagedBuffer::new();
 
         for action in actions.iter() {
-            let formatted = sc_format!("{:x}{}{}{}{}", action.destination.as_managed_buffer(), action.amount, action.token_id, action.token_nonce, action.endpoint);
+            serialized.append(&sc_format!("{:x}{}{}", action.destination.as_managed_buffer(), action.endpoint, action.value));
 
-            serialized.append(&formatted);
+            for payment in action.payments.iter() {
+                serialized.append(&sc_format!("{}{}{}", payment.token_identifier, payment.token_nonce, payment.amount));
+            }
 
             for arg in action.arguments.into_iter() {
                 serialized.append(&sc_format!("{:x}", arg));
