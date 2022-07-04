@@ -9,6 +9,7 @@ pub const ROLE_BUILTIN_LEADER: &[u8] = b"leader";
 pub struct PermissionDetails<M: ManagedTypeApi> {
     pub destination: ManagedAddress<M>,
     pub endpoint: ManagedBuffer<M>,
+    pub arguments: ManagedVec<M, ManagedBuffer<M>>,
 }
 
 #[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, TypeAbi, ManagedVecItem)]
@@ -57,9 +58,9 @@ pub trait PermissionModule: config::ConfigModule {
     }
 
     #[endpoint(createPermission)]
-    fn create_permission_endpoint(&self, permission_name: ManagedBuffer, destination: ManagedAddress, endpoint: ManagedBuffer) {
+    fn create_permission_endpoint(&self, permission_name: ManagedBuffer, destination: ManagedAddress, endpoint: ManagedBuffer, arguments: MultiValueManagedVec<ManagedBuffer>) {
         self.require_caller_self();
-        self.create_permission(permission_name, destination, endpoint);
+        self.create_permission(permission_name, destination, endpoint, arguments.into_vec());
     }
 
     #[endpoint(createPolicyWeighted)]
@@ -142,7 +143,7 @@ pub trait PermissionModule: config::ConfigModule {
         require!(added, "user already has role");
     }
 
-    fn create_permission(&self, permission_name: ManagedBuffer, destination: ManagedAddress, endpoint: ManagedBuffer) {
+    fn create_permission(&self, permission_name: ManagedBuffer, destination: ManagedAddress, endpoint: ManagedBuffer, arguments: ManagedVec<ManagedBuffer>) {
         let created = self.permissions().insert(permission_name.clone());
 
         require!(created, "permission already exists");
@@ -150,6 +151,7 @@ pub trait PermissionModule: config::ConfigModule {
         self.permission_details(&permission_name).set(PermissionDetails {
             destination,
             endpoint,
+            arguments,
         });
     }
 

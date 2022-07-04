@@ -243,7 +243,28 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
     }
 
     fn does_permission_apply_to_action(&self, permission_details: &PermissionDetails<Self::Api>, action: &Action<Self::Api>) -> bool {
-        action.destination == permission_details.destination && action.endpoint == permission_details.endpoint
+        let mut applies = true;
+
+        if applies && !permission_details.destination.is_zero() {
+            applies = permission_details.destination == action.destination;
+        }
+
+        if applies && !permission_details.endpoint.is_empty() {
+            applies = permission_details.endpoint == action.endpoint;
+        }
+
+        if applies && !permission_details.arguments.is_empty() {
+            for (i, perm_arg) in permission_details.arguments.into_iter().enumerate() {
+                if let Option::Some(arg_at_index) = action.arguments.try_get(i).as_deref() {
+                    applies = arg_at_index == &perm_arg;
+                } else {
+                    applies = false;
+                    break;
+                }
+            }
+        }
+
+        applies
     }
 
     fn has_sufficient_votes(&self, proposal: &Proposal<Self::Api>, quorum: &BigUint) -> bool {
