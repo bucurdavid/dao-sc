@@ -63,13 +63,12 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
         actions_hash: ManagedBuffer,
         permissions: MultiValueManagedVec<ManagedBuffer>,
     ) -> u64 {
-        let payment = self.call_value().single_esdt();
+        let payment = self.call_value().egld_or_single_esdt();
         let proposer = self.blockchain().get_caller();
         let permissions = permissions.into_vec();
 
         self.require_proposed_via_trusted_host(&trusted_host_id, &content_hash, content_sig, &actions_hash, &permissions);
         self.require_sealed();
-        require!(payment.amount > 0, "token ownership proof required");
         require!(!self.known_trusted_host_proposal_ids().contains(&trusted_host_id), "proposal already registered");
 
         let (allowed, policies) = self.can_propose(&proposer, &actions_hash, &permissions);
@@ -91,9 +90,12 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
             self.sign_for_all_roles(&proposer, &proposal);
         }
 
-        self.protected_vote_tokens(&payment.token_identifier).update(|current| *current += &payment.amount);
+        if let Option::Some(token_id) = payment.token_identifier.as_esdt_option() {
+            self.protected_vote_tokens(&token_id).update(|current| *current += &payment.amount);
+        }
+
         self.known_trusted_host_proposal_ids().insert(trusted_host_id);
-        self.emit_propose_event(proposal, payment, vote_weight);
+        self.emit_propose_event(proposal, vote_weight);
 
         proposal_id
     }

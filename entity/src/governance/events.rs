@@ -6,11 +6,10 @@ use super::vote::{VoteType};
 
 #[elrond_wasm::module]
 pub trait GovEventsModule {
-    fn emit_propose_event(&self, proposal: Proposal<Self::Api>, payment: EsdtTokenPayment<Self::Api>, weight: BigUint) {
+    fn emit_propose_event(&self, proposal: Proposal<Self::Api>, weight: BigUint) {
         self.propose_event(
             self.blockchain().get_caller(),
             proposal,
-            payment,
             weight,
             self.blockchain().get_block_timestamp(),
             self.blockchain().get_block_nonce(),
@@ -65,7 +64,6 @@ pub trait GovEventsModule {
         &self,
         #[indexed] caller: ManagedAddress,
         #[indexed] proposal: Proposal<Self::Api>,
-        #[indexed] payment: EsdtTokenPayment<Self::Api>,
         #[indexed] weight: BigUint,
         #[indexed] timestamp: u64,
         #[indexed] epoch: u64,
