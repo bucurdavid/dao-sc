@@ -150,6 +150,8 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
     #[payable("EGLD")]
     #[endpoint(issueGovToken)]
     fn issue_gov_token_endpoint(&self, token_name: ManagedBuffer, token_ticker: ManagedBuffer, supply: BigUint) {
+        require!(self.gov_token_id().is_empty(), "governance token already set");
+
         let caller = self.blockchain().get_caller();
 
         self.issue_gov_token(token_name, token_ticker, supply)
