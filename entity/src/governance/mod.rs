@@ -141,8 +141,10 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
     }
 
     #[endpoint(withdraw)]
-    fn withdraw_endpoint(&self, proposal_ids: MultiValueManagedVec<u64>) {
-        for proposal_id in proposal_ids.iter() {
+    fn withdraw_endpoint(&self) {
+        let caller = self.blockchain().get_caller();
+
+        for proposal_id in self.withdrawable_proposal_ids(&caller).iter() {
             self.withdraw_tokens(proposal_id);
         }
     }

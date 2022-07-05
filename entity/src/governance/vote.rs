@@ -35,6 +35,7 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
         self.proposals(proposal_id).set(&proposal);
         self.protected_vote_tokens(&payment.token_identifier).update(|current| *current += &payment.amount);
         self.votes(proposal_id, &voter).update(|current| *current += &payment.amount);
+        self.withdrawable_proposal_ids(&voter).insert(proposal_id);
         self.emit_vote_event(proposal, vote_type, payment, vote_weight);
     }
 
@@ -61,7 +62,9 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
         let proposal = self.proposals(proposal_id).get();
         let status = self.get_proposal_status(&proposal);
 
-        require!(status != ProposalStatus::Active, "proposal is still active");
+        if status == ProposalStatus::Active || status == ProposalStatus::Pending {
+            return;
+        }
 
         let gov_token_id = self.gov_token_id().get();
         let votes_mapper = self.votes(proposal_id, &caller);
@@ -70,6 +73,7 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
         if votes > 0 {
             votes_mapper.clear();
             self.protected_vote_tokens(&gov_token_id).update(|current| *current -= &votes);
+            self.withdrawable_proposal_ids(&caller).swap_remove(&proposal_id);
             self.send().direct_esdt(&caller, &gov_token_id, 0, &votes);
         }
     }

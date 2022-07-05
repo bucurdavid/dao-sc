@@ -42,6 +42,7 @@ fn it_creates_a_proposal() {
         // storage
         assert_eq!(2, sc.next_proposal_id().get());
         assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL), sc.votes(proposal.id, &managed_address!(&owner_address)).get());
+        assert!(sc.withdrawable_proposal_ids(&managed_address!(&owner_address)).contains(&proposal.id));
     })
     .assert_ok();
 }

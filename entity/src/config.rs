@@ -111,6 +111,9 @@ pub trait ConfigModule {
     #[storage_mapper("proposal_signers")]
     fn proposal_signers(&self, proposal_id: u64, role_name: &ManagedBuffer) -> UnorderedSetMapper<usize>;
 
+    #[storage_mapper("withdrawable_proposal_ids")]
+    fn withdrawable_proposal_ids(&self, voter: &ManagedAddress) -> UnorderedSetMapper<u64>;
+
     #[storage_mapper("votes")]
     fn votes(&self, proposal_id: u64, voter: &ManagedAddress) -> SingleValueMapper<BigUint>;
 
