@@ -39,6 +39,7 @@ elrond_wasm_node::wasm_endpoints! {
         getUserRoles
         getVersion
         getVotingPeriodMinutes
+        getWithdrawableProposalIds
         issueGovToken
         propose
         seal
