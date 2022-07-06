@@ -1,6 +1,6 @@
 NETWORK_NAME="devnet" # devnet, testnet, mainnet
-ADDRESS="erd1qqqqqqqqqqqqqpgqs36pqcnd4m5gqdcefljvypu4rkr097e527rsjycspn"
-TOKEN_ID="ALPHA-69ef77"
+ADDRESS=""
+GOV_TOKEN_ID=""
 
 PROXY=$(erdpy data load --partition $NETWORK_NAME --key=proxy)
 CHAIN_ID=$(erdpy data load --partition $NETWORK_NAME --key=chain-id)
@@ -13,7 +13,7 @@ COST_TOKEN_ID=$(erdpy data load --partition $NETWORK_NAME --key=cost-token-id)
 propose() {
     erdpy contract call $ADDRESS \
         --function="ESDTTransfer" \
-        --arguments "str:$TOKEN_ID" $3 "str:propose" "str:$1" "str:$2" \
+        --arguments "str:$GOV_TOKEN_ID" $3 "str:propose" "str:$1" "str:$2" \
         --recall-nonce --gas-limit=80000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --ledger \
