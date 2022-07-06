@@ -5,6 +5,7 @@ use crate::governance::proposal::Proposal;
 elrond_wasm::imports!();
 
 pub const VOTING_PERIOD_MINUTES_DEFAULT: usize = 4320; // 3 days
+pub const VOTING_PERIOD_MINUTES_MAX: usize = 20_160; // 14 days
 
 pub const SEALED_NOT_SET: u8 = 0;
 pub const SEALED_ON: u8 = 1;
@@ -74,7 +75,8 @@ pub trait ConfigModule {
     }
 
     fn try_change_voting_period_in_minutes(&self, voting_period: usize) {
-        require!(voting_period != 0, "voting period (in minutes) can not be zero");
+        require!(voting_period != 0, "voting period can not be zero");
+        require!(voting_period <= VOTING_PERIOD_MINUTES_MAX, "max voting period exceeded");
         self.voting_period_in_minutes().set(&voting_period);
     }
 
