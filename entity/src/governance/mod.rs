@@ -68,7 +68,6 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
         let permissions = permissions.into_vec();
 
         self.require_proposed_via_trusted_host(&trusted_host_id, &content_hash, content_sig, &actions_hash, &permissions);
-        self.require_sealed();
         require!(!self.known_trusted_host_proposal_ids().contains(&trusted_host_id), "proposal already registered");
 
         let (allowed, policies) = self.can_propose(&proposer, &actions_hash, &permissions);
@@ -79,6 +78,7 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
         let proposer_roles = self.user_roles(proposer_id);
 
         if proposer_roles.is_empty() || self.has_token_weighted_policy(&policies) {
+            self.require_sealed();
             self.require_payment_token_governance_token();
             require!(vote_weight >= self.min_proposal_vote_weight().get(), "insufficient vote weight");
         }
@@ -116,7 +116,6 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
 
     #[endpoint(sign)]
     fn sign_endpoint(&self, proposal_id: u64) {
-        self.require_sealed();
         self.sign(proposal_id);
     }
 
