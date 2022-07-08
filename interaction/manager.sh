@@ -74,7 +74,7 @@ upgradeEntityTemplate() {
     erdpy --verbose contract clean entity || return
     erdpy --verbose contract build entity || return
 
-    # cargo test || return
+    cargo test || return
 
     erdpy --verbose contract upgrade $ENTITY_ADDRESS --project entity \
         --arguments $TRUSTED_HOST_ADDRESS \

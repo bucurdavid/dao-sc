@@ -271,6 +271,12 @@ getProposalStatus() {
         --proxy=$PROXY || return
 }
 
+getProposalIdCounter() {
+    erdpy contract query $ADDRESS \
+        --function="getProposalIdCounter" \
+        --proxy=$PROXY || return
+}
+
 # params:
 #   $1 = proposal id
 getProposalVotes() {
