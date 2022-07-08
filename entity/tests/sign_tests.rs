@@ -21,6 +21,7 @@ fn it_signs_a_proposal() {
         sc.create_permission(managed_buffer!(b"perm"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"), ManagedVec::new());
         sc.create_policy(managed_buffer!(b"builder"), managed_buffer!(b"perm"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
         sc.assign_role(managed_address!(&owner_address), managed_buffer!(b"builder"));
+        sc.assign_role(managed_address!(&signer_address), managed_buffer!(b"builder"));
     }).assert_ok();
 
     setup.blockchain.execute_esdt_transfer(&owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL), |sc| {
@@ -44,7 +45,7 @@ fn it_signs_a_proposal() {
     setup.blockchain.execute_tx(&signer_address, &setup.contract, &rust_biguint!(0), |sc| {
         sc.sign_endpoint(proposal_id);
 
-        assert_eq!(1, sc.proposal_signers(proposal_id, &managed_buffer!(b"builder")).len());
+        assert_eq!(2, sc.proposal_signers(proposal_id, &managed_buffer!(b"builder")).len());
     })
     .assert_ok();
 }

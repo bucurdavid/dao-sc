@@ -98,45 +98,60 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
     }
 
     fn get_proposal_status(&self, proposal: &Proposal<Self::Api>) -> ProposalStatus {
-        let current_time = self.blockchain().get_block_timestamp();
-
         if proposal.was_executed {
             return ProposalStatus::Executed;
         }
 
-        if current_time >= proposal.starts_at && current_time < proposal.ends_at {
-            return ProposalStatus::Active;
-        }
-
-        if proposal.actions_hash.is_empty() || proposal.permissions.is_empty() {
-            return match self.has_sufficient_votes(&proposal, &self.quorum().get()) {
-                true => ProposalStatus::Succeeded,
-                false => ProposalStatus::Defeated,
-            };
-        }
-
+        let has_gov_token = !self.gov_token_id().is_empty();
         let proposer_id = self.users().get_user_id(&proposal.proposer);
         let proposer_roles = self.user_roles(proposer_id);
+        let has_actions = !proposal.actions_hash.is_empty() || !proposal.permissions.is_empty();
+
         let mut fulfilled_all = true;
+        let mut has_token_weighted_policy = false;
 
         for permission in proposal.permissions.into_iter() {
             let fulfilled_perm = proposer_roles.iter()
                 .map(|role| if let Some(policy) = self.policies(&role).get(&permission) {
                     match policy.method {
-                        PolicyMethod::Weight => self.has_sufficient_votes(&proposal, &policy.quorum),
+                        PolicyMethod::Weight => {
+                            has_token_weighted_policy = true;
+                            has_gov_token && self.has_sufficient_votes(&proposal, &policy.quorum)
+                        },
                         PolicyMethod::One => self.proposal_signers(proposal.id, &role).contains(&proposer_id),
                         PolicyMethod::All => self.proposal_signers(proposal.id, &role).len() >= self.roles_member_amount(&role).get(),
                         PolicyMethod::Quorum => BigUint::from(self.proposal_signers(proposal.id, &role).len()) >= policy.quorum,
                     }
                 } else {
-                    self.proposal_signers(proposal.id, &role).len() > self.roles_member_amount(&role).get() / 2
+                    self.has_signer_majority_for_role(&proposal, &role)
                 })
-                .find(|fulfilled| !fulfilled)
-                .is_none();
+                .all(|fulfilled| fulfilled == true);
 
             if !fulfilled_perm {
                 fulfilled_all = false;
             }
+        }
+
+        // early succeed if all required signatures are given and not token weighted
+        if fulfilled_all && has_actions && !has_token_weighted_policy {
+            let has_required_signatures = proposer_roles.iter()
+                .map(|role| self.has_signer_majority_for_role(&proposal, &role))
+                .all(|res| res == true);
+
+            if has_required_signatures {
+                return ProposalStatus::Succeeded;
+            }
+        }
+
+        if self.is_proposal_active(&proposal) {
+            return ProposalStatus::Active;
+        }
+
+        if !has_actions {
+            return match self.has_sufficient_votes(&proposal, &self.quorum().get()) {
+                true => ProposalStatus::Succeeded,
+                false => ProposalStatus::Defeated,
+            };
         }
 
         if fulfilled_all {
@@ -276,12 +291,27 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         applies
     }
 
+    fn is_proposal_active(&self, proposal: &Proposal<Self::Api>) -> bool {
+        let current_time = self.blockchain().get_block_timestamp();
+
+        current_time >= proposal.starts_at && current_time < proposal.ends_at
+    }
+
     fn has_sufficient_votes(&self, proposal: &Proposal<Self::Api>, quorum: &BigUint) -> bool {
         let total_votes = &proposal.votes_for + &proposal.votes_against;
+
+        if total_votes < 1 {
+            return false;
+        }
+
         let vote_for_percent = &proposal.votes_for * &BigUint::from(100u64) / &total_votes;
         let vote_for_percent_to_pass = BigUint::from(50u64);
 
         vote_for_percent >= vote_for_percent_to_pass && &proposal.votes_for >= quorum
+    }
+
+    fn has_signer_majority_for_role(&self, proposal: &Proposal<Self::Api>, role: &ManagedBuffer) -> bool {
+        self.proposal_signers(proposal.id, &role).len() > self.roles_member_amount(&role).get() / 2
     }
 
     fn require_proposed_via_trusted_host(

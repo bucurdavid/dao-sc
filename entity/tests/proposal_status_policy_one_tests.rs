@@ -9,7 +9,7 @@ use setup::*;
 mod setup;
 
 #[test]
-fn it_returns_active_when_just_created() {
+fn it_returns_succeeded_when_just_created_but_only_required_proposers_signature() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let sc_address = setup.contract.address_ref();
     let proposer_address = setup.user_address.clone();
@@ -22,7 +22,7 @@ fn it_returns_active_when_just_created() {
         sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"testrole"));
     }).assert_ok();
 
-    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
+    setup.blockchain.execute_tx(&proposer_address, &setup.contract, &rust_biguint!(0), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
         actions.push(Action::<DebugApi> {
             destination: managed_address!(sc_address),
@@ -40,7 +40,7 @@ fn it_returns_active_when_just_created() {
     }).assert_ok();
 
     setup.blockchain.execute_query(&setup.contract, |sc| {
-        assert_eq!(ProposalStatus::Active, sc.get_proposal_status_view(proposal_id));
+        assert_eq!(ProposalStatus::Succeeded, sc.get_proposal_status_view(proposal_id));
     }).assert_ok();
 }
 

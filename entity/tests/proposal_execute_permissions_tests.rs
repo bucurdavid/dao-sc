@@ -16,6 +16,8 @@ fn it_executes_a_proposal_with_truthfully_announced_permissions() {
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
 
+    setup.configure_gov_token();
+
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
         sc.create_role(managed_buffer!(b"builder"));
         sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"builder"));

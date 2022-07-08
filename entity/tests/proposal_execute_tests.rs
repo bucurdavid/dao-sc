@@ -377,7 +377,7 @@ fn it_fails_to_spend_vote_tokens() {
     setup.blockchain.execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
         sc.assign_role(managed_address!(&proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
         sc.create_permission(managed_buffer!(b"perm"), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"), ManagedVec::new());
-        sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"perm"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
+        sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"perm"), PolicyMethod::Weight, BigUint::from(1u64), 10);
     }).assert_ok();
 
     // but try to spend 6 with a proposal action
@@ -404,15 +404,15 @@ fn it_fails_to_spend_vote_tokens() {
 
     // add to the sc token balance: vote for with 100 tokens
     setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(100), |sc| {
-            sc.vote_for_endpoint(proposal_id);
-        })
-        .assert_ok();
+        sc.vote_for_endpoint(proposal_id);
+    })
+    .assert_ok();
 
     // add to the sc token balance: vote against with 100 tokens
     setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(20), |sc| {
-            sc.vote_against_endpoint(proposal_id);
-        })
-        .assert_ok();
+        sc.vote_against_endpoint(proposal_id);
+    })
+    .assert_ok();
 
     setup.blockchain.set_block_timestamp(voting_period_seconds + 1);
 
