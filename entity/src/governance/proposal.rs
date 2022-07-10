@@ -33,15 +33,6 @@ pub struct Action<M: ManagedTypeApi> {
     pub gas_limit: u64,
 }
 
-pub type ActionAsMultiArg<M> = MultiValue6<
-    ManagedAddress<M>,
-    ManagedBuffer<M>,
-    BigUint<M>,
-    ManagedVec<M, EsdtTokenPayment<M>>,
-    ManagedVec<M, ManagedBuffer<M>>,
-    u64
->;
-
 #[derive(TypeAbi, TopEncode, TopDecode, PartialEq, Debug)]
 pub enum ProposalStatus {
     Pending,
