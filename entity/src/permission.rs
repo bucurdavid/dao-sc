@@ -52,7 +52,7 @@ pub trait PermissionModule: config::ConfigModule {
     }
 
     #[endpoint(assignRole)]
-    fn assign_role_endpoint(&self, address: ManagedAddress, role_name: ManagedBuffer) {
+    fn assign_role_endpoint(&self, role_name: ManagedBuffer, address: ManagedAddress) {
         self.require_caller_self();
         self.assign_role(address, role_name);
     }
@@ -104,12 +104,12 @@ pub trait PermissionModule: config::ConfigModule {
     }
 
     #[view(getPermissions)]
-    fn get_permissions_view(&self) -> MultiValueEncoded<MultiValue3<ManagedBuffer, ManagedAddress, ManagedBuffer>> {
+    fn get_permissions_view(&self) -> MultiValueEncoded<MultiValue5<ManagedBuffer, ManagedAddress, ManagedBuffer, usize, MultiValueManagedVec<Self::Api, ManagedBuffer<Self::Api>>>> {
         let mut permissions = MultiValueEncoded::new();
 
         for permission_name in self.permissions().iter() {
-            let permission_details = self.permission_details(&permission_name).get();
-            permissions.push((permission_name, permission_details.destination, permission_details.endpoint).into());
+            let perm = self.permission_details(&permission_name).get();
+            permissions.push((permission_name, perm.destination, perm.endpoint, perm.arguments.len(), MultiValueManagedVec::from(perm.arguments)).into());
         }
 
         permissions

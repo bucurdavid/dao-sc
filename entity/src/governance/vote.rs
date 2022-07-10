@@ -71,10 +71,10 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
         let votes = votes_mapper.get();
 
         if votes > 0 {
-            votes_mapper.clear();
             self.protected_vote_tokens(&gov_token_id).update(|current| *current -= &votes);
             self.withdrawable_proposal_ids(&caller).swap_remove(&proposal_id);
             self.send().direct_esdt(&caller, &gov_token_id, 0, &votes);
+            votes_mapper.clear();
         }
     }
 }
