@@ -26,8 +26,9 @@ pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::Fa
 
     #[payable("*")]
     #[endpoint(executeTicket)]
-    fn execute_ticket_endpoint(&self, ticket_id: ManagedBuffer) {
-        require!(ticket_id.len() > 0, "ticket id is required");
+    fn execute_ticket_endpoint(&self, ticket_id: ManagedBuffer, ticket_type: ManagedBuffer) {
+        require!(!ticket_id.is_empty(), "ticket id is required");
+        require!(!ticket_type.is_empty(), "ticket type is required");
     }
 
     #[payable("*")]
