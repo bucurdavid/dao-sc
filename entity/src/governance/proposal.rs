@@ -302,7 +302,11 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
     }
 
     fn has_signer_majority_for_role(&self, proposal: &Proposal<Self::Api>, role: &ManagedBuffer) -> bool {
-        self.proposal_signers(proposal.id, &role).len() > self.roles_member_amount(&role).get() / 2
+        self.proposal_signers(proposal.id, &role).len() >= self.get_signer_majority_for_role(&role)
+    }
+
+    fn get_signer_majority_for_role(&self, role: &ManagedBuffer) -> usize {
+        self.roles_member_amount(&role).get() / 2 + 1
     }
 
     fn require_proposed_via_trusted_host(

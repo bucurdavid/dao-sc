@@ -61,6 +61,7 @@ fn it_requires_signer_majority_if_proposer_has_role_and_with_actions_that_do_not
     setup.blockchain.set_block_timestamp(VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60 + 1);
 
     setup.blockchain.execute_query(&setup.contract, |sc| {
+        assert_eq!(2, sc.get_signer_majority_for_role(&managed_buffer!(b"builder")));
         assert_eq!(ProposalStatus::Succeeded, sc.get_proposal_status_view(proposal_id));
     })
     .assert_ok();
