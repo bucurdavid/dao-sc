@@ -45,6 +45,18 @@ execute() {
 }
 
 # params:
+#   $1 = token id
+changeGovToken() {
+    erdpy contract call $ADDRESS \
+        --function="changeGovToken" \
+        --arguments "str:$1" \
+        --recall-nonce --gas-limit=10000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+# params:
 #   $1 = amount
 changeQuorum() {
     erdpy contract call $ADDRESS \
