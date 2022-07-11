@@ -38,12 +38,14 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
     #[endpoint(changeQuorum)]
     fn change_quorum_endpoint(&self, value: BigUint) {
         self.require_caller_self_or_unsealed();
+        self.require_gov_token_set();
         self.try_change_quorum(value);
     }
 
     #[endpoint(changeMinProposalVoteWeight)]
     fn change_min_proposal_vote_weight_endpoint(&self, value: BigUint) {
         self.require_caller_self_or_unsealed();
+        self.require_gov_token_set();
         self.try_change_min_proposal_vote_weight(value);
     }
 
@@ -79,7 +81,7 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
 
         if proposer_roles.is_empty() || self.has_token_weighted_policy(&policies) {
             self.require_sealed();
-            self.require_payment_token_governance_token();
+            self.require_payment_with_gov_token();
             require!(vote_weight >= self.min_proposal_vote_weight().get(), "insufficient vote weight");
         }
 

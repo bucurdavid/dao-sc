@@ -36,11 +36,15 @@ pub trait ConfigModule {
         self.sealed().get() == SEALED_ON
     }
 
-    fn require_payment_token_governance_token(&self) {
+    fn require_gov_token_set(&self) {
+        require!(!self.gov_token_id().is_empty(), "gov token must be set");
+    }
+
+    fn require_payment_with_gov_token(&self) {
         require!(self.call_value().single_esdt().token_identifier == self.gov_token_id().get(), "invalid token");
     }
 
-    fn require_governance_tokens_available(&self, amount: &BigUint) {
+    fn require_gov_tokens_available(&self, amount: &BigUint) {
         let gov_token_id = self.gov_token_id().get();
         let protected = self.protected_vote_tokens(&gov_token_id).get();
         let balance = self.blockchain().get_sc_balance(&EgldOrEsdtTokenIdentifier::esdt(gov_token_id), 0u64);

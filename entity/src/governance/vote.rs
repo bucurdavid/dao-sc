@@ -17,7 +17,7 @@ pub enum VoteType {
 #[elrond_wasm::module]
 pub trait VoteModule: config::ConfigModule + permission::PermissionModule + proposal::ProposalModule + events::GovEventsModule {
     fn vote(&self, proposal_id: u64, vote_type: VoteType) {
-        self.require_payment_token_governance_token();
+        self.require_payment_with_gov_token();
 
         let voter = self.blockchain().get_caller();
         let payment = self.call_value().single_esdt();
