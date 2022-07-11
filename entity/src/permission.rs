@@ -127,26 +127,20 @@ pub trait PermissionModule: config::ConfigModule {
     }
 
     fn create_role(&self, role_name: ManagedBuffer) {
-        let created = self.roles().insert(role_name);
-
-        require!(created, "role already exists");
+        self.roles().insert(role_name);
     }
 
     fn assign_role(&self, address: ManagedAddress, role_name: ManagedBuffer) {
         require!(self.roles().contains(&role_name), "role does not exist");
 
-        self.roles_member_amount(&role_name).update(|current| *current += 1);
-
         let user_id = self.users().get_or_create_user(&address);
-        let added = self.user_roles(user_id).insert(role_name);
 
-        require!(added, "user already has role");
+        self.roles_member_amount(&role_name).update(|current| *current += 1);
+        self.user_roles(user_id).insert(role_name);
     }
 
     fn create_permission(&self, permission_name: ManagedBuffer, destination: ManagedAddress, endpoint: ManagedBuffer, arguments: ManagedVec<ManagedBuffer>) {
-        let created = self.permissions().insert(permission_name.clone());
-
-        require!(created, "permission already exists");
+        self.permissions().insert(permission_name.clone());
 
         self.permission_details(&permission_name).set(PermissionDetails {
             destination,
