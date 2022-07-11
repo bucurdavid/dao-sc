@@ -94,9 +94,49 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         }
 
         let has_gov_token = !self.gov_token_id().is_empty();
+        let has_actions = !proposal.actions_hash.is_empty() || !proposal.permissions.is_empty();
+
+        let (has_permission, has_token_weighted_policy) = if has_actions {
+            self.has_fulfilled_permissions(&proposal)
+        } else {
+            (false, false)
+        };
+
+        // early succeed if signer majority & no token weighted policy
+        if has_permission && !has_token_weighted_policy {
+            return ProposalStatus::Succeeded;
+        }
+
+        if self.is_proposal_active(&proposal) {
+            return ProposalStatus::Active;
+        }
+
+        if !has_actions && has_gov_token {
+            return match self.has_sufficient_votes(&proposal, &self.quorum().get()) {
+                true => ProposalStatus::Succeeded,
+                false => ProposalStatus::Defeated,
+            };
+        }
+
+        if has_permission {
+            return ProposalStatus::Succeeded;
+        }
+
+        ProposalStatus::Defeated
+    }
+
+    fn has_fulfilled_permissions(&self, proposal: &Proposal<Self::Api>) -> (bool, bool) {
         let proposer_id = self.users().get_user_id(&proposal.proposer);
         let proposer_roles = self.user_roles(proposer_id);
-        let has_actions = !proposal.actions_hash.is_empty() || !proposal.permissions.is_empty();
+
+        // require signer majority if no permissions announced
+        if proposal.permissions.is_empty() {
+            let has_signer_majority = proposer_roles.iter()
+                .map(|role| self.has_signer_majority_for_role(&proposal, &role))
+                .all(|res| res == true);
+
+            return (has_signer_majority, false)
+        }
 
         let mut fulfilled_all = true;
         let mut has_token_weighted_policy = false;
@@ -107,7 +147,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
                     match policy.method {
                         PolicyMethod::Weight => {
                             has_token_weighted_policy = true;
-                            has_gov_token && self.has_sufficient_votes(&proposal, &policy.quorum)
+                            self.has_sufficient_votes(&proposal, &policy.quorum)
                         },
                         PolicyMethod::One => self.proposal_signers(proposal.id, &role).contains(&proposer_id),
                         PolicyMethod::All => self.proposal_signers(proposal.id, &role).len() >= self.roles_member_amount(&role).get(),
@@ -123,33 +163,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
             }
         }
 
-        // early succeed if all required signatures are given and not token weighted
-        if fulfilled_all && has_actions && !has_token_weighted_policy {
-            let has_required_signatures = proposer_roles.iter()
-                .map(|role| self.has_signer_majority_for_role(&proposal, &role))
-                .all(|res| res == true);
-
-            if has_required_signatures {
-                return ProposalStatus::Succeeded;
-            }
-        }
-
-        if self.is_proposal_active(&proposal) {
-            return ProposalStatus::Active;
-        }
-
-        if !has_actions {
-            return match self.has_sufficient_votes(&proposal, &self.quorum().get()) {
-                true => ProposalStatus::Succeeded,
-                false => ProposalStatus::Defeated,
-            };
-        }
-
-        if fulfilled_all {
-            return ProposalStatus::Succeeded;
-        }
-
-        ProposalStatus::Defeated
+        (fulfilled_all, has_token_weighted_policy)
     }
 
     fn execute_actions(&self, actions: &ManagedVec<Action<Self::Api>>) {

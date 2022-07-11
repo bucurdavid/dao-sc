@@ -98,7 +98,7 @@ fn it_succeeds_if_one_of_one_permission_policies_reaches_signer_quorum() {
     setup.blockchain.set_block_timestamp(VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60 + 1);
 
     setup.blockchain.execute_query(&setup.contract, |sc| {
-        assert_eq!(ProposalStatus::Succeeded, sc.get_proposal_status_view(1));
+        assert_eq!(ProposalStatus::Succeeded, sc.get_proposal_status_view(proposal_id));
     }).assert_ok();
 }
 
@@ -149,7 +149,7 @@ fn it_returns_defeated_if_one_of_one_permission_policies_does_not_meet_quorum_af
     setup.blockchain.set_block_timestamp(VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60 + 1);
 
     setup.blockchain.execute_query(&setup.contract, |sc| {
-        assert_eq!(ProposalStatus::Defeated, sc.get_proposal_status_view(1));
+        assert_eq!(ProposalStatus::Defeated, sc.get_proposal_status_view(proposal_id));
     }).assert_ok();
 }
 
