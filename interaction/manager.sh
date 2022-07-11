@@ -161,7 +161,7 @@ getBaseDailyCost() {
 getCredits() {
     erdpy contract query $MANAGER_ADDRESS \
         --function="getCredits" \
-        --arguments "str:$1" \
+        --arguments $1 \
         --proxy=$PROXY || return
 }
 
