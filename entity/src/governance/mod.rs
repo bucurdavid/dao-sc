@@ -125,7 +125,6 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
     fn execute_endpoint(&self, proposal_id: u64, actions: MultiValueManagedVec<Action<Self::Api>>) {
         require!(!actions.is_empty(), "no actions to execute");
         require!(!self.proposals(proposal_id).is_empty(), "proposal not found");
-        self.require_sealed();
 
         let actions = actions.into_vec();
         let actions_hash = self.calculate_actions_hash(&actions);
