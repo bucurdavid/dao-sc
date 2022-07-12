@@ -151,9 +151,11 @@ pub trait PermissionModule: config::ConfigModule {
         require!(self.roles().contains(&role_name), "role does not exist");
 
         let user_id = self.users().get_or_create_user(&address);
+        let added = self.user_roles(user_id).insert(role_name.clone());
 
-        self.roles_member_amount(&role_name).update(|current| *current += 1);
-        self.user_roles(user_id).insert(role_name);
+        if added {
+            self.roles_member_amount(&role_name).update(|current| *current += 1);
+        }
     }
 
     fn create_permission(&self, permission_name: ManagedBuffer, destination: ManagedAddress, endpoint: ManagedBuffer, arguments: ManagedVec<ManagedBuffer>) {
