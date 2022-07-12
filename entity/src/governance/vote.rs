@@ -59,6 +59,11 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
 
     fn withdraw_tokens(&self, proposal_id: u64) {
         let caller = self.blockchain().get_caller();
+
+        if self.proposals(proposal_id).is_empty() {
+            return;
+        }
+
         let proposal = self.proposals(proposal_id).get();
         let status = self.get_proposal_status(&proposal);
 
