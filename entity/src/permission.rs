@@ -103,6 +103,23 @@ pub trait PermissionModule: config::ConfigModule {
         roles
     }
 
+    #[view(getUsersForRole)]
+    fn get_users_for_role_view(&self, role: ManagedBuffer) -> MultiValueEncoded<ManagedAddress> {
+        let user_count = self.users().get_user_count();
+        let mut addresses = MultiValueEncoded::new();
+
+        for user_id in 0..user_count {
+            let has_role = self.user_roles(user_id).contains(&role);
+
+            if has_role {
+                let address = self.users().get_user_address(user_id).unwrap();
+                addresses.push(address);
+            }
+        }
+
+        addresses
+    }
+
     #[view(getPermissions)]
     fn get_permissions_view(&self) -> MultiValueEncoded<MultiValue5<ManagedBuffer, ManagedAddress, ManagedBuffer, usize, MultiValueManagedVec<Self::Api, ManagedBuffer<Self::Api>>>> {
         let mut permissions = MultiValueEncoded::new();

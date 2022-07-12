@@ -226,11 +226,20 @@ createPolicyQuorum() {
 }
 
 # params:
-#   $1 = user id
+#   $1 = address
 getUserRoles() {
     erdpy contract query $ADDRESS \
         --function="getUserRoles" \
         --arguments $1 \
+        --proxy=$PROXY || return
+}
+
+# params:
+#   $1 = role name
+getUsersForRole() {
+    erdpy contract query $ADDRESS \
+        --function="getUsersForRole" \
+        --arguments "str:$1" \
         --proxy=$PROXY || return
 }
 
