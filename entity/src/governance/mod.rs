@@ -132,7 +132,7 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
         let actual_permissions = self.get_actual_permissions(&proposal, &actions);
 
         require!(proposal.actions_hash == actions_hash, "actions have been corrupted");
-        require!(proposal.permissions.eq(&actual_permissions), "untruthful permissions announced");
+        require!(proposal.permissions == actual_permissions, "untruthful permissions announced");
         require!(self.get_proposal_status(&proposal) == ProposalStatus::Succeeded, "proposal is not executable");
 
         self.execute_actions(&actions);

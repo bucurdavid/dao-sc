@@ -3,8 +3,6 @@
 
 elrond_wasm::imports!();
 
-use features::FEATURE_NAME_LEADER;
-
 pub mod config;
 pub mod credits;
 pub mod factory;
@@ -58,9 +56,6 @@ pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::Fa
     fn set_features_endpoint(&self, features: MultiValueManagedVec<ManagedBuffer>) {
         let caller_entity_address = self.blockchain().get_caller();
         let features = features.into_vec();
-        let builtin_leader_feature = ManagedBuffer::from(FEATURE_NAME_LEADER);
-
-        require!(!features.contains(&builtin_leader_feature), "this feature can not be enabled");
 
         self.require_entity_exists(&caller_entity_address);
         self.set_features(&caller_entity_address, features);
