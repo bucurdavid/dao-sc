@@ -204,16 +204,6 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
             return (true, policies);
         }
 
-        // has roles -> always allowed
-        if !proposer_roles.is_empty() {
-            return (true, policies);
-        }
-
-        // if fellowship has leaders, only allow if has a role
-        if self.does_leader_role_exist() && proposer_roles.is_empty() {
-            return (false, policies);
-        }
-
         let mut allowed = false;
 
         for role in proposer_roles.iter() {

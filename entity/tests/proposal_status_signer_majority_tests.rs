@@ -11,7 +11,7 @@ mod setup;
 #[test]
 fn it_requires_signer_majority_if_proposer_has_role_and_with_actions_that_do_not_require_any_permissions() {
     let mut setup = EntitySetup::new(entity::contract_obj);
-    let proposer_address = setup.user_address.clone();
+    let proposer_address = setup.owner_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let signer_one = setup.blockchain.create_user_account(&rust_biguint!(1));
     let signer_inactive = setup.blockchain.create_user_account(&rust_biguint!(1));
@@ -22,11 +22,9 @@ fn it_requires_signer_majority_if_proposer_has_role_and_with_actions_that_do_not
         sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"builder"));
         sc.assign_role(managed_address!(&signer_one), managed_buffer!(b"builder"));
         sc.assign_role(managed_address!(&signer_inactive), managed_buffer!(b"builder"));
-
-        sc.create_permission(managed_buffer!(b"perm"), managed_address!(&action_receiver), managed_buffer!(b"any"), ManagedVec::new());
     }).assert_ok();
 
-    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(1), |sc| {
+    setup.blockchain.execute_tx(&proposer_address, &setup.contract, &rust_biguint!(0), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
         actions.push(Action::<DebugApi> {
             destination: managed_address!(&action_receiver),
@@ -69,7 +67,7 @@ fn it_requires_signer_majority_if_proposer_has_role_and_with_actions_that_do_not
 #[test]
 fn it_fails_if_signer_majority_not_met_if_proposer_has_role_and_with_actions_that_do_not_require_any_permissions() {
     let mut setup = EntitySetup::new(entity::contract_obj);
-    let proposer_address = setup.user_address.clone();
+    let proposer_address = setup.owner_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let signer_inactive_one = setup.blockchain.create_user_account(&rust_biguint!(1));
     let signer_inactive_two = setup.blockchain.create_user_account(&rust_biguint!(1));
@@ -82,7 +80,7 @@ fn it_fails_if_signer_majority_not_met_if_proposer_has_role_and_with_actions_tha
         sc.assign_role(managed_address!(&signer_inactive_two), managed_buffer!(b"builder"));
     }).assert_ok();
 
-    setup.blockchain.execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(1), |sc| {
+    setup.blockchain.execute_tx(&proposer_address, &setup.contract, &rust_biguint!(0), |sc| {
         let mut actions = Vec::<Action<DebugApi>>::new();
         actions.push(Action::<DebugApi> {
             destination: managed_address!(&action_receiver),
@@ -110,7 +108,7 @@ fn it_fails_if_signer_majority_not_met_if_proposer_has_role_and_with_actions_tha
 #[test]
 fn it_requires_signer_majority_for_multiple_roles() {
     let mut setup = EntitySetup::new(entity::contract_obj);
-    let proposer_address = setup.user_address.clone();
+    let proposer_address = setup.owner_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let signer = setup.blockchain.create_user_account(&rust_biguint!(1));
     let signer_dev_one = setup.blockchain.create_user_account(&rust_biguint!(1));
@@ -182,7 +180,7 @@ fn it_requires_signer_majority_for_multiple_roles() {
 #[test]
 fn it_succeeds_early_if_has_all_required_signatures_for_proposal_with_actions() {
     let mut setup = EntitySetup::new(entity::contract_obj);
-    let proposer_address = setup.user_address.clone();
+    let proposer_address = setup.owner_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let signer_one = setup.blockchain.create_user_account(&rust_biguint!(1));
     let signer_inactive = setup.blockchain.create_user_account(&rust_biguint!(1));
@@ -226,7 +224,7 @@ fn it_succeeds_early_if_has_all_required_signatures_for_proposal_with_actions() 
 #[test]
 fn it_returns_executed_for_an_executed_proposal_with_signer_quorum() {
     let mut setup = EntitySetup::new(entity::contract_obj);
-    let proposer_address = setup.blockchain.create_user_account(&rust_biguint!(1));
+    let proposer_address = setup.owner_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let signer_one = setup.blockchain.create_user_account(&rust_biguint!(1));
     let signer_inactive = setup.blockchain.create_user_account(&rust_biguint!(1));
