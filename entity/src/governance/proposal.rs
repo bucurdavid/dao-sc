@@ -59,7 +59,8 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
             require!(actions_hash.len() == KECCAK256_RESULT_LEN, "invalid actions hash");
         }
 
-        let voting_period_minutes = policies.iter()
+        let voting_period_minutes = policies
+            .iter()
             .map(|p| p.voting_period_minutes)
             .max()
             .unwrap_or_else(|| self.voting_period_in_minutes().get());
@@ -131,30 +132,34 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
 
         // require signer majority if no permissions announced
         if proposal.permissions.is_empty() {
-            let has_signer_majority = proposer_roles.iter()
+            let has_signer_majority = proposer_roles
+                .iter()
                 .map(|role| self.has_signer_majority_for_role(&proposal, &role))
                 .all(|res| res == true);
 
-            return (has_signer_majority, false)
+            return (has_signer_majority, false);
         }
 
         let mut fulfilled_all = true;
         let mut has_token_weighted_policy = false;
 
         for permission in proposal.permissions.into_iter() {
-            let fulfilled_perm = proposer_roles.iter()
-                .map(|role| if let Some(policy) = self.policies(&role).get(&permission) {
-                    match policy.method {
-                        PolicyMethod::Weight => {
-                            has_token_weighted_policy = true;
-                            self.has_sufficient_votes(&proposal, &policy.quorum)
-                        },
-                        PolicyMethod::One => self.proposal_signers(proposal.id, &role).contains(&proposer_id),
-                        PolicyMethod::All => self.proposal_signers(proposal.id, &role).len() >= self.roles_member_amount(&role).get(),
-                        PolicyMethod::Quorum => BigUint::from(self.proposal_signers(proposal.id, &role).len()) >= policy.quorum,
+            let fulfilled_perm = proposer_roles
+                .iter()
+                .map(|role| {
+                    if let Some(policy) = self.policies(&role).get(&permission) {
+                        match policy.method {
+                            PolicyMethod::Weight => {
+                                has_token_weighted_policy = true;
+                                self.has_sufficient_votes(&proposal, &policy.quorum)
+                            }
+                            PolicyMethod::One => self.proposal_signers(proposal.id, &role).contains(&proposer_id),
+                            PolicyMethod::All => self.proposal_signers(proposal.id, &role).len() >= self.roles_member_amount(&role).get(),
+                            PolicyMethod::Quorum => BigUint::from(self.proposal_signers(proposal.id, &role).len()) >= policy.quorum,
+                        }
+                    } else {
+                        self.has_signer_majority_for_role(&proposal, &role)
                     }
-                } else {
-                    self.has_signer_majority_for_role(&proposal, &role)
                 })
                 .all(|fulfilled| fulfilled == true);
 
@@ -194,7 +199,12 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         }
     }
 
-    fn can_propose(&self, proposer: &ManagedAddress, actions_hash: &ManagedBuffer, permissions: &ManagedVec<ManagedBuffer>) -> (bool, ManagedVec<Policy<Self::Api>>) {
+    fn can_propose(
+        &self,
+        proposer: &ManagedAddress,
+        actions_hash: &ManagedBuffer,
+        permissions: &ManagedVec<ManagedBuffer>,
+    ) -> (bool, ManagedVec<Policy<Self::Api>>) {
         let proposer_id = self.users().get_user_id(proposer);
         let proposer_roles = self.user_roles(proposer_id);
         let mut policies = ManagedVec::new();
@@ -228,7 +238,12 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         let mut serialized = ManagedBuffer::new();
 
         for action in actions.iter() {
-            serialized.append(&sc_format!("{:x}{}{}", action.destination.as_managed_buffer(), action.endpoint, action.value));
+            serialized.append(&sc_format!(
+                "{:x}{}{}",
+                action.destination.as_managed_buffer(),
+                action.endpoint,
+                action.value
+            ));
 
             for payment in action.payments.iter() {
                 serialized.append(&sc_format!("{}{}{}", payment.token_identifier, payment.token_nonce, payment.amount));
@@ -319,12 +334,19 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         content_hash: &ManagedBuffer,
         content_sig: ManagedBuffer,
         actions_hash: &ManagedBuffer,
-        permissions: &ManagedVec<ManagedBuffer>
+        permissions: &ManagedVec<ManagedBuffer>,
     ) {
         let proposer = self.blockchain().get_caller();
         let entity_address = self.blockchain().get_sc_address();
         let trusted_host_signature = ManagedByteArray::try_from(content_sig).unwrap();
-        let mut trusted_host_signable = sc_format!("{:x}{:x}{:x}{:x}{:x}", proposer, entity_address, trusted_host_id, content_hash, actions_hash);
+        let mut trusted_host_signable = sc_format!(
+            "{:x}{:x}{:x}{:x}{:x}",
+            proposer,
+            entity_address,
+            trusted_host_id,
+            content_hash,
+            actions_hash
+        );
 
         for perm in permissions.into_iter() {
             trusted_host_signable.append(&sc_format!("{:x}", perm));
