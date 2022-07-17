@@ -1,5 +1,3 @@
-use std::vec;
-
 use elrond_wasm::types::*;
 use elrond_wasm_debug::*;
 use entity::config::*;
@@ -11,145 +9,12 @@ use setup::*;
 mod setup;
 
 #[test]
-fn it_matches_a_permission_based_on_destination_only() {
+fn it_fails_if_a_required_argument_is_missing() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let proposer_address = setup.user_address.clone();
-    let executor_address = setup.blockchain.create_user_account(&rust_biguint!(5));
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
-    let mut proposal_id = 0;
-
-    setup.configure_gov_token();
-
-    setup
-        .blockchain
-        .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
-            sc.create_role(managed_buffer!(b"builder"));
-            sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"builder"));
-            sc.create_permission(managed_buffer!(b"addressOnlyPerm"), managed_biguint!(0), managed_address!(&action_receiver), managed_buffer!(b""), ManagedVec::new(), ManagedVec::new());
-            sc.create_policy(managed_buffer!(b"builder"), managed_buffer!(b"addressOnlyPerm"), PolicyMethod::All, BigUint::from(0u64), 10);
-        })
-        .assert_ok();
-
-    setup
-        .blockchain
-        .execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
-            let mut actions = Vec::<Action<DebugApi>>::new();
-            actions.push(Action::<DebugApi> {
-                destination: managed_address!(&action_receiver),
-                endpoint: managed_buffer!(b"myendpoint"),
-                arguments: ManagedVec::new(),
-                gas_limit: 5_000_000u64,
-                value: managed_biguint!(0),
-                payments: ManagedVec::new(),
-            });
-
-            let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
-            let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"addressOnlyPerm")]);
-
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
-        })
-        .assert_ok();
-
-    setup
-        .blockchain
-        .execute_tx(&executor_address, &setup.contract, &rust_biguint!(0), |sc| {
-            let mut actions = Vec::<Action<DebugApi>>::new();
-            actions.push(Action::<DebugApi> {
-                destination: managed_address!(&action_receiver),
-                endpoint: managed_buffer!(b"myendpoint"),
-                arguments: ManagedVec::new(),
-                gas_limit: 5_000_000u64,
-                value: managed_biguint!(0),
-                payments: ManagedVec::new(),
-            });
-
-            let proposal = sc.proposals(proposal_id).get();
-
-            let actual = sc.get_actual_permissions(&proposal, &ManagedVec::from(actions));
-
-            assert_eq!(1, actual.len());
-        })
-        .assert_ok();
-}
-
-#[test]
-fn it_matches_a_permission_based_on_destination_and_endpoint() {
-    let mut setup = EntitySetup::new(entity::contract_obj);
-    let proposer_address = setup.user_address.clone();
     let executor_address = setup.blockchain.create_user_account(&rust_biguint!(5));
-    let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
-
-    setup.configure_gov_token();
-
-    setup
-        .blockchain
-        .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
-            sc.create_role(managed_buffer!(b"builder"));
-            sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"builder"));
-            sc.create_permission(
-                managed_buffer!(b"addressAndEndpoint"),
-                managed_biguint!(0),
-                managed_address!(&action_receiver),
-                managed_buffer!(b"myendpoint"),
-                ManagedVec::new(),
-                ManagedVec::new(),
-            );
-            sc.create_policy(managed_buffer!(b"builder"), managed_buffer!(b"addressAndEndpoint"), PolicyMethod::All, BigUint::from(0u64), 10);
-        })
-        .assert_ok();
-
-    setup
-        .blockchain
-        .execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
-            let mut actions = Vec::<Action<DebugApi>>::new();
-            actions.push(Action::<DebugApi> {
-                destination: managed_address!(&action_receiver),
-                endpoint: managed_buffer!(b"myendpoint"),
-                arguments: ManagedVec::new(),
-                gas_limit: 5_000_000u64,
-                value: managed_biguint!(0),
-                payments: ManagedVec::new(),
-            });
-
-            let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
-            let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"addressAndEndpoint")]);
-
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
-        })
-        .assert_ok();
-
-    setup
-        .blockchain
-        .execute_tx(&executor_address, &setup.contract, &rust_biguint!(0), |sc| {
-            let mut actions = Vec::<Action<DebugApi>>::new();
-            actions.push(Action::<DebugApi> {
-                destination: managed_address!(&action_receiver),
-                endpoint: managed_buffer!(b"myendpoint"),
-                arguments: ManagedVec::new(),
-                gas_limit: 5_000_000u64,
-                value: managed_biguint!(0),
-                payments: ManagedVec::new(),
-            });
-
-            let proposal = sc.proposals(proposal_id).get();
-
-            let actual = sc.get_actual_permissions(&proposal, &ManagedVec::from(actions));
-
-            assert_eq!(1, actual.len());
-        })
-        .assert_ok();
-}
-
-#[test]
-fn it_matches_a_permission_based_on_destination_and_endpoint_and_one_argument() {
-    let mut setup = EntitySetup::new(entity::contract_obj);
-    let proposer_address = setup.user_address.clone();
-    let executor_address = setup.blockchain.create_user_account(&rust_biguint!(5));
-    let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
-    let mut proposal_id = 0;
-
-    setup.configure_gov_token();
 
     setup
         .blockchain
@@ -158,33 +23,162 @@ fn it_matches_a_permission_based_on_destination_and_endpoint_and_one_argument() 
             sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"builder"));
 
             sc.create_permission(
-                managed_buffer!(b"addressAndEndpoint"),
-                managed_biguint!(0),
+                managed_buffer!(b"callSc"),
+                managed_biguint!(10),
                 managed_address!(&action_receiver),
-                managed_buffer!(b"myendpoint"),
-                ManagedVec::from(vec![managed_buffer!(b"testarg")]),
+                managed_buffer!(b""),
+                ManagedVec::from(vec![managed_buffer!(b"testarg1"), managed_buffer!(b"testarg2")]),
                 ManagedVec::new(),
             );
 
-            sc.create_policy(managed_buffer!(b"builder"), managed_buffer!(b"addressAndEndpoint"), PolicyMethod::All, BigUint::from(0u64), 10);
+            sc.create_policy(managed_buffer!(b"builder"), managed_buffer!(b"callSc"), PolicyMethod::Quorum, BigUint::from(1u64), 1);
         })
         .assert_ok();
 
     setup
         .blockchain
-        .execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
+        .execute_tx(&proposer_address, &setup.contract, &rust_biguint!(0), |sc| {
             let mut actions = Vec::<Action<DebugApi>>::new();
             actions.push(Action::<DebugApi> {
                 destination: managed_address!(&action_receiver),
-                endpoint: managed_buffer!(b"myendpoint"),
-                arguments: ManagedVec::new(),
+                endpoint: managed_buffer!(b""),
+                arguments: ManagedVec::from(vec![managed_buffer!(b"testarg1")]),
                 gas_limit: 5_000_000u64,
                 value: managed_biguint!(0),
                 payments: ManagedVec::new(),
             });
 
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
-            let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"addressAndEndpoint")]);
+            let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"callSc")]);
+
+            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
+        })
+        .assert_ok();
+
+    setup.blockchain.set_block_timestamp(VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60 + 1);
+
+    setup
+        .blockchain
+        .execute_tx(&executor_address, &setup.contract, &rust_biguint!(0), |sc| {
+            let mut actions = Vec::<Action<DebugApi>>::new();
+            actions.push(Action::<DebugApi> {
+                destination: managed_address!(&action_receiver),
+                endpoint: managed_buffer!(b""),
+                arguments: ManagedVec::from(vec![managed_buffer!(b"testarg1")]),
+                gas_limit: 5_000_000u64,
+                value: managed_biguint!(0),
+                payments: ManagedVec::new(),
+            });
+
+            sc.execute_endpoint(proposal_id, MultiValueManagedVec::from(actions));
+        })
+        .assert_user_error("no permission for action");
+}
+
+#[test]
+fn it_fails_if_payment_value_is_higher_than_defined_by_permission() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+    let proposer_address = setup.user_address.clone();
+    let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
+    let executor_address = setup.blockchain.create_user_account(&rust_biguint!(5));
+    let mut proposal_id = 0;
+
+    setup.blockchain.set_egld_balance(setup.contract.address_ref(), &rust_biguint!(100));
+
+    setup
+        .blockchain
+        .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
+            sc.create_role(managed_buffer!(b"builder"));
+            sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"builder"));
+            sc.create_permission(managed_buffer!(b"sendEGLD"), managed_biguint!(10), managed_address!(&action_receiver), managed_buffer!(b""), ManagedVec::new(), ManagedVec::new());
+            sc.create_policy(managed_buffer!(b"builder"), managed_buffer!(b"sendEGLD"), PolicyMethod::Quorum, BigUint::from(1u64), 1);
+        })
+        .assert_ok();
+
+    setup
+        .blockchain
+        .execute_tx(&proposer_address, &setup.contract, &rust_biguint!(0), |sc| {
+            let mut actions = Vec::<Action<DebugApi>>::new();
+            actions.push(Action::<DebugApi> {
+                destination: managed_address!(&action_receiver),
+                endpoint: managed_buffer!(b""),
+                arguments: ManagedVec::new(),
+                gas_limit: 5_000_000u64,
+                value: managed_biguint!(11),
+                payments: ManagedVec::new(),
+            });
+
+            let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
+            let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"sendEGLD")]);
+
+            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
+        })
+        .assert_ok();
+
+    setup.blockchain.set_block_timestamp(VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60 + 1);
+
+    setup
+        .blockchain
+        .execute_tx(&executor_address, &setup.contract, &rust_biguint!(0), |sc| {
+            let mut actions = Vec::<Action<DebugApi>>::new();
+            actions.push(Action::<DebugApi> {
+                destination: managed_address!(&action_receiver),
+                endpoint: managed_buffer!(b""),
+                arguments: ManagedVec::new(),
+                gas_limit: 5_000_000u64,
+                value: managed_biguint!(11),
+                payments: ManagedVec::new(),
+            });
+
+            sc.execute_endpoint(proposal_id, MultiValueManagedVec::from(actions));
+        })
+        .assert_user_error("no permission for action");
+}
+
+#[test]
+fn it_fails_if_token_payment_amount_is_higher_than_defined_by_permission() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+    let proposer_address = setup.user_address.clone();
+    let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
+    let executor_address = setup.blockchain.create_user_account(&rust_biguint!(5));
+    let mut proposal_id = 0;
+
+    setup.blockchain.set_esdt_balance(setup.contract.address_ref(), b"SUPER-123456", &rust_biguint!(100));
+
+    setup
+        .blockchain
+        .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
+            sc.create_role(managed_buffer!(b"builder"));
+            sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"builder"));
+
+            sc.create_permission(
+                managed_buffer!(b"sendSuper"),
+                managed_biguint!(0),
+                managed_address!(&action_receiver),
+                managed_buffer!(b""),
+                ManagedVec::new(),
+                ManagedVec::from(vec![EsdtTokenPayment::new(managed_token_id!(b"SUPER-123456"), 0, managed_biguint!(10))]),
+            );
+
+            sc.create_policy(managed_buffer!(b"builder"), managed_buffer!(b"sendSuper"), PolicyMethod::Quorum, BigUint::from(1u64), 1);
+        })
+        .assert_ok();
+
+    setup
+        .blockchain
+        .execute_tx(&proposer_address, &setup.contract, &rust_biguint!(0), |sc| {
+            let mut actions = Vec::<Action<DebugApi>>::new();
+            actions.push(Action::<DebugApi> {
+                destination: managed_address!(&action_receiver),
+                endpoint: managed_buffer!(b""),
+                arguments: ManagedVec::new(),
+                gas_limit: 5_000_000u64,
+                value: managed_biguint!(0),
+                payments: ManagedVec::from(vec![EsdtTokenPayment::new(managed_token_id!(b"SUPER-123456"), 0, managed_biguint!(11))]),
+            });
+
+            let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
+            let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"sendSuper")]);
 
             proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
         })
@@ -196,18 +190,14 @@ fn it_matches_a_permission_based_on_destination_and_endpoint_and_one_argument() 
             let mut actions = Vec::<Action<DebugApi>>::new();
             actions.push(Action::<DebugApi> {
                 destination: managed_address!(&action_receiver),
-                endpoint: managed_buffer!(b"myendpoint"),
-                arguments: ManagedVec::from(vec![managed_buffer!(b"testarg")]),
+                endpoint: managed_buffer!(b""),
+                arguments: ManagedVec::new(),
                 gas_limit: 5_000_000u64,
                 value: managed_biguint!(0),
-                payments: ManagedVec::new(),
+                payments: ManagedVec::from(vec![EsdtTokenPayment::new(managed_token_id!(b"SUPER-123456"), 0, managed_biguint!(11))]),
             });
 
-            let proposal = sc.proposals(proposal_id).get();
-
-            let actual = sc.get_actual_permissions(&proposal, &ManagedVec::from(actions));
-
-            assert_eq!(1, actual.len());
+            sc.execute_endpoint(proposal_id, MultiValueManagedVec::from(actions));
         })
-        .assert_ok();
+        .assert_user_error("no permission for action");
 }

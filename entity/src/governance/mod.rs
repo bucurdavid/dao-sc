@@ -7,8 +7,8 @@ use proposal::{Action, ProposalStatus};
 
 pub mod events;
 pub mod proposal;
-pub mod vote;
 pub mod token;
+pub mod vote;
 
 #[elrond_wasm::module]
 pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule + events::GovEventsModule + proposal::ProposalModule + vote::VoteModule + token::TokenModule {
@@ -57,14 +57,7 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
 
     #[payable("*")]
     #[endpoint(propose)]
-    fn propose_endpoint(
-        &self,
-        trusted_host_id: ManagedBuffer,
-        content_hash: ManagedBuffer,
-        content_sig: ManagedBuffer,
-        actions_hash: ManagedBuffer,
-        permissions: MultiValueManagedVec<ManagedBuffer>,
-    ) -> u64 {
+    fn propose_endpoint(&self, trusted_host_id: ManagedBuffer, content_hash: ManagedBuffer, content_sig: ManagedBuffer, actions_hash: ManagedBuffer, permissions: MultiValueManagedVec<ManagedBuffer>) -> u64 {
         let payment = self.call_value().egld_or_single_esdt();
         let proposer = self.blockchain().get_caller();
         let permissions = permissions.into_vec();
@@ -129,9 +122,11 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
         let actions = actions.into_vec();
         let actions_hash = self.calculate_actions_hash(&actions);
         let mut proposal = self.proposals(proposal_id).get();
-        let actual_permissions = self.get_actual_permissions(&proposal, &actions);
 
         require!(proposal.actions_hash == actions_hash, "actions have been corrupted");
+
+        let actual_permissions = self.get_actual_permissions(&proposal, &actions);
+
         require!(proposal.permissions == actual_permissions, "untruthful permissions announced");
         require!(self.get_proposal_status(&proposal) == ProposalStatus::Succeeded, "proposal is not executable");
 
@@ -158,9 +153,7 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
 
         let caller = self.blockchain().get_caller();
 
-        self.issue_gov_token(token_name, token_ticker, supply)
-            .with_callback(self.callbacks().gov_token_issue_callback(&caller))
-            .call_and_exit();
+        self.issue_gov_token(token_name, token_ticker, supply).with_callback(self.callbacks().gov_token_issue_callback(&caller)).call_and_exit();
     }
 
     #[endpoint(setGovTokenLocalRoles)]
@@ -171,10 +164,7 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
         let entity_address = self.blockchain().get_sc_address();
         let roles = [EsdtLocalRole::Mint, EsdtLocalRole::Burn];
 
-        self.send().esdt_system_sc_proxy()
-            .set_special_roles(&entity_address, &gov_token_id, (&roles[..]).into_iter().cloned())
-            .async_call()
-            .call_and_exit();
+        self.send().esdt_system_sc_proxy().set_special_roles(&entity_address, &gov_token_id, (&roles[..]).into_iter().cloned()).async_call().call_and_exit();
     }
 
     #[payable("*")]
@@ -196,17 +186,7 @@ pub trait GovernanceModule: config::ConfigModule + permission::PermissionModule 
             OptionalValue::None
         } else {
             let proposal = self.proposals(proposal_id).get();
-            OptionalValue::Some(
-                (
-                    proposal.content_hash,
-                    proposal.actions_hash,
-                    proposal.proposer,
-                    proposal.starts_at,
-                    proposal.ends_at,
-                    proposal.was_executed,
-                )
-                    .into(),
-            )
+            OptionalValue::Some((proposal.content_hash, proposal.actions_hash, proposal.proposer, proposal.starts_at, proposal.ends_at, proposal.was_executed).into())
         }
     }
 

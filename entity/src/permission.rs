@@ -7,9 +7,11 @@ pub const ROLE_BUILTIN_LEADER: &[u8] = b"leader";
 
 #[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, TypeAbi)]
 pub struct PermissionDetails<M: ManagedTypeApi> {
+    pub value: BigUint<M>,
     pub destination: ManagedAddress<M>,
     pub endpoint: ManagedBuffer<M>,
     pub arguments: ManagedVec<M, ManagedBuffer<M>>,
+    pub payments: ManagedVec<M, EsdtTokenPayment<M>>,
 }
 
 #[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, TypeAbi, ManagedVecItem)]
@@ -58,9 +60,24 @@ pub trait PermissionModule: config::ConfigModule {
     }
 
     #[endpoint(createPermission)]
-    fn create_permission_endpoint(&self, permission_name: ManagedBuffer, destination: ManagedAddress, endpoint: ManagedBuffer, arguments: MultiValueManagedVec<ManagedBuffer>) {
+    fn create_permission_endpoint(
+        &self,
+        permission_name: ManagedBuffer,
+        value: BigUint,
+        destination: ManagedAddress,
+        endpoint: OptionalValue<ManagedBuffer>,
+        arguments: MultiValueManagedVec<ManagedBuffer>,
+        payments: MultiValueManagedVec<EsdtTokenPayment>,
+    ) {
         self.require_caller_self();
-        self.create_permission(permission_name, destination, endpoint, arguments.into_vec());
+        self.create_permission(
+            permission_name,
+            value,
+            destination,
+            endpoint.into_option().unwrap_or_default(),
+            arguments.into_vec(),
+            payments.into_vec(),
+        );
     }
 
     #[endpoint(createPolicyWeighted)]
@@ -139,12 +156,43 @@ pub trait PermissionModule: config::ConfigModule {
     }
 
     #[view(getPermissions)]
-    fn get_permissions_view(&self) -> MultiValueEncoded<MultiValue5<ManagedBuffer, ManagedAddress, ManagedBuffer, usize, MultiValueManagedVec<Self::Api, ManagedBuffer<Self::Api>>>> {
+    fn get_permissions_view(
+        &self,
+    ) -> MultiValueEncoded<
+        MultiValue8<
+            ManagedBuffer,
+            BigUint,
+            ManagedAddress,
+            ManagedBuffer,
+            usize,
+            MultiValueManagedVec<ManagedBuffer>,
+            usize,
+            MultiValueManagedVec<EsdtTokenPaymentMultiValue>,
+        >,
+    > {
         let mut permissions = MultiValueEncoded::new();
 
         for permission_name in self.permissions().iter() {
             let perm = self.permission_details(&permission_name).get();
-            permissions.push((permission_name, perm.destination, perm.endpoint, perm.arguments.len(), MultiValueManagedVec::from(perm.arguments)).into());
+            let mut payments_multi = MultiValueManagedVec::new();
+
+            for payment in perm.payments.into_iter() {
+                payments_multi.push(payment.into_multi_value());
+            }
+
+            permissions.push(
+                (
+                    permission_name,
+                    perm.value,
+                    perm.destination,
+                    perm.endpoint,
+                    perm.arguments.len(),
+                    MultiValueManagedVec::from(perm.arguments),
+                    perm.payments.len(),
+                    payments_multi,
+                )
+                    .into(),
+            );
         }
 
         permissions
@@ -184,13 +232,23 @@ pub trait PermissionModule: config::ConfigModule {
         }
     }
 
-    fn create_permission(&self, permission_name: ManagedBuffer, destination: ManagedAddress, endpoint: ManagedBuffer, arguments: ManagedVec<ManagedBuffer>) {
+    fn create_permission(
+        &self,
+        permission_name: ManagedBuffer,
+        value: BigUint,
+        destination: ManagedAddress,
+        endpoint: ManagedBuffer,
+        arguments: ManagedVec<ManagedBuffer>,
+        payments: ManagedVec<EsdtTokenPayment>,
+    ) {
         self.permissions().insert(permission_name.clone());
 
         self.permission_details(&permission_name).set(PermissionDetails {
+            value,
             destination,
             endpoint,
             arguments,
+            payments,
         });
     }
 
