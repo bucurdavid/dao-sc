@@ -59,6 +59,12 @@ pub trait PermissionModule: config::ConfigModule {
         self.assign_role(address, role_name);
     }
 
+    #[endpoint(unassignRole)]
+    fn unassign_role_endpoint(&self, role_name: ManagedBuffer, address: ManagedAddress) {
+        self.require_caller_self();
+        self.unassign_role(address, role_name);
+    }
+
     #[endpoint(createPermission)]
     fn create_permission_endpoint(
         &self,
@@ -196,10 +202,19 @@ pub trait PermissionModule: config::ConfigModule {
         require!(self.roles().contains(&role_name), "role does not exist");
 
         let user_id = self.users().get_or_create_user(&address);
-        let added = self.user_roles(user_id).insert(role_name.clone());
 
-        if added {
+        if self.user_roles(user_id).insert(role_name.clone()) {
             self.roles_member_amount(&role_name).update(|current| *current += 1);
+        }
+    }
+
+    fn unassign_role(&self, address: ManagedAddress, role_name: ManagedBuffer) {
+        require!(self.roles().contains(&role_name), "role does not exist");
+
+        let user_id = self.users().get_or_create_user(&address);
+
+        if self.user_roles(user_id).swap_remove(&role_name) {
+            self.roles_member_amount(&role_name).update(|current| *current -= 1);
         }
     }
 
