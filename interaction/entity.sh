@@ -243,15 +243,6 @@ getUserRoles() {
         --proxy=$PROXY || return
 }
 
-# params:
-#   $1 = role name
-getUsersForRole() {
-    erdpy contract query $ADDRESS \
-        --function="getUsersForRole" \
-        --arguments "str:$1" \
-        --proxy=$PROXY || return
-}
-
 getGovTokenId() {
     erdpy contract query $ADDRESS \
         --function="getGovTokenId" \
