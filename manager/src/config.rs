@@ -26,6 +26,13 @@ pub trait ConfigModule {
         self.cost_feature_daily_amount(&feature).set(amount);
     }
 
+    #[only_owner]
+    #[endpoint(setMinBoostCost)]
+    fn set_min_boost_endpoint(&self, amount: BigUint) {
+        require!(amount > 0, "can not be zero");
+        self.cost_boost_min_amount().set(amount);
+    }
+
     #[storage_mapper("entities")]
     fn entities(&self) -> UnorderedSetMapper<ManagedAddress>;
 
@@ -43,7 +50,7 @@ pub trait ConfigModule {
     #[storage_mapper("cost_creation_amount")]
     fn cost_creation_amount(&self) -> SingleValueMapper<BigUint>;
 
-    #[view(getMinBoostAmount)]
+    #[view(getMinBoostCost)]
     #[storage_mapper("cost_boost_min_amount")]
     fn cost_boost_min_amount(&self) -> SingleValueMapper<BigUint>;
 

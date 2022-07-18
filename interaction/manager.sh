@@ -9,6 +9,8 @@ CHAIN_ID=$(erdpy data load --partition $NETWORK_NAME --key=chain-id)
 TRUSTED_HOST_ADDRESS=$(erdpy data load --partition $NETWORK_NAME --key=trusted-host-address)
 COST_TOKEN_ID=$(erdpy data load --partition $NETWORK_NAME --key=cost-token-id)
 COST_ENTITY_CREATION_AMOUNT=$(erdpy data load --partition $NETWORK_NAME --key=cost-entity-creation-amount)
+COST_DAILY_BASE_AMOUNT=$(erdpy data load --partition $NETWORK_NAME --key=cost-daily-base-amount)
+COST_MIN_BOOST_AMOUNT=$(erdpy data load --partition $NETWORK_NAME --key=cost-min-boost-amount)
 
 deploy() {
     echo "accidental deploy protection is activated."
@@ -50,6 +52,12 @@ deploy() {
 
     erdpy data store --partition $NETWORK_NAME --key=manager--address --value=$MANAGER_ADDRESS
     erdpy data store --partition $NETWORK_NAME --key=manager--deploy-transaction --value=$MANAGER_TRANSACTION
+
+    sleep 6
+    setDailyBaseCost
+
+    sleep 6
+    setMinBoostCost
 
     echo ""
     echo "deployed ENTITY TEMPLATE: $ENTITY_ADDRESS"
@@ -96,12 +104,10 @@ upgradeEntity() {
         --send || return
 }
 
-# params:
-#   $1 = amount
 setDailyBaseCost() {
     erdpy --verbose contract call $MANAGER_ADDRESS \
         --function="setDailyBaseCost" \
-        --arguments $1 \
+        --arguments $COST_DAILY_BASE_AMOUNT \
         --recall-nonce --gas-limit=5000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --ledger \
@@ -115,6 +121,16 @@ setDailyFeatureCost() {
     erdpy --verbose contract call $MANAGER_ADDRESS \
         --function="setDailyFeatureCost" \
         --arguments "str:$1" $2 \
+        --recall-nonce --gas-limit=5000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+setMinBoostCost() {
+    erdpy --verbose contract call $MANAGER_ADDRESS \
+        --function="setMinBoostCost" \
+        --arguments $COST_MIN_BOOST_AMOUNT \
         --recall-nonce --gas-limit=5000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --ledger \
@@ -153,6 +169,12 @@ getEntityTemplateAddress() {
 getBaseDailyCost() {
     erdpy contract query $MANAGER_ADDRESS \
         --function="getBaseDailyCost" \
+        --proxy=$PROXY || return
+}
+
+getMinBoostCost() {
+    erdpy contract query $MANAGER_ADDRESS \
+        --function="getMinBoostCost" \
         --proxy=$PROXY || return
 }
 

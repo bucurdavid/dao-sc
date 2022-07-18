@@ -16,11 +16,12 @@ elrond_wasm_node::wasm_endpoints! {
         getEntityTemplateAddress
         getFeatureDailyCost
         getFeatures
-        getMinBoostAmount
+        getMinBoostCost
         getTrustedHostAddress
         setDailyBaseCost
         setDailyFeatureCost
         setFeatures
+        setMinBoostCost
         upgradeEntity
     )
 }
