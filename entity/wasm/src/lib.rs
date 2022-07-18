@@ -38,7 +38,6 @@ elrond_wasm_node::wasm_endpoints! {
         getSealed
         getTrustedHostAddress
         getUserRoles
-        getUsersForRole
         getVersion
         getVotingPeriodMinutes
         getWithdrawableProposalIds
@@ -47,6 +46,7 @@ elrond_wasm_node::wasm_endpoints! {
         seal
         setGovTokenLocalRoles
         sign
+        unassignRole
         voteAgainst
         voteFor
         withdraw
