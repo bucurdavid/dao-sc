@@ -44,7 +44,14 @@ pub enum ProposalStatus {
 
 #[elrond_wasm::module]
 pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
-    fn create_proposal(&self, content_hash: ManagedBuffer, actions_hash: ManagedBuffer, vote_weight: BigUint, permissions: ManagedVec<ManagedBuffer>, policies: &ManagedVec<Policy<Self::Api>>) -> Proposal<Self::Api> {
+    fn create_proposal(
+        &self,
+        content_hash: ManagedBuffer,
+        actions_hash: ManagedBuffer,
+        vote_weight: BigUint,
+        permissions: ManagedVec<ManagedBuffer>,
+        policies: &ManagedVec<Policy<Self::Api>>,
+    ) -> Proposal<Self::Api> {
         let proposer = self.blockchain().get_caller();
         let proposal_id = self.next_proposal_id().get();
 
@@ -52,7 +59,11 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
             require!(actions_hash.len() == KECCAK256_RESULT_LEN, "invalid actions hash");
         }
 
-        let voting_period_minutes = policies.iter().map(|p| p.voting_period_minutes).max().unwrap_or_else(|| self.voting_period_in_minutes().get());
+        let voting_period_minutes = policies
+            .iter()
+            .map(|p| p.voting_period_minutes)
+            .max()
+            .unwrap_or_else(|| self.voting_period_in_minutes().get());
 
         let starts_at = self.blockchain().get_block_timestamp();
         let ends_at = starts_at + voting_period_minutes as u64 * 60;
@@ -117,7 +128,10 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
 
         // require signer majority if no permissions announced
         if proposal.permissions.is_empty() {
-            let has_signer_majority = proposer_roles.iter().map(|role| self.has_signer_majority_for_role(&proposal, &role)).all(|res| res == true);
+            let has_signer_majority = proposer_roles
+                .iter()
+                .map(|role| self.has_signer_majority_for_role(&proposal, &role))
+                .all(|res| res == true);
 
             return (has_signer_majority, false);
         }
@@ -323,7 +337,14 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         self.roles_member_amount(&role).get() / 2 + 1
     }
 
-    fn require_proposed_via_trusted_host(&self, trusted_host_id: &ManagedBuffer, content_hash: &ManagedBuffer, content_sig: ManagedBuffer, actions_hash: &ManagedBuffer, permissions: &ManagedVec<ManagedBuffer>) {
+    fn require_proposed_via_trusted_host(
+        &self,
+        trusted_host_id: &ManagedBuffer,
+        content_hash: &ManagedBuffer,
+        content_sig: ManagedBuffer,
+        actions_hash: &ManagedBuffer,
+        permissions: &ManagedVec<ManagedBuffer>,
+    ) {
         let proposer = self.blockchain().get_caller();
         let entity_address = self.blockchain().get_sc_address();
         let trusted_host_signature = ManagedByteArray::try_from(content_sig).unwrap();

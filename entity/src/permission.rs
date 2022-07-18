@@ -81,13 +81,7 @@ pub trait PermissionModule: config::ConfigModule {
     }
 
     #[endpoint(createPolicyWeighted)]
-    fn create_policy_weighted_endpoint(
-        &self,
-        role_name: ManagedBuffer,
-        permission_name: ManagedBuffer,
-        quorum: BigUint,
-        voting_period_minutes: usize,
-    ) {
+    fn create_policy_weighted_endpoint(&self, role_name: ManagedBuffer, permission_name: ManagedBuffer, quorum: BigUint, voting_period_minutes: usize) {
         self.require_caller_self();
         self.create_policy(role_name, permission_name, PolicyMethod::Weight, quorum, voting_period_minutes);
     }
@@ -101,13 +95,7 @@ pub trait PermissionModule: config::ConfigModule {
     #[endpoint(createPolicyForAll)]
     fn create_policy_all_endpoint(&self, role_name: ManagedBuffer, permission_name: ManagedBuffer) {
         self.require_caller_self();
-        self.create_policy(
-            role_name,
-            permission_name,
-            PolicyMethod::All,
-            BigUint::zero(),
-            self.voting_period_in_minutes().get(),
-        );
+        self.create_policy(role_name, permission_name, PolicyMethod::All, BigUint::zero(), self.voting_period_in_minutes().get());
     }
 
     #[endpoint(createPolicyQuorum)]
@@ -235,14 +223,7 @@ pub trait PermissionModule: config::ConfigModule {
         });
     }
 
-    fn create_policy(
-        &self,
-        role_name: ManagedBuffer,
-        permission_name: ManagedBuffer,
-        method: PolicyMethod,
-        quorum: BigUint,
-        voting_period_minutes: usize,
-    ) {
+    fn create_policy(&self, role_name: ManagedBuffer, permission_name: ManagedBuffer, method: PolicyMethod, quorum: BigUint, voting_period_minutes: usize) {
         require!(self.roles().contains(&role_name), "role does not exist");
         require!(self.permissions().contains(&permission_name), "permission does not exist");
         require!(!self.policies(&role_name).contains_key(&permission_name), "policy already exists");
