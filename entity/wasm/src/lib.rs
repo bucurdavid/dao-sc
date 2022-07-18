@@ -33,6 +33,7 @@ elrond_wasm_node::wasm_endpoints! {
         getProposalVotes
         getProtectedVoteTokens
         getQuorum
+        getRoleMemberAmount
         getRoles
         getSealed
         getTrustedHostAddress

@@ -129,6 +129,15 @@ getRoles() {
 }
 
 # params:
+#   $1 = role name
+getRoleMemberAmount() {
+    erdpy contract query $ADDRESS \
+        --function="getRoleMemberAmount" \
+        --arguments "str:$1" \
+        --proxy=$PROXY || return
+}
+
+# params:
 #   $1 = permission name
 #   $2 = destination address
 #   $3 = sc endpoint

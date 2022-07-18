@@ -303,6 +303,7 @@ pub trait PermissionModule: config::ConfigModule {
     #[storage_mapper("roles")]
     fn roles(&self) -> UnorderedSetMapper<ManagedBuffer<Self::Api>>;
 
+    #[view(getRoleMemberAmount)]
     #[storage_mapper("roles_member_amount")]
     fn roles_member_amount(&self, role_name: &ManagedBuffer) -> SingleValueMapper<usize>;
 
