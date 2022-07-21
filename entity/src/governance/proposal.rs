@@ -251,15 +251,20 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
 
             for role in proposer_roles.iter() {
                 for permission in self.policies(&role).keys() {
-                    let permission_details = self.permission_details(&permission).get();
+                    if actual_permissions.contains(&permission) {
+                        continue;
+                    }
 
-                    if self.does_permission_apply_to_action(&permission_details, &action) && !actual_permissions.contains(&permission) {
+                    let permission_details = self.permission_details(&permission).get();
+                    let applies = self.does_permission_apply_to_action(&permission_details, &action);
+
+                    if applies {
                         actual_permissions.push(permission.clone());
                         has_permission_for_action = true;
                     }
                 }
 
-                // leader does not need permission for all proposals defined
+                // leader does not need permission for all actions defined
                 if role == ManagedBuffer::from(ROLE_BUILTIN_LEADER) {
                     has_permission_for_action = true;
                 }
