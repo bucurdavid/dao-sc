@@ -16,12 +16,13 @@ pub trait TokenModule: config::ConfigModule {
             can_freeze: true,
             can_wipe: true,
             can_pause: true,
-            can_change_owner: true,
-            can_upgrade: false,
+            can_change_owner: false,
+            can_upgrade: true,
             can_add_special_roles: true,
         };
 
-        self.send().esdt_system_sc_proxy()
+        self.send()
+            .esdt_system_sc_proxy()
             .issue_fungible(self.call_value().egld_value(), &token_name, &token_ticker, &supply, properties)
             .async_call()
     }
