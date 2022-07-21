@@ -2,7 +2,7 @@ elrond_wasm::imports!();
 
 use self::vote::VoteType;
 use crate::config::{self, VOTING_PERIOD_MINUTES_DEFAULT};
-use crate::permission;
+use crate::permission::{self, ROLE_BUILTIN_LEADER};
 use proposal::{Action, ProposalStatus};
 
 pub mod events;
@@ -161,6 +161,10 @@ pub trait GovernanceModule:
         require!(self.gov_token_id().is_empty(), "governance token already set");
 
         let caller = self.blockchain().get_caller();
+        let user_id = self.users().get_user_id(&caller);
+        let is_leader = self.user_roles(user_id).contains(&ManagedBuffer::from(ROLE_BUILTIN_LEADER));
+
+        require!(is_leader, "only allowed for leader");
 
         self.issue_gov_token(token_name, token_ticker, supply)
             .with_callback(self.callbacks().gov_token_issue_callback(&caller))
