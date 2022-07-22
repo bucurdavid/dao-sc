@@ -1,37 +1,41 @@
 {
-  "devnet": {
-    "proxy": "https://devnet-gateway.elrond.com",
-    "chain-id": "D",
-    "cost-token-id": "DSUPER-9af8df",
-    "cost-entity-creation-amount": 1000000000000000000,
-    "cost-daily-base-amount": 100000000000000000000,
-    "cost-min-boost-amount": 100000000000000000000,
-    "trusted-host-address": "erd1aum55fcd44xfrwelsdma7j5avp263jwrkmr48en0arezkc72hsnq42qa7q",
-    "entity--address": "erd1qqqqqqqqqqqqqpgqsxykwum9lrrn3xs3v6rcs47g6gndywly27rswajv0k",
-    "entity--deploy-transaction": "a4f19547b28c3dfe152d863d5b4aec9ccf863b3b71a266f992a09765f5894979",
-    "manager--address": "erd1qqqqqqqqqqqqqpgqhplgqhep8capp9rlv78aws0lr9v6t2xq27rsrkg59x",
-    "manager--deploy-transaction": "f530feeaec53412ab02ec295eaefb450473106c2dcd15f1f5a147d505c87edab"
-  },
-  "testnet": {
-    "proxy": "https://testnet-gateway.elrond.com",
-    "chain-id": "T",
-    "cost-token-id": "XSUPER-c19331",
-    "cost-entity-creation-amount": 1000000000000000000,
-    "cost-daily-base-amount": 100000000000000000000,
-    "cost-min-boost-amount": 100000000000000000000,
-    "trusted-host-address": "erd1aum55fcd44xfrwelsdma7j5avp263jwrkmr48en0arezkc72hsnq42qa7q",
-    "entity--address": "erd1qqqqqqqqqqqqqpgqxtlpz8er2yl7acfh7pch7hg8y8flqxjn27rs63cl7f",
-    "entity--deploy-transaction": "fd0393ed2010c7b36796cf5da29e2773311064f81a9b0b80743ddd3416d722cb",
-    "manager--address": "erd1qqqqqqqqqqqqqpgq5gt0hcs9s68qela3ju0tsncuu32w6emc27rs4tcfvp",
-    "manager--deploy-transaction": "e6d898664516a42a4ec06d7121c8999bfa6e33c881c4aca29396f9d9966825f9"
-  },
-  "mainnet": {
-    "proxy": "https://gateway.elrond.com",
-    "chain-id": "1",
-    "cost-token-id": "SUPER-507aa6",
-    "cost-entity-creation-amount": 1000000000000000000000,
-    "cost-daily-base-amount": 100000000000000000000,
-    "cost-min-boost-amount": 100000000000000000000,
-    "trusted-host-address": "erd1gymypy0yatvw8scqv9438eu9ngxnsln0rrq4knxgr0scs4uazhrqnclzkd"
-  }
+    "devnet": {
+        "proxy": "https://devnet-gateway.elrond.com",
+        "chain-id": "D",
+        "cost-token-id": "DSUPER-9af8df",
+        "cost-entity-creation-amount": 1000000000000000000,
+        "cost-daily-base-amount": 100000000000000000000,
+        "cost-min-boost-amount": 100000000000000000000,
+        "trusted-host-address": "erd1aum55fcd44xfrwelsdma7j5avp263jwrkmr48en0arezkc72hsnq42qa7q",
+        "entity--address": "erd1qqqqqqqqqqqqqpgqsxykwum9lrrn3xs3v6rcs47g6gndywly27rswajv0k",
+        "entity--deploy-transaction": "a4f19547b28c3dfe152d863d5b4aec9ccf863b3b71a266f992a09765f5894979",
+        "manager--address": "erd1qqqqqqqqqqqqqpgqhplgqhep8capp9rlv78aws0lr9v6t2xq27rsrkg59x",
+        "manager--deploy-transaction": "f530feeaec53412ab02ec295eaefb450473106c2dcd15f1f5a147d505c87edab"
+    },
+    "testnet": {
+        "proxy": "https://testnet-gateway.elrond.com",
+        "chain-id": "T",
+        "cost-token-id": "XSUPER-c19331",
+        "cost-entity-creation-amount": 1000000000000000000,
+        "cost-daily-base-amount": 100000000000000000000,
+        "cost-min-boost-amount": 100000000000000000000,
+        "trusted-host-address": "erd1aum55fcd44xfrwelsdma7j5avp263jwrkmr48en0arezkc72hsnq42qa7q",
+        "entity--address": "erd1qqqqqqqqqqqqqpgqxtlpz8er2yl7acfh7pch7hg8y8flqxjn27rs63cl7f",
+        "entity--deploy-transaction": "fd0393ed2010c7b36796cf5da29e2773311064f81a9b0b80743ddd3416d722cb",
+        "manager--address": "erd1qqqqqqqqqqqqqpgq5gt0hcs9s68qela3ju0tsncuu32w6emc27rs4tcfvp",
+        "manager--deploy-transaction": "e6d898664516a42a4ec06d7121c8999bfa6e33c881c4aca29396f9d9966825f9"
+    },
+    "mainnet": {
+        "proxy": "https://gateway.elrond.com",
+        "chain-id": "1",
+        "cost-token-id": "SUPER-507aa6",
+        "cost-entity-creation-amount": 1000000000000000000000,
+        "cost-daily-base-amount": 100000000000000000000,
+        "cost-min-boost-amount": 100000000000000000000,
+        "trusted-host-address": "erd1gymypy0yatvw8scqv9438eu9ngxnsln0rrq4knxgr0scs4uazhrqnclzkd",
+        "entity--address": "erd1qqqqqqqqqqqqqpgqces4kdydtp9ea29pymjjyg7vcfqfllly27rsv3qats",
+        "entity--deploy-transaction": "52e72d4530a48567e9bfaf46314395ccc97cd69c8ec3924ee485a461e8e3edeb",
+        "manager--address": "erd1qqqqqqqqqqqqqpgqtatmxjhlxkehl37u5kz9tz7sm450xd7f27rsppynzj",
+        "manager--deploy-transaction": "58abeb95190fb5f39c51793d4ecd37189c22f2e8beb6960aa5dcf7c5b2ec56a3"
+    }
 }
