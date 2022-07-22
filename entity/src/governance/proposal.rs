@@ -227,14 +227,14 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         let mut serialized = ManagedBuffer::new();
 
         for action in actions.iter() {
-            serialized.append(&sc_format!("{:x}{}{}", action.destination.as_managed_buffer(), action.endpoint, action.value));
+            serialized.append(&sc_format!("{}{}{}", action.destination.as_managed_buffer(), action.endpoint, action.value));
 
             for payment in action.payments.iter() {
                 serialized.append(&sc_format!("{}{}{}", payment.token_identifier, payment.token_nonce, payment.amount));
             }
 
             for arg in action.arguments.into_iter() {
-                serialized.append(&sc_format!("{:x}", arg));
+                serialized.append(&arg);
             }
         }
 
