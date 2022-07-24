@@ -104,6 +104,16 @@ upgradeEntity() {
         --send || return
 }
 
+setEntityCreationCost() {
+    erdpy --verbose contract call $MANAGER_ADDRESS \
+        --function="setEntityCreationCost" \
+        --arguments $COST_ENTITY_CREATION_AMOUNT \
+        --recall-nonce --gas-limit=5000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
 setDailyBaseCost() {
     erdpy --verbose contract call $MANAGER_ADDRESS \
         --function="setDailyBaseCost" \
@@ -163,6 +173,12 @@ boost() {
 getEntityTemplateAddress() {
     erdpy contract query $MANAGER_ADDRESS \
         --function="getEntityTemplateAddress" \
+        --proxy=$PROXY || return
+}
+
+getEntityCreationCost() {
+    erdpy contract query $MANAGER_ADDRESS \
+        --function="getEntityCreationCost" \
         --proxy=$PROXY || return
 }
 

@@ -13,6 +13,13 @@ pub trait ConfigModule {
     }
 
     #[only_owner]
+    #[endpoint(setEntityCreationCost)]
+    fn set_entity_creation_cost_endpoint(&self, amount: BigUint) {
+        require!(amount > 0, "can not be zero");
+        self.cost_creation_amount().set(amount);
+    }
+
+    #[only_owner]
     #[endpoint(setDailyBaseCost)]
     fn set_daily_base_cost_endpoint(&self, amount: BigUint) {
         require!(amount > 0, "can not be zero");
@@ -28,7 +35,7 @@ pub trait ConfigModule {
 
     #[only_owner]
     #[endpoint(setMinBoostCost)]
-    fn set_min_boost_endpoint(&self, amount: BigUint) {
+    fn set_min_boost_cost_endpoint(&self, amount: BigUint) {
         require!(amount > 0, "can not be zero");
         self.cost_boost_min_amount().set(amount);
     }
@@ -47,6 +54,7 @@ pub trait ConfigModule {
     #[storage_mapper("cost_token")]
     fn cost_token_id(&self) -> SingleValueMapper<TokenIdentifier>;
 
+    #[view(getEntityCreationCost)]
     #[storage_mapper("cost_creation_amount")]
     fn cost_creation_amount(&self) -> SingleValueMapper<BigUint>;
 

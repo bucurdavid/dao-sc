@@ -13,6 +13,7 @@ elrond_wasm_node::wasm_endpoints! {
         executeTicket
         getBaseDailyCost
         getCredits
+        getEntityCreationCost
         getEntityTemplateAddress
         getFeatureDailyCost
         getFeatures
@@ -20,6 +21,7 @@ elrond_wasm_node::wasm_endpoints! {
         getTrustedHostAddress
         setDailyBaseCost
         setDailyFeatureCost
+        setEntityCreationCost
         setFeatures
         setMinBoostCost
         upgradeEntity
