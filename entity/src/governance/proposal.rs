@@ -353,10 +353,18 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         let proposer = self.blockchain().get_caller();
         let entity_address = self.blockchain().get_sc_address();
         let trusted_host_signature = ManagedByteArray::try_from(content_sig).unwrap();
-        let mut trusted_host_signable = sc_format!("{:x}{:x}{:x}{:x}{:x}", proposer, entity_address, trusted_host_id, content_hash, actions_hash);
+
+        let mut trusted_host_signable = sc_format!(
+            "{}{}{}{}{}",
+            proposer.as_managed_buffer(),
+            entity_address.as_managed_buffer(),
+            trusted_host_id,
+            content_hash,
+            actions_hash
+        );
 
         for perm in permissions.into_iter() {
-            trusted_host_signable.append(&sc_format!("{:x}", perm));
+            trusted_host_signable.append(&perm);
         }
 
         self.require_signed_by_trusted_host(&trusted_host_signable, &trusted_host_signature);
