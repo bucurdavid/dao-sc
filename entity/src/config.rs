@@ -122,6 +122,7 @@ pub trait ConfigModule {
     #[storage_mapper("proposal_signers")]
     fn proposal_signers(&self, proposal_id: u64, role_name: &ManagedBuffer) -> UnorderedSetMapper<usize>;
 
+    #[view(getProposalNftVotes)]
     #[storage_mapper("proposal_nft_votes")]
     fn proposal_nft_votes(&self, proposal_id: u64) -> UnorderedSetMapper<u64>;
 
