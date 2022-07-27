@@ -72,7 +72,7 @@ pub trait GovernanceModule:
         let permissions = permissions.into_vec();
 
         self.require_payments_with_gov_token();
-        // self.require_proposed_via_trusted_host(&trusted_host_id, &content_hash, content_sig, &actions_hash, &permissions);
+        self.require_proposed_via_trusted_host(&trusted_host_id, &content_hash, content_sig, &actions_hash, &permissions);
         require!(!self.known_trusted_host_proposal_ids().contains(&trusted_host_id), "proposal already registered");
 
         let (allowed, policies) = self.can_propose(&proposer, &actions_hash, &permissions);

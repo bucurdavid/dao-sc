@@ -18,8 +18,6 @@ pub enum VoteType {
 pub trait VoteModule: config::ConfigModule + permission::PermissionModule + proposal::ProposalModule + events::GovEventsModule {
     fn vote(&self, proposal_id: u64, vote_type: VoteType, weight: BigUint) {
         self.require_payments_with_gov_token();
-
-        let voter = self.blockchain().get_caller();
         let mut proposal = self.proposals(proposal_id).get();
 
         require!(weight > 0, "not enough vote weight");
