@@ -16,27 +16,20 @@ pub enum VoteType {
 
 #[elrond_wasm::module]
 pub trait VoteModule: config::ConfigModule + permission::PermissionModule + proposal::ProposalModule + events::GovEventsModule {
-    fn vote(&self, proposal_id: u64, vote_type: VoteType) {
-        self.require_payment_with_gov_token();
-
-        let voter = self.blockchain().get_caller();
-        let payment = self.call_value().single_esdt();
-        let vote_weight = payment.amount.clone();
+    fn vote(&self, proposal_id: u64, vote_type: VoteType, weight: BigUint) {
+        self.require_payments_with_gov_token();
         let mut proposal = self.proposals(proposal_id).get();
 
-        require!(vote_weight > 0, "not enough vote weight");
+        require!(weight > 0, "not enough vote weight");
         require!(self.get_proposal_status(&proposal) == ProposalStatus::Active, "proposal is not active");
 
         match vote_type {
-            VoteType::For => proposal.votes_for += &vote_weight,
-            VoteType::Against => proposal.votes_against += &vote_weight,
+            VoteType::For => proposal.votes_for += &weight,
+            VoteType::Against => proposal.votes_against += &weight,
         }
 
         self.proposals(proposal_id).set(&proposal);
-        self.protected_vote_tokens(&payment.token_identifier).update(|current| *current += &payment.amount);
-        self.votes(proposal_id, &voter).update(|current| *current += &payment.amount);
-        self.withdrawable_proposal_ids(&voter).insert(proposal_id);
-        self.emit_vote_event(proposal, vote_type, payment, vote_weight);
+        self.emit_vote_event(proposal, vote_type, weight);
     }
 
     fn sign(&self, proposal_id: u64) {

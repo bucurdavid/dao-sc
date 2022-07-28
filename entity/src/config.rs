@@ -6,6 +6,8 @@ elrond_wasm::imports!();
 
 pub const VOTING_PERIOD_MINUTES_DEFAULT: usize = 4320; // 3 days
 pub const VOTING_PERIOD_MINUTES_MAX: usize = 20_160; // 14 days
+pub const MIN_PROPOSAL_VOTE_WEIGHT_DEFAULT: u64 = 1;
+pub const QUORUM_DEFAULT: u64 = 1;
 
 pub const SEALED_NOT_SET: u8 = 0;
 pub const SEALED_ON: u8 = 1;
@@ -40,8 +42,13 @@ pub trait ConfigModule {
         require!(!self.gov_token_id().is_empty(), "gov token must be set");
     }
 
-    fn require_payment_with_gov_token(&self) {
-        require!(self.call_value().single_esdt().token_identifier == self.gov_token_id().get(), "invalid token");
+    fn require_payments_with_gov_token(&self) {
+        let payments = self.call_value().all_esdt_transfers();
+        let gov_token_id = self.gov_token_id().get();
+
+        for payment in payments.into_iter() {
+            require!(payment.token_identifier == gov_token_id, "invalid payment token");
+        }
     }
 
     fn require_gov_tokens_available(&self, amount: &BigUint) {
@@ -58,7 +65,9 @@ pub trait ConfigModule {
 
         let trusted_host = self.trusted_host_address().get();
         let signable_hashed = self.crypto().keccak256(signable).as_managed_buffer().clone();
-        let trusted = self.crypto().verify_ed25519_legacy_managed::<KECCAK256_RESULT_LEN>(trusted_host.as_managed_byte_array(), &signable_hashed, &signature);
+        let trusted = self
+            .crypto()
+            .verify_ed25519_legacy_managed::<KECCAK256_RESULT_LEN>(trusted_host.as_managed_byte_array(), &signable_hashed, &signature);
 
         require!(trusted, "not a trusted host");
     }
@@ -99,10 +108,6 @@ pub trait ConfigModule {
     #[storage_mapper("gov_token_id")]
     fn gov_token_id(&self) -> SingleValueMapper<TokenIdentifier>;
 
-    #[view(getGovTokenSupply)]
-    #[storage_mapper("gove_token_supply")]
-    fn gov_token_supply(&self) -> SingleValueMapper<BigUint>;
-
     #[view(getProtectedVoteTokens)]
     #[storage_mapper("protected_vote_tokens")]
     fn protected_vote_tokens(&self, token_id: &TokenIdentifier) -> SingleValueMapper<BigUint>;
@@ -116,6 +121,10 @@ pub trait ConfigModule {
 
     #[storage_mapper("proposal_signers")]
     fn proposal_signers(&self, proposal_id: u64, role_name: &ManagedBuffer) -> UnorderedSetMapper<usize>;
+
+    #[view(getProposalNftVotes)]
+    #[storage_mapper("proposal_nft_votes")]
+    fn proposal_nft_votes(&self, proposal_id: u64) -> UnorderedSetMapper<u64>;
 
     #[view(getWithdrawableProposalIds)]
     #[storage_mapper("withdrawable_proposal_ids")]

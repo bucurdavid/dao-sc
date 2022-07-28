@@ -40,16 +40,13 @@ where
         blockchain.set_esdt_balance(&user_address, ENTITY_GOV_TOKEN_ID, &rust_biguint!(ENTITY_GOV_TOKEN_SUPPLY));
         blockchain.set_esdt_balance(&user_address, ENTITY_FAKE_TOKEN_ID, &rust_biguint!(ENTITY_GOV_TOKEN_SUPPLY));
 
-        blockchain.execute_tx(&owner_address, &contract, &rust_zero, |sc| {
-            sc.init(
-                managed_address!(&trusted_host_address),
-                OptionalValue::Some(managed_address!(&owner_address)),
-            );
+        blockchain
+            .execute_tx(&owner_address, &contract, &rust_zero, |sc| {
+                sc.init(managed_address!(&trusted_host_address), OptionalValue::Some(managed_address!(&owner_address)));
 
-            sc.voting_period_in_minutes().set(VOTING_PERIOD_MINUTES_DEFAULT);
-            sc.sealed().set(SEALED_ON);
-        })
-        .assert_ok();
+                sc.sealed().set(SEALED_ON);
+            })
+            .assert_ok();
 
         Self {
             blockchain,
@@ -61,13 +58,14 @@ where
     }
 
     pub fn configure_gov_token(&mut self) {
-        self.blockchain.execute_tx(&self.owner_address, &self.contract, &rust_biguint!(0), |sc| {
-            sc.gov_token_id().set(managed_token_id!(ENTITY_GOV_TOKEN_ID));
-            sc.quorum().set(managed_biguint!(QURUM));
-            sc.min_proposal_vote_weight().set(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL));
-        }).assert_ok();
+        self.blockchain
+            .execute_tx(&self.owner_address, &self.contract, &rust_biguint!(0), |sc| {
+                sc.gov_token_id().set(managed_token_id!(ENTITY_GOV_TOKEN_ID));
+                sc.quorum().set(managed_biguint!(QURUM));
+                sc.min_proposal_vote_weight().set(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL));
+            })
+            .assert_ok();
     }
-
 }
 
 #[test]
@@ -75,7 +73,10 @@ fn it_initializes_the_contract() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let trusted_host_address = setup.trusted_host_address.clone();
 
-    setup.blockchain.execute_query(&setup.contract, |sc| {
-        assert_eq!(managed_address!(&trusted_host_address), sc.trusted_host_address().get());
-    }).assert_ok();
+    setup
+        .blockchain
+        .execute_query(&setup.contract, |sc| {
+            assert_eq!(managed_address!(&trusted_host_address), sc.trusted_host_address().get());
+        })
+        .assert_ok();
 }

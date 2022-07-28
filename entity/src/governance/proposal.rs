@@ -82,8 +82,6 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         };
 
         self.proposals(proposal_id).set(&proposal);
-        self.votes(proposal_id, &proposer).set(vote_weight);
-        self.withdrawable_proposal_ids(&proposer).insert(proposal_id);
         self.next_proposal_id().set(proposal_id + 1);
 
         proposal

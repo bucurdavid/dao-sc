@@ -1,7 +1,7 @@
 elrond_wasm::imports!();
 
 use self::vote::VoteType;
-use crate::config::{self, VOTING_PERIOD_MINUTES_DEFAULT};
+use crate::config::{self, MIN_PROPOSAL_VOTE_WEIGHT_DEFAULT, QUORUM_DEFAULT, VOTING_PERIOD_MINUTES_DEFAULT};
 use crate::permission::{self, ROLE_BUILTIN_LEADER};
 use proposal::{Action, ProposalStatus};
 
@@ -17,6 +17,8 @@ pub trait GovernanceModule:
     fn init_governance_module(&self) {
         self.next_proposal_id().set_if_empty(1);
         self.voting_period_in_minutes().set_if_empty(VOTING_PERIOD_MINUTES_DEFAULT);
+        self.min_proposal_vote_weight().set_if_empty(BigUint::from(MIN_PROPOSAL_VOTE_WEIGHT_DEFAULT));
+        self.quorum().set_if_empty(BigUint::from(QUORUM_DEFAULT));
     }
 
     fn configure_governance_token(&self, gov_token_id: TokenIdentifier, supply: BigUint) {
@@ -24,7 +26,6 @@ pub trait GovernanceModule:
         let initial_min_tokens_for_proposing = &supply / &BigUint::from(1000u64); // 0.1% of supply
 
         self.gov_token_id().set(&gov_token_id);
-        self.gov_token_supply().set(&supply);
 
         self.try_change_governance_token(gov_token_id);
         self.try_change_quorum(BigUint::from(initial_quorum));
@@ -67,23 +68,22 @@ pub trait GovernanceModule:
         actions_hash: ManagedBuffer,
         permissions: MultiValueManagedVec<ManagedBuffer>,
     ) -> u64 {
-        let payment = self.call_value().egld_or_single_esdt();
         let proposer = self.blockchain().get_caller();
         let permissions = permissions.into_vec();
 
+        self.require_payments_with_gov_token();
         self.require_proposed_via_trusted_host(&trusted_host_id, &content_hash, content_sig, &actions_hash, &permissions);
         require!(!self.known_trusted_host_proposal_ids().contains(&trusted_host_id), "proposal already registered");
 
         let (allowed, policies) = self.can_propose(&proposer, &actions_hash, &permissions);
         require!(allowed, "action not allowed for user");
 
-        let vote_weight = payment.amount.clone();
         let proposer_id = self.users().get_user_id(&proposer);
         let proposer_roles = self.user_roles(proposer_id);
+        let vote_weight = self.get_weight_from_vote_payments();
 
         if proposer_roles.is_empty() || self.has_token_weighted_policy(&policies) {
             self.require_sealed();
-            self.require_payment_with_gov_token();
             require!(vote_weight >= self.min_proposal_vote_weight().get(), "insufficient vote weight");
         }
 
@@ -94,10 +94,7 @@ pub trait GovernanceModule:
             self.sign_for_all_roles(&proposer, &proposal);
         }
 
-        if let Option::Some(token_id) = payment.token_identifier.as_esdt_option() {
-            self.protected_vote_tokens(&token_id).update(|current| *current += &payment.amount);
-        }
-
+        self.commit_vote_payments(proposal_id);
         self.known_trusted_host_proposal_ids().insert(trusted_host_id);
         self.emit_propose_event(proposal, vote_weight);
 
@@ -108,14 +105,18 @@ pub trait GovernanceModule:
     #[endpoint(voteFor)]
     fn vote_for_endpoint(&self, proposal_id: u64) {
         self.require_sealed();
-        self.vote(proposal_id, VoteType::For)
+        let vote_weight = self.get_weight_from_vote_payments();
+        self.vote(proposal_id, VoteType::For, vote_weight);
+        self.commit_vote_payments(proposal_id);
     }
 
     #[payable("*")]
     #[endpoint(voteAgainst)]
     fn vote_against_endpoint(&self, proposal_id: u64) {
         self.require_sealed();
-        self.vote(proposal_id, VoteType::Against)
+        let vote_weight = self.get_weight_from_vote_payments();
+        self.vote(proposal_id, VoteType::Against, vote_weight);
+        self.commit_vote_payments(proposal_id);
     }
 
     #[endpoint(sign)]
@@ -265,5 +266,32 @@ pub trait GovernanceModule:
             }
         }
         signers
+    }
+
+    fn get_weight_from_vote_payments(&self) -> BigUint {
+        self.call_value()
+            .all_esdt_transfers()
+            .into_iter()
+            .fold(BigUint::zero(), |carry, payment| carry + &payment.amount)
+    }
+
+    fn commit_vote_payments(&self, proposal_id: u64) {
+        let payments = self.call_value().all_esdt_transfers();
+        let caller = self.blockchain().get_caller();
+
+        for payment in payments.into_iter() {
+            let is_fungible = payment.token_nonce == 0;
+
+            if is_fungible {
+                self.protected_vote_tokens(&payment.token_identifier).update(|current| *current += &payment.amount);
+                self.votes(proposal_id, &caller).update(|current| *current += &payment.amount);
+                self.withdrawable_proposal_ids(&caller).insert(proposal_id);
+            } else {
+                let inserted = self.proposal_nft_votes(proposal_id).insert(payment.token_nonce);
+                require!(inserted, "already voted with nft");
+
+                self.send().direct_esdt(&caller, &payment.token_identifier, payment.token_nonce, &payment.amount);
+            }
+        }
     }
 }

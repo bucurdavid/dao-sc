@@ -19,15 +19,28 @@ fn it_returns_active_when_just_created() {
         .blockchain
         .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
             sc.create_role(managed_buffer!(b"testrole"));
-            sc.create_permission(managed_buffer!(b"testperm"), managed_biguint!(0), managed_address!(&sc_address), managed_buffer!(b"testendpoint"), ManagedVec::new(), ManagedVec::new());
-            sc.create_policy(managed_buffer!(b"testrole"), managed_buffer!(b"testperm"), PolicyMethod::Quorum, managed_biguint!(3), VOTING_PERIOD_MINUTES_DEFAULT);
+            sc.create_permission(
+                managed_buffer!(b"testperm"),
+                managed_biguint!(0),
+                managed_address!(&sc_address),
+                managed_buffer!(b"testendpoint"),
+                ManagedVec::new(),
+                ManagedVec::new(),
+            );
+            sc.create_policy(
+                managed_buffer!(b"testrole"),
+                managed_buffer!(b"testperm"),
+                PolicyMethod::Quorum,
+                managed_biguint!(3),
+                VOTING_PERIOD_MINUTES_DEFAULT,
+            );
             sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"testrole"));
         })
         .assert_ok();
 
     setup
         .blockchain
-        .execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
+        .execute_tx(&proposer_address, &setup.contract, &rust_biguint!(QURUM), |sc| {
             let mut actions = Vec::<Action<DebugApi>>::new();
             actions.push(Action::<DebugApi> {
                 destination: managed_address!(&sc_address),
@@ -67,8 +80,21 @@ fn it_succeeds_if_one_of_one_permission_policies_reaches_signer_quorum() {
         .blockchain
         .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
             sc.create_role(managed_buffer!(b"testrole"));
-            sc.create_permission(managed_buffer!(b"testperm"), managed_biguint!(0), managed_address!(&sc_address), managed_buffer!(b"testendpoint"), ManagedVec::new(), ManagedVec::new());
-            sc.create_policy(managed_buffer!(b"testrole"), managed_buffer!(b"testperm"), PolicyMethod::Quorum, managed_biguint!(quorum), VOTING_PERIOD_MINUTES_DEFAULT);
+            sc.create_permission(
+                managed_buffer!(b"testperm"),
+                managed_biguint!(0),
+                managed_address!(&sc_address),
+                managed_buffer!(b"testendpoint"),
+                ManagedVec::new(),
+                ManagedVec::new(),
+            );
+            sc.create_policy(
+                managed_buffer!(b"testrole"),
+                managed_buffer!(b"testperm"),
+                PolicyMethod::Quorum,
+                managed_biguint!(quorum),
+                VOTING_PERIOD_MINUTES_DEFAULT,
+            );
             sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"testrole"));
             sc.assign_role(managed_address!(&signer_one), managed_buffer!(b"testrole"));
             sc.assign_role(managed_address!(&signer_two), managed_buffer!(b"testrole"));
@@ -77,7 +103,7 @@ fn it_succeeds_if_one_of_one_permission_policies_reaches_signer_quorum() {
 
     setup
         .blockchain
-        .execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
+        .execute_tx(&proposer_address, &setup.contract, &rust_biguint!(QURUM), |sc| {
             let mut actions = Vec::<Action<DebugApi>>::new();
             actions.push(Action::<DebugApi> {
                 destination: managed_address!(&sc_address),
@@ -134,12 +160,27 @@ fn it_returns_defeated_if_one_of_one_permission_policies_does_not_meet_quorum_af
     let mut proposal_id = 0;
     let quorum = 3;
 
+    setup.configure_gov_token();
+
     setup
         .blockchain
         .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
             sc.create_role(managed_buffer!(b"testrole"));
-            sc.create_permission(managed_buffer!(b"testperm"), managed_biguint!(0), managed_address!(&sc_address), managed_buffer!(b"testendpoint"), ManagedVec::new(), ManagedVec::new());
-            sc.create_policy(managed_buffer!(b"testrole"), managed_buffer!(b"testperm"), PolicyMethod::Quorum, managed_biguint!(quorum), VOTING_PERIOD_MINUTES_DEFAULT);
+            sc.create_permission(
+                managed_buffer!(b"testperm"),
+                managed_biguint!(0),
+                managed_address!(&sc_address),
+                managed_buffer!(b"testendpoint"),
+                ManagedVec::new(),
+                ManagedVec::new(),
+            );
+            sc.create_policy(
+                managed_buffer!(b"testrole"),
+                managed_buffer!(b"testperm"),
+                PolicyMethod::Quorum,
+                managed_biguint!(quorum),
+                VOTING_PERIOD_MINUTES_DEFAULT,
+            );
             sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"testrole"));
         })
         .assert_ok();
@@ -196,11 +237,37 @@ fn it_returns_defeated_if_one_of_two_permission_policies_does_not_meet_quorum_af
         .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
             sc.create_role(managed_buffer!(b"testrole"));
 
-            sc.create_permission(managed_buffer!(b"testperm1"), managed_biguint!(0), managed_address!(&sc_address), managed_buffer!(b"testendpoint"), ManagedVec::new(), ManagedVec::new());
-            sc.create_permission(managed_buffer!(b"testperm2"), managed_biguint!(0), managed_address!(&sc_address), managed_buffer!(b"testendpoint"), ManagedVec::new(), ManagedVec::new());
+            sc.create_permission(
+                managed_buffer!(b"testperm1"),
+                managed_biguint!(0),
+                managed_address!(&sc_address),
+                managed_buffer!(b"testendpoint"),
+                ManagedVec::new(),
+                ManagedVec::new(),
+            );
+            sc.create_permission(
+                managed_buffer!(b"testperm2"),
+                managed_biguint!(0),
+                managed_address!(&sc_address),
+                managed_buffer!(b"testendpoint"),
+                ManagedVec::new(),
+                ManagedVec::new(),
+            );
 
-            sc.create_policy(managed_buffer!(b"testrole"), managed_buffer!(b"testperm1"), PolicyMethod::Quorum, managed_biguint!(3), VOTING_PERIOD_MINUTES_DEFAULT);
-            sc.create_policy(managed_buffer!(b"testrole"), managed_buffer!(b"testperm2"), PolicyMethod::Weight, managed_biguint!(QURUM), VOTING_PERIOD_MINUTES_DEFAULT);
+            sc.create_policy(
+                managed_buffer!(b"testrole"),
+                managed_buffer!(b"testperm1"),
+                PolicyMethod::Quorum,
+                managed_biguint!(3),
+                VOTING_PERIOD_MINUTES_DEFAULT,
+            );
+            sc.create_policy(
+                managed_buffer!(b"testrole"),
+                managed_buffer!(b"testperm2"),
+                PolicyMethod::Weight,
+                managed_biguint!(QURUM),
+                VOTING_PERIOD_MINUTES_DEFAULT,
+            );
 
             sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"testrole"));
         })

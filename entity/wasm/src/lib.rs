@@ -21,12 +21,12 @@ elrond_wasm_node::wasm_endpoints! {
         createRole
         execute
         getGovTokenId
-        getGovTokenSupply
         getMinProposalVoteWeight
         getPermissions
         getPolicies
         getProposal
         getProposalIdCounter
+        getProposalNftVotes
         getProposalSignatureRoleCounts
         getProposalSigners
         getProposalStatus
