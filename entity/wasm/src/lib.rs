@@ -43,6 +43,7 @@ elrond_wasm_node::wasm_endpoints! {
         getWithdrawableProposalIds
         issueGovToken
         propose
+        registerDns
         seal
         setGovTokenLocalRoles
         sign

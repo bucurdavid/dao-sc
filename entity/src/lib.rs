@@ -37,8 +37,31 @@ pub trait Entity:
         self.sealed().set(SEALED_ON);
     }
 
+    #[payable("EGLD")]
+    #[endpoint(registerDns)]
+    fn register_dns(&self, dns_address: ManagedAddress, name: ManagedBuffer) {
+        self.require_caller_self();
+        let payment = self.call_value().egld_value();
+
+        self.dns_proxy(dns_address).register(&name).with_egld_transfer(payment).async_call().call_and_exit()
+    }
+
     #[view(getVersion)]
     fn version_view(&self) -> &'static [u8] {
         env!("CARGO_PKG_VERSION").as_bytes()
+    }
+
+    #[proxy]
+    fn dns_proxy(&self, to: ManagedAddress) -> dns_proxy::Proxy<Self::Api>;
+}
+
+mod dns_proxy {
+    elrond_wasm::imports!();
+
+    #[elrond_wasm::proxy]
+    pub trait Dns {
+        #[payable("EGLD")]
+        #[endpoint]
+        fn register(&self, name: &ManagedBuffer);
     }
 }
