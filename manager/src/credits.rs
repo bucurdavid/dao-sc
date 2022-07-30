@@ -19,16 +19,21 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule {
     fn boost_endpoint(&self, entity_address: ManagedAddress) {
         let payment = self.call_value().single_esdt();
 
-        self.require_entity_exists(&entity_address);
         require!(payment.token_identifier == self.cost_token_id().get(), "invalid token");
         require!(payment.amount >= self.cost_boost_min_amount().get(), "invalid amount");
 
-        let mut entry = self.get_or_create_entry(&entity_address);
-        entry.total_amount += &payment.amount;
-        entry.period_amount += &payment.amount;
+        self.boost(entity_address, payment.amount)
+    }
 
-        self.credit_entries(&entity_address).set(entry);
-        self.credit_total_deposits_amount().update(|current| *current += &payment.amount);
+    #[endpoint(registerExternalBoost)]
+    fn register_external_boost_endpoint(&self, entity_address: ManagedAddress, amount: BigUint) {
+        let caller = self.blockchain().get_caller();
+        let is_trusted_host = caller == self.trusted_host_address().get();
+        let is_owner = caller == self.blockchain().get_owner_address();
+
+        require!(is_trusted_host || is_owner, "not allowed");
+
+        self.boost(entity_address, amount)
     }
 
     #[view(getCredits)]
@@ -41,6 +46,17 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule {
         let available = self.calculate_available_credits(&entry);
 
         (available, entry.daily_cost).into()
+    }
+
+    fn boost(&self, entity_address: ManagedAddress, amount: BigUint) {
+        self.require_entity_exists(&entity_address);
+
+        let mut entry = self.get_or_create_entry(&entity_address);
+        entry.total_amount += &amount;
+        entry.period_amount += &amount;
+
+        self.credit_entries(&entity_address).set(entry);
+        self.credit_total_deposits_amount().update(|current| *current += &amount);
     }
 
     fn recalculate_daily_cost(&self, entity_address: &ManagedAddress) {
