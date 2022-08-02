@@ -18,6 +18,8 @@ where
 {
     pub blockchain: BlockchainStateWrapper,
     pub owner_address: Address,
+    pub trusted_host_address: Address,
+    pub user_address: Address,
     pub contract: ContractObjWrapper<manager::ContractObj<DebugApi>, ObjBuilder>,
     pub contract_entity_template: ContractObjWrapper<manager::ContractObj<DebugApi>, ObjBuilder>,
 }
@@ -29,6 +31,8 @@ where
     let rust_zero = rust_biguint!(0u64);
     let mut blockchain = BlockchainStateWrapper::new();
     let owner_address = blockchain.create_user_account(&rust_zero);
+    let trusted_host_address = blockchain.create_user_account(&rust_biguint!(1));
+    let user_address = blockchain.create_user_account(&rust_zero);
     let contract = blockchain.create_sc_account(&rust_zero, Some(&owner_address), builder, WASM_PATH);
     let contract_entity_template = blockchain.create_sc_account(&rust_zero, Some(&owner_address), builder, WASM_PATH_ENTITY_TEMPLATE);
 
@@ -38,7 +42,7 @@ where
         .execute_tx(&owner_address, &contract, &rust_zero, |sc| {
             sc.init(
                 managed_address!(contract_entity_template.address_ref()),
-                managed_address!(&owner_address),
+                managed_address!(&trusted_host_address),
                 managed_token_id!(COST_TOKEN_ID),
                 managed_biguint!(COST_AMOUNT_ENTITY_CREATION),
             );
@@ -48,6 +52,8 @@ where
     ManagerSetup {
         blockchain,
         owner_address,
+        trusted_host_address,
+        user_address,
         contract,
         contract_entity_template,
     }
