@@ -10,7 +10,9 @@ TRUSTED_HOST_ADDRESS=$(erdpy data load --partition $NETWORK_NAME --key=trusted-h
 COST_TOKEN_ID=$(erdpy data load --partition $NETWORK_NAME --key=cost-token-id)
 COST_ENTITY_CREATION_AMOUNT=$(erdpy data load --partition $NETWORK_NAME --key=cost-entity-creation-amount)
 COST_DAILY_BASE_AMOUNT=$(erdpy data load --partition $NETWORK_NAME --key=cost-daily-base-amount)
-COST_MIN_BOOST_AMOUNT=$(erdpy data load --partition $NETWORK_NAME --key=cost-min-boost-amount)
+DEX_WEGLD_TOKEN_ID=$(erdpy data load --partition $NETWORK_NAME --key=dex-wegld-token-id)
+DEX_COST_TOKEN_WEGLD_SWAP_CONTRACT=$(erdpy data load --partition $NETWORK_NAME --key=dex-cost-token-wegld-swap-contract)
+DEX_WRAP_EGLD_SWAP_CONTRACT=$(erdpy data load --partition $NETWORK_NAME --key=dex-wrap-egld-contract)
 
 deploy() {
     echo "accidental deploy protection is activated."
@@ -57,7 +59,7 @@ deploy() {
     setDailyBaseCost
 
     sleep 6
-    setMinBoostCost
+    initDexModule
 
     echo ""
     echo "deployed ENTITY TEMPLATE: $ENTITY_ADDRESS"
@@ -72,6 +74,8 @@ upgrade() {
 
     erdpy --verbose contract upgrade $MANAGER_ADDRESS --project manager \
         --arguments $ENTITY_ADDRESS $TRUSTED_HOST_ADDRESS "str:$COST_TOKEN_ID" $COST_ENTITY_CREATION_AMOUNT \
+        --metadata-payable \
+        --metadata-payable-by-sc \
         --recall-nonce --gas-limit=100000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --ledger \
@@ -99,6 +103,16 @@ upgradeEntity() {
         --function="upgradeEntity" \
         --arguments $1 \
         --recall-nonce --gas-limit=100000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+initDexModule() {
+    erdpy --verbose contract call $MANAGER_ADDRESS \
+        --function="initDexModule" \
+        --arguments "str:$DEX_WEGLD_TOKEN_ID" $DEX_COST_TOKEN_WEGLD_SWAP_CONTRACT $DEX_WRAP_EGLD_SWAP_CONTRACT \
+        --recall-nonce --gas-limit=5000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --ledger \
         --send || return
@@ -137,16 +151,6 @@ setDailyFeatureCost() {
         --send || return
 }
 
-setMinBoostCost() {
-    erdpy --verbose contract call $MANAGER_ADDRESS \
-        --function="setMinBoostCost" \
-        --arguments $COST_MIN_BOOST_AMOUNT \
-        --recall-nonce --gas-limit=5000000 \
-        --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
-        --send || return
-}
-
 createEntity() {
     erdpy contract call $MANAGER_ADDRESS \
         --function="ESDTTransfer" \
@@ -170,9 +174,44 @@ boost() {
         --send || return
 }
 
+# params:
+#   $1 = token id
+#   $2 = amount
+#   $3 = entity address
+#   $4 = dex swap contract address
+boostWithSwap() {
+    erdpy contract call $MANAGER_ADDRESS \
+        --function="ESDTTransfer" \
+        --arguments "str:$1" $2 "str:boostWithSwap" $3 $4 \
+        --recall-nonce --gas-limit=80000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+# params:
+#   $1 = value
+#   $2 = entity address
+boostWithSwapEgld() {
+    erdpy contract call $MANAGER_ADDRESS \
+        --function="boostWithSwap" \
+        --arguments $2 \
+        --value=$1 \
+        --recall-nonce --gas-limit=80000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
 getEntityTemplateAddress() {
     erdpy contract query $MANAGER_ADDRESS \
         --function="getEntityTemplateAddress" \
+        --proxy=$PROXY || return
+}
+
+getCostTokenId() {
+    erdpy contract query $MANAGER_ADDRESS \
+        --function="getCostTokenId" \
         --proxy=$PROXY || return
 }
 
@@ -185,12 +224,6 @@ getEntityCreationCost() {
 getBaseDailyCost() {
     erdpy contract query $MANAGER_ADDRESS \
         --function="getBaseDailyCost" \
-        --proxy=$PROXY || return
-}
-
-getMinBoostCost() {
-    erdpy contract query $MANAGER_ADDRESS \
-        --function="getMinBoostCost" \
         --proxy=$PROXY || return
 }
 

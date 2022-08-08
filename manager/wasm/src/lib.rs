@@ -8,23 +8,23 @@ elrond_wasm_node::wasm_endpoints! {
     manager
     (
         boost
+        boostWithSwap
         createEntity
-        deposit
         executeTicket
         getBaseDailyCost
+        getCostTokenId
         getCredits
         getEntityCreationCost
         getEntityTemplateAddress
         getFeatureDailyCost
         getFeatures
-        getMinBoostCost
         getTrustedHostAddress
+        initDexModule
         registerExternalBoost
         setDailyBaseCost
         setDailyFeatureCost
         setEntityCreationCost
         setFeatures
-        setMinBoostCost
         upgradeEntity
     )
 }
