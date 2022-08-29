@@ -12,17 +12,11 @@ fn it_assigns_a_role() {
 
     setup
         .blockchain
-        .execute_tx(&user_address, &setup.contract, &rust_biguint!(0), |sc| {
-            sc.create_role(managed_buffer!(b"testrole"));
+        .execute_tx(setup.contract.address_ref(), &setup.contract, &rust_biguint!(0), |sc| {
+            sc.create_role_endpoint(managed_buffer!(b"testrole"));
 
-            // TODO: switch to endpoint, currently a bug in wasm-rs lib when SC calls itself
-            sc.assign_role(managed_address!(user_address), managed_buffer!(b"testrole"));
-        })
-        .assert_ok();
+            sc.assign_role_endpoint(managed_buffer!(b"testrole"), managed_address!(user_address));
 
-    setup
-        .blockchain
-        .execute_query(&setup.contract, |sc| {
             let user_id = sc.users().get_user_id(&managed_address!(user_address));
 
             assert!(sc.user_roles(user_id).contains(&managed_buffer!(b"testrole")));
@@ -38,19 +32,13 @@ fn it_only_increases_role_member_count_once_per_assigned_user() {
 
     setup
         .blockchain
-        .execute_tx(&user_address, &setup.contract, &rust_biguint!(0), |sc| {
-            sc.create_role(managed_buffer!(b"testrole"));
-            sc.assign_role(managed_address!(user_address), managed_buffer!(b"testrole"));
+        .execute_tx(setup.contract.address_ref(), &setup.contract, &rust_biguint!(0), |sc| {
+            sc.create_role_endpoint(managed_buffer!(b"testrole"));
+            sc.assign_role_endpoint(managed_buffer!(b"testrole"), managed_address!(user_address));
 
             // same user again
-            // TODO: switch to endpoint, currently a bug in wasm-rs lib when SC calls itself
-            sc.assign_role(managed_address!(user_address), managed_buffer!(b"testrole"));
-        })
-        .assert_ok();
+            sc.assign_role_endpoint(managed_buffer!(b"testrole"), managed_address!(user_address));
 
-    setup
-        .blockchain
-        .execute_query(&setup.contract, |sc| {
             assert_eq!(1, sc.roles_member_amount(&managed_buffer!(b"testrole")).get());
         })
         .assert_ok();
@@ -63,9 +51,14 @@ fn it_must_call_itself() {
 
     setup
         .blockchain
-        .execute_tx(&user_address, &setup.contract, &rust_biguint!(0), |sc| {
-            sc.create_role(managed_buffer!(b"testrole"));
+        .execute_tx(setup.contract.address_ref(), &setup.contract, &rust_biguint!(0), |sc| {
+            sc.create_role_endpoint(managed_buffer!(b"testrole"));
+        })
+        .assert_ok();
 
+    setup
+        .blockchain
+        .execute_tx(&user_address, &setup.contract, &rust_biguint!(0), |sc| {
             sc.assign_role_endpoint(managed_buffer!(b"testrole"), managed_address!(user_address));
         })
         .assert_user_error("action not allowed by user");

@@ -44,6 +44,7 @@ elrond_wasm_node::wasm_endpoints! {
         issueGovToken
         propose
         registerDns
+        removeRole
         seal
         setGovTokenLocalRoles
         sign
