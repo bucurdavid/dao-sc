@@ -275,11 +275,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
     }
 
     fn does_permission_apply_to_action(&self, permission_details: &PermissionDetails<Self::Api>, action: &Action<Self::Api>) -> bool {
-        let mut applies = true;
-
-        if applies && permission_details.value > 0 {
-            applies = action.value <= permission_details.value;
-        }
+        let mut applies = action.value <= permission_details.value;
 
         if applies && !permission_details.destination.is_zero() {
             applies = permission_details.destination == action.destination;
