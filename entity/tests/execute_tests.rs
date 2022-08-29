@@ -225,7 +225,7 @@ fn it_executes_actions_of_a_proposal() {
         .blockchain
         .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
             sc.assign_role(managed_address!(&proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
-            sc.create_permission(managed_buffer!(b"perm"), managed_biguint!(0), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"), ManagedVec::new(), ManagedVec::new());
+            sc.create_permission(managed_buffer!(b"perm"), managed_biguint!(5), managed_address!(&action_receiver), managed_buffer!(b"myendpoint"), ManagedVec::new(), ManagedVec::new());
             sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"perm"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
         })
         .assert_ok();
