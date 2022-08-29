@@ -21,7 +21,7 @@ fn it_changes_the_governance_token_on_unsealed_entity() {
 }
 
 #[test]
-fn it_fails_if_entity_is_sealed_even_if_contract_calls_itself() {
+fn it_changes_the_governance_token_if_contract_calls_itself() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup
@@ -30,12 +30,14 @@ fn it_fails_if_entity_is_sealed_even_if_contract_calls_itself() {
             sc.sealed().set(SEALED_ON);
 
             sc.change_gov_token_endpoint(managed_token_id!(b"GOV-123456"));
+
+            assert_eq!(sc.gov_token_id().get(), managed_token_id!(b"GOV-123456"));
         })
-        .assert_user_error("entity is sealed");
+        .assert_ok();
 }
 
 #[test]
-fn it_fails_if_the_entity_is_sealed() {
+fn it_fails_if_caller_not_self() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup
@@ -45,5 +47,5 @@ fn it_fails_if_the_entity_is_sealed() {
 
             sc.change_gov_token_endpoint(managed_token_id!(b"GOV-123456"));
         })
-        .assert_user_error("entity is sealed");
+        .assert_user_error("action not allowed by user");
 }
