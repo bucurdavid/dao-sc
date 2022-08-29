@@ -34,7 +34,7 @@ pub trait GovernanceModule:
 
     #[endpoint(changeGovToken)]
     fn change_gov_token_endpoint(&self, token_id: TokenIdentifier) {
-        self.require_not_sealed();
+        self.require_caller_self_or_unsealed();
         self.try_change_governance_token(token_id);
     }
 
