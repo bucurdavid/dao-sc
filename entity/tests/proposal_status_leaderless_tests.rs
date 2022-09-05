@@ -9,8 +9,9 @@ use setup::*;
 mod setup;
 
 #[test]
-fn it_returns_active_for_a_newly_created_proposal() {
+fn it_returns_active_when_just_created() {
     let mut setup = EntitySetup::new(entity::contract_obj);
+    let sc_address = setup.contract.address_ref().clone();
     let proposer_address = setup.user_address.clone();
     let mut proposal_id = 0;
 
@@ -21,13 +22,23 @@ fn it_returns_active_for_a_newly_created_proposal() {
     setup
         .blockchain
         .execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
-            proposal_id = sc.propose_endpoint(
-                managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
-                MultiValueManagedVec::new(),
-            );
+            // remove leader role
+            sc.roles().swap_remove(&managed_buffer!(ROLE_BUILTIN_LEADER));
+
+            let mut actions = Vec::<Action<DebugApi>>::new();
+            actions.push(Action::<DebugApi> {
+                destination: managed_address!(&sc_address),
+                endpoint: managed_buffer!(b"testendpoint"),
+                arguments: ManagedVec::new(),
+                gas_limit: 5_000_000u64,
+                value: managed_biguint!(0),
+                payments: ManagedVec::new(),
+            });
+
+            let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
+            let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"testperm")]);
+
+            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
         })
         .assert_ok();
 
@@ -44,6 +55,7 @@ fn it_returns_active_for_a_newly_created_proposal() {
 #[test]
 fn it_returns_defeated_if_for_votes_quorum_not_met() {
     let mut setup = EntitySetup::new(entity::contract_obj);
+    let sc_address = setup.contract.address_ref().clone();
     let mut proposal_id = 0;
 
     setup.configure_gov_token();
@@ -51,13 +63,23 @@ fn it_returns_defeated_if_for_votes_quorum_not_met() {
     setup
         .blockchain
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM - 10), |sc| {
-            proposal_id = sc.propose_endpoint(
-                managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
-                MultiValueManagedVec::new(),
-            );
+            // remove leader role
+            sc.roles().swap_remove(&managed_buffer!(ROLE_BUILTIN_LEADER));
+
+            let mut actions = Vec::<Action<DebugApi>>::new();
+            actions.push(Action::<DebugApi> {
+                destination: managed_address!(&sc_address),
+                endpoint: managed_buffer!(b"testendpoint"),
+                arguments: ManagedVec::new(),
+                gas_limit: 5_000_000u64,
+                value: managed_biguint!(0),
+                payments: ManagedVec::new(),
+            });
+
+            let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
+            let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"testperm")]);
+
+            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
         })
         .assert_ok();
 
@@ -81,6 +103,7 @@ fn it_returns_defeated_if_for_votes_quorum_not_met() {
 #[test]
 fn it_returns_defeated_if_quorum_met_but_votes_against_is_more_than_for() {
     let mut setup = EntitySetup::new(entity::contract_obj);
+    let sc_address = setup.contract.address_ref().clone();
     let mut proposal_id = 0;
 
     setup.configure_gov_token();
@@ -88,13 +111,23 @@ fn it_returns_defeated_if_quorum_met_but_votes_against_is_more_than_for() {
     setup
         .blockchain
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(10), |sc| {
-            proposal_id = sc.propose_endpoint(
-                managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
-                MultiValueManagedVec::new(),
-            );
+            // remove leader role
+            sc.roles().swap_remove(&managed_buffer!(ROLE_BUILTIN_LEADER));
+
+            let mut actions = Vec::<Action<DebugApi>>::new();
+            actions.push(Action::<DebugApi> {
+                destination: managed_address!(&sc_address),
+                endpoint: managed_buffer!(b"testendpoint"),
+                arguments: ManagedVec::new(),
+                gas_limit: 5_000_000u64,
+                value: managed_biguint!(0),
+                payments: ManagedVec::new(),
+            });
+
+            let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
+            let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"testperm")]);
+
+            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
         })
         .assert_ok();
 
@@ -125,6 +158,7 @@ fn it_returns_defeated_if_quorum_met_but_votes_against_is_more_than_for() {
 #[test]
 fn it_returns_succeeded_if_for_votes_quorum_met_and_more_for_than_against_votes() {
     let mut setup = EntitySetup::new(entity::contract_obj);
+    let sc_address = setup.contract.address_ref().clone();
     let mut proposal_id = 0;
 
     setup.configure_gov_token();
@@ -132,13 +166,23 @@ fn it_returns_succeeded_if_for_votes_quorum_met_and_more_for_than_against_votes(
     setup
         .blockchain
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
-            proposal_id = sc.propose_endpoint(
-                managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
-                MultiValueManagedVec::new(),
-            );
+            // remove leader role
+            sc.roles().swap_remove(&managed_buffer!(ROLE_BUILTIN_LEADER));
+
+            let mut actions = Vec::<Action<DebugApi>>::new();
+            actions.push(Action::<DebugApi> {
+                destination: managed_address!(&sc_address),
+                endpoint: managed_buffer!(b"testendpoint"),
+                arguments: ManagedVec::new(),
+                gas_limit: 5_000_000u64,
+                value: managed_biguint!(0),
+                payments: ManagedVec::new(),
+            });
+
+            let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
+            let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"testperm")]);
+
+            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
         })
         .assert_ok();
 
@@ -200,6 +244,9 @@ fn it_returns_executed_for_an_executed_proposal() {
     setup
         .blockchain
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
+            // remove leader role
+            sc.roles().swap_remove(&managed_buffer!(ROLE_BUILTIN_LEADER));
+
             let mut actions = Vec::<Action<DebugApi>>::new();
             actions.push(Action::<DebugApi> {
                 destination: managed_address!(&action_receiver),

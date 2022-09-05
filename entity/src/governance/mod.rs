@@ -22,20 +22,23 @@ pub trait GovernanceModule:
     }
 
     fn configure_governance_token(&self, gov_token_id: TokenIdentifier, supply: BigUint) {
+        self.try_change_governance_token(gov_token_id);
+
+        if supply == 0 {
+            return;
+        }
+
         let initial_quorum = &supply / &BigUint::from(20u64); // 5% of supply
         let initial_min_tokens_for_proposing = &supply / &BigUint::from(1000u64); // 0.1% of supply
 
-        self.gov_token_id().set(&gov_token_id);
-
-        self.try_change_governance_token(gov_token_id);
         self.try_change_quorum(BigUint::from(initial_quorum));
         self.try_change_min_proposal_vote_weight(BigUint::from(initial_min_tokens_for_proposing));
     }
 
     #[endpoint(changeGovToken)]
-    fn change_gov_token_endpoint(&self, token_id: TokenIdentifier) {
+    fn change_gov_token_endpoint(&self, token_id: TokenIdentifier, supply: BigUint) {
         self.require_caller_self_or_unsealed();
-        self.try_change_governance_token(token_id);
+        self.configure_governance_token(token_id, supply);
     }
 
     #[endpoint(changeQuorum)]

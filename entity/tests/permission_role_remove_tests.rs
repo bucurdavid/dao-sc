@@ -1,4 +1,5 @@
 use elrond_wasm_debug::*;
+use entity::config::ConfigModule;
 use entity::permission::*;
 use setup::*;
 
@@ -48,6 +49,7 @@ fn it_must_call_itself() {
 #[test]
 fn it_unassigns_all_users_from_the_role() {
     let mut setup = EntitySetup::new(entity::contract_obj);
+    let owner_address = &setup.owner_address.clone();
     let user_one = setup.blockchain.create_user_account(&rust_biguint!(0));
     let user_two = setup.blockchain.create_user_account(&rust_biguint!(0));
     let user_three = setup.blockchain.create_user_account(&rust_biguint!(0));
@@ -68,12 +70,19 @@ fn it_unassigns_all_users_from_the_role() {
             sc.remove_role_endpoint(managed_buffer!(b"builder"));
 
             assert!(!sc.roles().contains(&managed_buffer!(b"builder")));
-
-            assert!(!sc.user_roles(1).contains(&managed_buffer!(b"builder")));
-            assert!(!sc.user_roles(2).contains(&managed_buffer!(b"builder")));
-            assert!(!sc.user_roles(3).contains(&managed_buffer!(b"builder")));
-
             assert_eq!(0, sc.roles_member_amount(&managed_buffer!(b"builder")).get());
+
+            let leader_user_id = sc.users().get_user_id(&managed_address!(&owner_address));
+            assert!(!sc.user_roles(leader_user_id).contains(&managed_buffer!(b"builder")));
+
+            let user_one_id = sc.users().get_user_id(&managed_address!(&user_one));
+            assert!(!sc.user_roles(user_one_id).contains(&managed_buffer!(b"builder")));
+
+            let user_two_id = sc.users().get_user_id(&managed_address!(&user_one));
+            assert!(!sc.user_roles(user_two_id).contains(&managed_buffer!(b"builder")));
+
+            let user_three_id = sc.users().get_user_id(&managed_address!(&user_one));
+            assert!(!sc.user_roles(user_three_id).contains(&managed_buffer!(b"builder")));
         })
         .assert_ok();
 }
