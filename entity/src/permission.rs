@@ -212,7 +212,7 @@ pub trait PermissionModule: config::ConfigModule {
         self.roles().swap_remove(&role_name);
         self.roles_member_amount(&role_name).set(0);
 
-        for user_id in 0..self.users().get_user_count() {
+        for user_id in 1..=self.users().get_user_count() {
             self.user_roles(user_id).swap_remove(&role_name);
         }
     }
@@ -286,8 +286,8 @@ pub trait PermissionModule: config::ConfigModule {
         policies.iter().find(|p| p.method == PolicyMethod::Weight).is_some()
     }
 
-    fn does_leader_role_exist(&self) -> bool {
-        self.roles().contains(&ManagedBuffer::from(ROLE_BUILTIN_LEADER))
+    fn is_leaderless(&self) -> bool {
+        !self.roles().contains(&ManagedBuffer::from(ROLE_BUILTIN_LEADER))
     }
 
     fn require_caller_has_leader_role(&self) {

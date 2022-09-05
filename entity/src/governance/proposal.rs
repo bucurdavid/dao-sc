@@ -94,8 +94,13 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
 
         let has_gov_token = !self.gov_token_id().is_empty();
         let has_actions = !proposal.actions_hash.is_empty() || !proposal.permissions.is_empty();
+        let is_leaderless = self.is_leaderless();
 
-        let (has_permission, has_token_weighted_policy) = if has_actions { self.has_fulfilled_permissions(&proposal) } else { (false, false) };
+        let (has_permission, has_token_weighted_policy) = if !is_leaderless && has_actions {
+            self.has_fulfilled_permissions(&proposal)
+        } else {
+            (false, false)
+        };
 
         // early succeed if signer majority & no token weighted policy
         if has_permission && !has_token_weighted_policy {
@@ -106,7 +111,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
             return ProposalStatus::Active;
         }
 
-        if !has_actions && has_gov_token {
+        if (is_leaderless || !has_actions) && has_gov_token {
             return match self.has_sufficient_votes(&proposal, &self.quorum().get()) {
                 true => ProposalStatus::Succeeded,
                 false => ProposalStatus::Defeated,
@@ -200,6 +205,10 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
 
         // no actions -> always allowed
         if actions_hash.is_empty() && permissions.is_empty() {
+            return (true, policies);
+        }
+
+        if self.is_leaderless() {
             return (true, policies);
         }
 
