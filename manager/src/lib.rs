@@ -9,9 +9,10 @@ pub mod dex;
 pub mod events;
 pub mod factory;
 pub mod features;
+pub mod organization;
 
 #[elrond_wasm::contract]
-pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::FactoryModule + credits::CreditsModule + events::EventsModule + dex::DexModule {
+pub trait Manager: config::ConfigModule + features::FeaturesModule + factory::FactoryModule + credits::CreditsModule + events::EventsModule + dex::DexModule + organization::OrganizationModule {
     #[init]
     fn init(&self, entity_template_address: ManagedAddress, trusted_host_address: ManagedAddress, cost_token: TokenIdentifier, cost_entity_creation: BigUint) {
         self.entity_templ_address().set_if_empty(&entity_template_address);
