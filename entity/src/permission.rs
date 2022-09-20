@@ -77,19 +77,18 @@ pub trait PermissionModule: config::ConfigModule {
         permission_name: ManagedBuffer,
         value: BigUint,
         destination: ManagedAddress,
-        endpoint: OptionalValue<ManagedBuffer>,
-        arguments: MultiValueManagedVec<ManagedBuffer>,
-        payments: MultiValueManagedVec<EsdtTokenPayment>,
+        endpoint: ManagedBuffer,
+        payments_multi: MultiValueManagedVec<EsdtTokenPaymentMultiValue>,
     ) {
         self.require_caller_self();
-        self.create_permission(
-            permission_name,
-            value,
-            destination,
-            endpoint.into_option().unwrap_or_default(),
-            arguments.into_vec(),
-            payments.into_vec(),
-        );
+
+        let mut payments = ManagedVec::new();
+
+        for payment in payments_multi.iter() {
+            payments.push(payment.into_esdt_token_payment());
+        }
+
+        self.create_permission(permission_name, value, destination, endpoint, ManagedVec::new(), payments);
     }
 
     #[endpoint(createPolicyWeighted)]

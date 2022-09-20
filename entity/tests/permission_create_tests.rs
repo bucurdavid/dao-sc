@@ -19,7 +19,7 @@ fn it_creates_a_permission() {
                 managed_biguint!(0),
                 managed_address!(sc_address),
                 OptionalValue::Some(managed_buffer!(b"endpoint")),
-                MultiValueManagedVec::new(),
+                ManagedVec::new(),
                 MultiValueManagedVec::new(),
             );
 
