@@ -11,6 +11,10 @@ pub trait OrganizationModule: config::ConfigModule {
     }
 
     fn forward_payment_with_profit_share(&self, token_id: TokenIdentifier, amount: BigUint) {
+        if self.org_contract_address().is_empty() {
+            return;
+        }
+
         let org_contract = self.org_contract_address().get();
 
         self.org_contract_proxy(org_contract)
