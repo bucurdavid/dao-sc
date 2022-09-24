@@ -18,8 +18,7 @@ fn it_creates_a_permission() {
                 managed_buffer!(b"testperm"),
                 managed_biguint!(0),
                 managed_address!(sc_address),
-                OptionalValue::Some(managed_buffer!(b"endpoint")),
-                ManagedVec::new(),
+                managed_buffer!(b"endpoint"),
                 MultiValueManagedVec::new(),
             );
 
