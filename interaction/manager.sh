@@ -66,6 +66,9 @@ deploy() {
     sleep 6
     initOrgModule
 
+    sleep 6
+    initCreditsModule
+
     echo ""
     echo "deployed ENTITY TEMPLATE: $ENTITY_ADDRESS"
     echo "deployed MANAGER: $MANAGER_ADDRESS"
