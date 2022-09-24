@@ -14,6 +14,7 @@ DEX_WEGLD_TOKEN_ID=$(erdpy data load --partition $NETWORK_NAME --key=dex-wegld-t
 DEX_COST_TOKEN_WEGLD_SWAP_CONTRACT=$(erdpy data load --partition $NETWORK_NAME --key=dex-cost-token-wegld-swap-contract)
 DEX_WRAP_EGLD_SWAP_CONTRACT=$(erdpy data load --partition $NETWORK_NAME --key=dex-wrap-egld-contract)
 ORGANIZATION_CONTRACT=$(erdpy data load --partition $NETWORK_NAME --key=organization-contract)
+BOOST_REWARD_TOKEN_ID=$(erdpy data load --partition $NETWORK_NAME --key=boost-reward-token-id)
 
 deploy() {
     echo "accidental deploy protection is activated."
@@ -107,6 +108,16 @@ upgradeEntity() {
         --function="upgradeEntity" \
         --arguments $1 \
         --recall-nonce --gas-limit=100000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+initCreditsModule() {
+    erdpy --verbose contract call $MANAGER_ADDRESS \
+        --function="initCreditsModule" \
+        --arguments "str:$BOOST_REWARD_TOKEN_ID" \
+        --recall-nonce --gas-limit=5000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --ledger \
         --send || return
