@@ -13,6 +13,8 @@ COST_DAILY_BASE_AMOUNT=$(erdpy data load --partition $NETWORK_NAME --key=cost-da
 DEX_WEGLD_TOKEN_ID=$(erdpy data load --partition $NETWORK_NAME --key=dex-wegld-token-id)
 DEX_COST_TOKEN_WEGLD_SWAP_CONTRACT=$(erdpy data load --partition $NETWORK_NAME --key=dex-cost-token-wegld-swap-contract)
 DEX_WRAP_EGLD_SWAP_CONTRACT=$(erdpy data load --partition $NETWORK_NAME --key=dex-wrap-egld-contract)
+ORGANIZATION_CONTRACT=$(erdpy data load --partition $NETWORK_NAME --key=organization-contract)
+BOOST_REWARD_TOKEN_ID=$(erdpy data load --partition $NETWORK_NAME --key=boost-reward-token-id)
 
 deploy() {
     echo "accidental deploy protection is activated."
@@ -61,6 +63,12 @@ deploy() {
     sleep 6
     initDexModule
 
+    sleep 6
+    initOrgModule
+
+    sleep 6
+    initCreditsModule
+
     echo ""
     echo "deployed ENTITY TEMPLATE: $ENTITY_ADDRESS"
     echo "deployed MANAGER: $MANAGER_ADDRESS"
@@ -108,10 +116,30 @@ upgradeEntity() {
         --send || return
 }
 
+initCreditsModule() {
+    erdpy --verbose contract call $MANAGER_ADDRESS \
+        --function="initCreditsModule" \
+        --arguments "str:$BOOST_REWARD_TOKEN_ID" \
+        --recall-nonce --gas-limit=5000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
 initDexModule() {
     erdpy --verbose contract call $MANAGER_ADDRESS \
         --function="initDexModule" \
         --arguments "str:$DEX_WEGLD_TOKEN_ID" $DEX_COST_TOKEN_WEGLD_SWAP_CONTRACT $DEX_WRAP_EGLD_SWAP_CONTRACT \
+        --recall-nonce --gas-limit=5000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
+initOrgModule() {
+    erdpy --verbose contract call $MANAGER_ADDRESS \
+        --function="initOrgModule" \
+        --arguments $ORGANIZATION_CONTRACT \
         --recall-nonce --gas-limit=5000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         --ledger \

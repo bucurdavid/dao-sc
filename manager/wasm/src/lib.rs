@@ -19,7 +19,9 @@ elrond_wasm_node::wasm_endpoints! {
         getFeatureDailyCost
         getFeatures
         getTrustedHostAddress
+        initCreditsModule
         initDexModule
+        initOrgModule
         registerExternalBoost
         setDailyBaseCost
         setDailyFeatureCost

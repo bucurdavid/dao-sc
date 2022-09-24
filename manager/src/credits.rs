@@ -2,6 +2,7 @@ use crate::config;
 use crate::dex;
 use crate::events;
 use crate::features;
+use crate::organization;
 
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
@@ -15,7 +16,13 @@ pub struct CreditEntry<M: ManagedTypeApi> {
 }
 
 #[elrond_wasm::module]
-pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::DexModule + events::EventsModule {
+pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::DexModule + organization::OrganizationModule + events::EventsModule {
+    #[only_owner]
+    #[endpoint(initCreditsModule)]
+    fn init_credits_module(&self, boost_reward_token_id: TokenIdentifier) {
+        self.credit_boost_reward_token().set(boost_reward_token_id);
+    }
+
     #[payable("*")]
     #[endpoint(boost)]
     fn boost_endpoint(&self, entity_address: ManagedAddress) {
@@ -24,7 +31,8 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
         require!(payment.token_identifier == self.cost_token_id().get(), "invalid token");
         require!(payment.amount > 0, "amount can not be zero");
 
-        self.boost(caller, entity_address, payment.amount)
+        self.boost(caller, entity_address, payment.amount.clone());
+        self.forward_payment_with_profit_share(payment.token_identifier, payment.amount);
     }
 
     #[payable("*")]
@@ -46,7 +54,8 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
 
         let cost_payment = self.swap_wegld_to_cost_tokens(wegld.amount);
 
-        self.boost(caller, entity, cost_payment.amount);
+        self.boost(caller, entity, cost_payment.amount.clone());
+        self.forward_payment_with_profit_share(cost_payment.token_identifier, cost_payment.amount);
     }
 
     #[endpoint(registerExternalBoost)]
@@ -81,6 +90,7 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
 
         self.credit_entries(&entity).set(entry);
         self.credit_total_deposits_amount().update(|current| *current += &amount);
+        self.mint_and_send_reward_token(&booster, &amount);
         self.boost_event(booster, entity, amount);
     }
 
@@ -126,9 +136,18 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
         }
     }
 
+    fn mint_and_send_reward_token(&self, address: &ManagedAddress, amount: &BigUint) {
+        let reward_token = self.credit_boost_reward_token().get();
+        self.send().esdt_local_mint(&reward_token, 0, &amount);
+        self.send().direct_esdt(&address, &reward_token, 0, &amount);
+    }
+
     #[storage_mapper("credits:entries")]
     fn credit_entries(&self, entity_address: &ManagedAddress) -> SingleValueMapper<CreditEntry<Self::Api>>;
 
     #[storage_mapper("credits:total_deposits")]
     fn credit_total_deposits_amount(&self) -> SingleValueMapper<BigUint>;
+
+    #[storage_mapper("credits:boost_reward_token")]
+    fn credit_boost_reward_token(&self) -> SingleValueMapper<TokenIdentifier>;
 }

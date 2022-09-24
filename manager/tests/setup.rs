@@ -3,9 +3,11 @@ elrond_wasm::imports!();
 use elrond_wasm_debug::testing_framework::*;
 use elrond_wasm_debug::*;
 use manager::config::*;
+use manager::credits::*;
 use manager::*;
 
 pub const COST_TOKEN_ID: &[u8] = b"SUPER-abcdef";
+pub const BOOST_REWARD_TOKEN_ID: &[u8] = b"SUPERPOWER-abcdef";
 pub const COST_AMOUNT_ENTITY_CREATION: u64 = 500;
 
 pub const WASM_PATH: &'static str = "output/manager.wasm";
@@ -37,6 +39,7 @@ where
     let contract_entity_template = blockchain.create_sc_account(&rust_zero, Some(&owner_address), builder, WASM_PATH_ENTITY_TEMPLATE);
 
     blockchain.set_esdt_balance(&owner_address, COST_TOKEN_ID, &rust_biguint!(10_000));
+    blockchain.set_esdt_local_roles(contract.address_ref(), BOOST_REWARD_TOKEN_ID, &[EsdtLocalRole::Mint]);
 
     blockchain
         .execute_tx(&owner_address, &contract, &rust_zero, |sc| {
@@ -46,6 +49,8 @@ where
                 managed_token_id!(COST_TOKEN_ID),
                 managed_biguint!(COST_AMOUNT_ENTITY_CREATION),
             );
+
+            sc.init_credits_module(managed_token_id!(BOOST_REWARD_TOKEN_ID));
         })
         .assert_ok();
 
