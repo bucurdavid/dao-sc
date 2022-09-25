@@ -90,7 +90,7 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
 
         self.credit_entries(&entity).set(entry);
         self.credit_total_deposits_amount().update(|current| *current += &amount);
-        self.mint_and_send_reward_token(&booster, &amount);
+        self.mint_and_send_reward_tokens(&booster, &amount);
         self.boost_event(booster, entity, amount);
     }
 
@@ -136,7 +136,7 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
         }
     }
 
-    fn mint_and_send_reward_token(&self, address: &ManagedAddress, amount: &BigUint) {
+    fn mint_and_send_reward_tokens(&self, address: &ManagedAddress, amount: &BigUint) {
         let reward_token = self.credit_boost_reward_token().get();
         self.send().esdt_local_mint(&reward_token, 0, &amount);
         self.send().direct_esdt(&address, &reward_token, 0, &amount);

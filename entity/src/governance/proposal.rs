@@ -263,9 +263,8 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
                     }
 
                     let permission_details = self.permission_details(&permission).get();
-                    let applies = self.does_permission_apply_to_action(&permission_details, &action);
 
-                    if applies {
+                    if self.does_permission_apply_to_action(&permission_details, &action) {
                         actual_permissions.push(permission.clone());
                         has_permission_for_action = true;
                     }
