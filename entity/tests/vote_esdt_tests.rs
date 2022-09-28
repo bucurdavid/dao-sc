@@ -202,11 +202,9 @@ fn it_fails_if_less_than_configured_min_vote_weight() {
         )
         .assert_ok();
 
-    setup.blockchain.set_block_timestamp(VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60 + 1);
-
     setup
         .blockchain
-        .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
+        .execute_esdt_transfer(&setup.user_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
             sc.vote_for_endpoint(proposal_id);
         })
         .assert_user_error("not enought vote weight");
