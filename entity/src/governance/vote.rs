@@ -19,8 +19,10 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
     fn vote(&self, proposal_id: u64, vote_type: VoteType, weight: BigUint) {
         self.require_payments_with_gov_token();
         let mut proposal = self.proposals(proposal_id).get();
+        let min_vote_weight = self.min_vote_weight().get();
 
-        require!(weight > 0, "not enough vote weight");
+        require!(weight > 0, "vote weight must be greater than 0");
+        require!(weight >= min_vote_weight, "not enought vote weight");
         require!(self.get_proposal_status(&proposal) == ProposalStatus::Active, "proposal is not active");
 
         match vote_type {
