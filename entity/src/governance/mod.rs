@@ -48,6 +48,13 @@ pub trait GovernanceModule:
         self.try_change_quorum(value);
     }
 
+    #[endpoint(changeMinVoteWeight)]
+    fn change_min_vote_weight_endpoint(&self, value: BigUint) {
+        self.require_caller_self_or_unsealed();
+        self.require_gov_token_set();
+        self.try_change_min_vote_weight(value);
+    }
+
     #[endpoint(changeMinProposalVoteWeight)]
     fn change_min_proposal_vote_weight_endpoint(&self, value: BigUint) {
         self.require_caller_self_or_unsealed();

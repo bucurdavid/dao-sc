@@ -82,6 +82,11 @@ pub trait ConfigModule {
         self.quorum().set(&quorum);
     }
 
+    fn try_change_min_vote_weight(&self, vote_weight: BigUint) {
+        require!(vote_weight != 0, "min vote weight can not be zero");
+        self.min_vote_weight().set(&vote_weight);
+    }
+
     fn try_change_min_proposal_vote_weight(&self, vote_weight: BigUint) {
         require!(vote_weight != 0, "min proposal vote weight can not be zero");
         self.min_proposal_vote_weight().set(&vote_weight);
@@ -139,6 +144,10 @@ pub trait ConfigModule {
     #[view(getQuorum)]
     #[storage_mapper("quorum")]
     fn quorum(&self) -> SingleValueMapper<BigUint>;
+
+    #[view(getMinVoteWeight)]
+    #[storage_mapper("min_vote_weight")]
+    fn min_vote_weight(&self) -> SingleValueMapper<BigUint>;
 
     #[view(getMinProposalVoteWeight)]
     #[storage_mapper("min_proposal_vote_weight")]
