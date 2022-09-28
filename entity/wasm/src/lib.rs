@@ -11,6 +11,7 @@ elrond_wasm_node::wasm_endpoints! {
         assignRole
         changeGovToken
         changeMinProposalVoteWeight
+        changeMinVoteWeight
         changeQuorum
         changeVotingPeriodMinutes
         createPermission
@@ -22,6 +23,7 @@ elrond_wasm_node::wasm_endpoints! {
         execute
         getGovTokenId
         getMinProposalVoteWeight
+        getMinVoteWeight
         getPermissions
         getPolicies
         getProposal
