@@ -144,16 +144,15 @@ pub trait GovernanceModule:
         let mut proposal = self.proposals(proposal_id).get();
 
         require!(proposal.actions_hash == actions_hash, "actions have been corrupted");
-
-        let actual_permissions = self.get_actual_permissions(&proposal, &actions);
-
-        require!(proposal.permissions == actual_permissions, "untruthful permissions announced");
         require!(self.get_proposal_status(&proposal) == ProposalStatus::Succeeded, "proposal is not executable");
 
-        self.execute_actions(&actions);
-        proposal.was_executed = true;
+        let actual_permissions = self.get_actual_permissions(&proposal, &actions);
+        require!(proposal.permissions == actual_permissions, "untruthful permissions announced");
 
+        proposal.was_executed = true;
         self.proposals(proposal_id).set(&proposal);
+
+        self.execute_actions(&actions);
         self.emit_execute_event(proposal);
     }
 
