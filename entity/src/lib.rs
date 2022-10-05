@@ -2,8 +2,6 @@
 
 elrond_wasm::imports!();
 
-use config::SEALED_ON;
-
 pub mod config;
 pub mod governance;
 pub mod permission;
@@ -26,14 +24,6 @@ pub trait Entity:
         if let OptionalValue::Some(leader) = opt_leader {
             self.init_permission_module(leader);
         }
-    }
-
-    #[endpoint(seal)]
-    fn seal_endpoint(&self) {
-        // TODO: deprecate old concept of sealing once UI has ability to easily change voting defaults
-        self.require_not_sealed();
-        self.require_caller_has_leader_role();
-        self.sealed().set(SEALED_ON);
     }
 
     #[payable("EGLD")]

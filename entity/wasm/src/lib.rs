@@ -37,7 +37,6 @@ elrond_wasm_node::wasm_endpoints! {
         getQuorum
         getRoleMemberAmount
         getRoles
-        getSealed
         getTrustedHostAddress
         getUserRoles
         getVersion
@@ -47,7 +46,6 @@ elrond_wasm_node::wasm_endpoints! {
         propose
         registerDns
         removeRole
-        seal
         setGovTokenLocalRoles
         sign
         unassignRole
