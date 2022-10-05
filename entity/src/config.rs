@@ -66,9 +66,9 @@ pub trait ConfigModule {
         self.min_vote_weight().set(&vote_weight);
     }
 
-    fn try_change_min_proposal_vote_weight(&self, vote_weight: BigUint) {
-        require!(vote_weight != 0, "min proposal vote weight can not be zero");
-        self.min_proposal_vote_weight().set(&vote_weight);
+    fn try_change_min_propose_weight(&self, vote_weight: BigUint) {
+        require!(vote_weight != 0, "min propose weight can not be zero");
+        self.min_propose_weight().set(&vote_weight);
     }
 
     fn try_change_voting_period_in_minutes(&self, voting_period: usize) {
@@ -124,9 +124,9 @@ pub trait ConfigModule {
     #[storage_mapper("min_vote_weight")]
     fn min_vote_weight(&self) -> SingleValueMapper<BigUint>;
 
-    #[view(getMinProposalVoteWeight)]
+    #[view(getMinProposeWeight)]
     #[storage_mapper("min_proposal_vote_weight")]
-    fn min_proposal_vote_weight(&self) -> SingleValueMapper<BigUint>;
+    fn min_propose_weight(&self) -> SingleValueMapper<BigUint>;
 
     #[view(getVotingPeriodMinutes)]
     #[storage_mapper("voting_period_minutes")]

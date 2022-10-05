@@ -6,7 +6,7 @@ use setup::*;
 mod setup;
 
 #[test]
-fn it_changes_the_min_proposal_vote_weight_if_contract_calls_itself() {
+fn it_changes_the_min_propose_weight_if_contract_calls_itself() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup.configure_gov_token();

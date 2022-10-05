@@ -17,7 +17,7 @@ pub trait GovernanceModule:
     fn init_governance_module(&self) {
         self.next_proposal_id().set_if_empty(1);
         self.voting_period_in_minutes().set_if_empty(VOTING_PERIOD_MINUTES_DEFAULT);
-        self.min_proposal_vote_weight().set_if_empty(BigUint::from(MIN_PROPOSAL_VOTE_WEIGHT_DEFAULT));
+        self.min_propose_weight().set_if_empty(BigUint::from(MIN_PROPOSAL_VOTE_WEIGHT_DEFAULT));
         self.quorum().set_if_empty(BigUint::from(QUORUM_DEFAULT));
     }
 
@@ -32,7 +32,7 @@ pub trait GovernanceModule:
         let initial_min_tokens_for_proposing = &supply / &BigUint::from(1000u64); // 0.1% of supply
 
         self.try_change_quorum(BigUint::from(initial_quorum));
-        self.try_change_min_proposal_vote_weight(BigUint::from(initial_min_tokens_for_proposing));
+        self.try_change_min_propose_weight(BigUint::from(initial_min_tokens_for_proposing));
     }
 
     #[endpoint(changeGovToken)]
@@ -55,11 +55,11 @@ pub trait GovernanceModule:
         self.try_change_min_vote_weight(value);
     }
 
-    #[endpoint(changeMinProposalVoteWeight)]
-    fn change_min_proposal_vote_weight_endpoint(&self, value: BigUint) {
+    #[endpoint(changeMinProposeWeight)]
+    fn change_min_propose_weight_endpoint(&self, value: BigUint) {
         self.require_caller_self();
         self.require_gov_token_set();
-        self.try_change_min_proposal_vote_weight(value);
+        self.try_change_min_propose_weight(value);
     }
 
     #[endpoint(changeVotingPeriodMinutes)]
@@ -93,7 +93,7 @@ pub trait GovernanceModule:
         let vote_weight = self.get_weight_from_vote_payments();
 
         if proposer_roles.is_empty() || self.has_token_weighted_policy(&policies) {
-            require!(vote_weight >= self.min_proposal_vote_weight().get(), "insufficient vote weight");
+            require!(vote_weight >= self.min_propose_weight().get(), "insufficient vote weight");
         }
 
         let proposal = self.create_proposal(content_hash, actions_hash, vote_weight.clone(), permissions, &policies);

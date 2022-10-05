@@ -262,9 +262,9 @@ getQuorum() {
         --proxy=$PROXY || return
 }
 
-getMinProposalVoteWeight() {
+getMinProposeWeight() {
     erdpy contract query $ADDRESS \
-        --function="getMinProposalVoteWeight" \
+        --function="getMinProposeWeight" \
         --proxy=$PROXY || return
 }
 

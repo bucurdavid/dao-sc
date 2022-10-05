@@ -15,7 +15,7 @@ fn it_issues_a_governance_token() {
             sc.issue_gov_token_endpoint(managed_buffer!(b"Token"), managed_buffer!(b"Token-123456"), managed_biguint!(100_000));
 
             assert!(!sc.quorum().is_empty());
-            assert!(!sc.min_proposal_vote_weight().is_empty());
+            assert!(!sc.min_propose_weight().is_empty());
             assert_eq!(managed_token_id!(ENTITY_GOV_TOKEN_ID), sc.gov_token_id().get());
         })
         .assert_ok();

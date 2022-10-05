@@ -60,7 +60,7 @@ where
             .execute_tx(&self.owner_address, &self.contract, &rust_biguint!(0), |sc| {
                 sc.gov_token_id().set(managed_token_id!(ENTITY_GOV_TOKEN_ID));
                 sc.quorum().set(managed_biguint!(QURUM));
-                sc.min_proposal_vote_weight().set(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL));
+                sc.min_propose_weight().set(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL));
             })
             .assert_ok();
     }
