@@ -9,33 +9,12 @@ pub const VOTING_PERIOD_MINUTES_MAX: usize = 20_160; // 14 days
 pub const MIN_PROPOSAL_VOTE_WEIGHT_DEFAULT: u64 = 1;
 pub const QUORUM_DEFAULT: u64 = 1;
 
-pub const SEALED_NOT_SET: u8 = 0;
-pub const SEALED_ON: u8 = 1;
-
 #[elrond_wasm::module]
 pub trait ConfigModule {
     fn require_caller_self(&self) {
         let caller = self.blockchain().get_caller();
         let sc_address = self.blockchain().get_sc_address();
         require!(caller == sc_address, "action not allowed by user");
-    }
-
-    fn require_caller_self_or_unsealed(&self) {
-        if self.is_sealed() {
-            self.require_caller_self();
-        }
-    }
-
-    fn require_not_sealed(&self) {
-        require!(!self.is_sealed(), "entity is sealed");
-    }
-
-    fn require_sealed(&self) {
-        require!(self.is_sealed(), "entity is not sealed yet");
-    }
-
-    fn is_sealed(&self) -> bool {
-        self.sealed().get() == SEALED_ON
     }
 
     fn require_gov_token_set(&self) {
@@ -104,10 +83,6 @@ pub trait ConfigModule {
     #[view(getTrustedHostAddress)]
     #[storage_mapper("trusted_host_addr")]
     fn trusted_host_address(&self) -> SingleValueMapper<ManagedAddress>;
-
-    #[view(getSealed)]
-    #[storage_mapper("sealed")]
-    fn sealed(&self) -> SingleValueMapper<u8>;
 
     #[view(getGovTokenId)]
     #[storage_mapper("gov_token_id")]

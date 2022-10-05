@@ -37,34 +37,34 @@ pub trait GovernanceModule:
 
     #[endpoint(changeGovToken)]
     fn change_gov_token_endpoint(&self, token_id: TokenIdentifier, supply: BigUint) {
-        self.require_caller_self_or_unsealed();
+        self.require_caller_self();
         self.configure_governance_token(token_id, supply);
     }
 
     #[endpoint(changeQuorum)]
     fn change_quorum_endpoint(&self, value: BigUint) {
-        self.require_caller_self_or_unsealed();
+        self.require_caller_self();
         self.require_gov_token_set();
         self.try_change_quorum(value);
     }
 
     #[endpoint(changeMinVoteWeight)]
     fn change_min_vote_weight_endpoint(&self, value: BigUint) {
-        self.require_caller_self_or_unsealed();
+        self.require_caller_self();
         self.require_gov_token_set();
         self.try_change_min_vote_weight(value);
     }
 
     #[endpoint(changeMinProposalVoteWeight)]
     fn change_min_proposal_vote_weight_endpoint(&self, value: BigUint) {
-        self.require_caller_self_or_unsealed();
+        self.require_caller_self();
         self.require_gov_token_set();
         self.try_change_min_proposal_vote_weight(value);
     }
 
     #[endpoint(changeVotingPeriodMinutes)]
     fn change_voting_period_in_minutes_endpoint(&self, value: usize) {
-        self.require_caller_self_or_unsealed();
+        self.require_caller_self();
         self.try_change_voting_period_in_minutes(value);
     }
 
@@ -93,7 +93,6 @@ pub trait GovernanceModule:
         let vote_weight = self.get_weight_from_vote_payments();
 
         if proposer_roles.is_empty() || self.has_token_weighted_policy(&policies) {
-            self.require_sealed();
             require!(vote_weight >= self.min_proposal_vote_weight().get(), "insufficient vote weight");
         }
 
@@ -114,7 +113,6 @@ pub trait GovernanceModule:
     #[payable("*")]
     #[endpoint(voteFor)]
     fn vote_for_endpoint(&self, proposal_id: u64) {
-        self.require_sealed();
         let vote_weight = self.get_weight_from_vote_payments();
         self.vote(proposal_id, VoteType::For, vote_weight);
         self.commit_vote_payments(proposal_id);
@@ -123,7 +121,6 @@ pub trait GovernanceModule:
     #[payable("*")]
     #[endpoint(voteAgainst)]
     fn vote_against_endpoint(&self, proposal_id: u64) {
-        self.require_sealed();
         let vote_weight = self.get_weight_from_vote_payments();
         self.vote(proposal_id, VoteType::Against, vote_weight);
         self.commit_vote_payments(proposal_id);

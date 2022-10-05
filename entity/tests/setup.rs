@@ -43,8 +43,6 @@ where
         blockchain
             .execute_tx(&owner_address, &contract, &rust_zero, |sc| {
                 sc.init(managed_address!(&trusted_host_address), OptionalValue::Some(managed_address!(&owner_address)));
-
-                sc.sealed().set(SEALED_ON);
             })
             .assert_ok();
 
