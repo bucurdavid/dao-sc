@@ -52,7 +52,7 @@ pub trait ConfigModule {
     }
 
     fn try_change_governance_token(&self, token_id: TokenIdentifier) {
-        require!(token_id.is_valid_esdt_identifier(), "invalid governance token id");
+        require!(token_id.is_valid_esdt_identifier(), "invalid token id");
         self.gov_token_id().set(token_id);
     }
 

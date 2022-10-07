@@ -42,6 +42,7 @@ elrond_wasm_node::wasm_endpoints! {
         getVersion
         getVotingPeriodMinutes
         getWithdrawableProposalIds
+        initGovToken
         issueGovToken
         propose
         registerDns
