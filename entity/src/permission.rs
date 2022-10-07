@@ -289,11 +289,15 @@ pub trait PermissionModule: config::ConfigModule {
         !self.roles().contains(&ManagedBuffer::from(ROLE_BUILTIN_LEADER))
     }
 
-    fn require_caller_has_leader_role(&self) {
-        let caller = self.blockchain().get_caller();
+    fn has_leader_role(&self, address: &ManagedAddress) -> bool {
         let leader_role = ManagedBuffer::from(ROLE_BUILTIN_LEADER);
 
-        require!(self.has_role(&caller, &leader_role), "caller must be leader");
+        self.has_role(&address, &leader_role)
+    }
+
+    fn require_caller_has_leader_role(&self) {
+        let caller = self.blockchain().get_caller();
+        require!(self.has_leader_role(&caller), "caller must be leader");
     }
 
     #[view(getRoles)]

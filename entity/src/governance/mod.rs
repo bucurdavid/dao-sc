@@ -35,6 +35,14 @@ pub trait GovernanceModule:
         self.try_change_min_propose_weight(BigUint::from(initial_min_tokens_for_proposing));
     }
 
+    #[endpoint(initGovToken)]
+    fn init_gov_token_endpoint(&self, token_id: TokenIdentifier, supply: BigUint) {
+        require!(self.gov_token_id().is_empty(), "gov token is already set");
+        self.require_caller_has_leader_role();
+
+        self.configure_governance_token(token_id, supply);
+    }
+
     #[endpoint(changeGovToken)]
     fn change_gov_token_endpoint(&self, token_id: TokenIdentifier, supply: BigUint) {
         self.require_caller_self();
