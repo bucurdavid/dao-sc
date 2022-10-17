@@ -292,20 +292,22 @@ pub trait GovernanceModule:
     fn commit_vote_payments(&self, proposal_id: u64) {
         let payments = self.call_value().all_esdt_transfers();
         let caller = self.blockchain().get_caller();
+        let mut returnables = ManagedVec::new();
 
         for payment in payments.into_iter() {
-            let is_fungible = payment.token_nonce == 0;
-
-            if is_fungible {
+            if payment.token_nonce == 0 {
                 self.protected_vote_tokens(&payment.token_identifier).update(|current| *current += &payment.amount);
                 self.votes(proposal_id, &caller).update(|current| *current += &payment.amount);
                 self.withdrawable_proposal_ids(&caller).insert(proposal_id);
             } else {
                 let inserted = self.proposal_nft_votes(proposal_id).insert(payment.token_nonce);
                 require!(inserted, "already voted with nft");
-
-                self.send().direct_esdt(&caller, &payment.token_identifier, payment.token_nonce, &payment.amount);
+                returnables.push(payment);
             }
+        }
+
+        if !returnables.is_empty() {
+            self.send().direct_multi(&caller, &returnables);
         }
     }
 }
