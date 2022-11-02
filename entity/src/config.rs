@@ -9,6 +9,8 @@ pub const VOTING_PERIOD_MINUTES_MAX: usize = 20_160; // 14 days
 pub const MIN_PROPOSAL_VOTE_WEIGHT_DEFAULT: u64 = 1;
 pub const QUORUM_DEFAULT: u64 = 1;
 
+pub const POLL_MAX_OPTIONS: u8 = 4;
+
 #[elrond_wasm::module]
 pub trait ConfigModule {
     fn require_caller_self(&self) {
@@ -105,6 +107,9 @@ pub trait ConfigModule {
     #[view(getProposalNftVotes)]
     #[storage_mapper("proposal_nft_votes")]
     fn proposal_nft_votes(&self, proposal_id: u64) -> UnorderedSetMapper<u64>;
+
+    #[storage_mapper("proposal_poll")]
+    fn proposal_poll(&self, proposal_id: u64, option_id: u8) -> SingleValueMapper<BigUint>;
 
     #[view(getWithdrawableProposalIds)]
     #[storage_mapper("withdrawable_proposal_ids")]

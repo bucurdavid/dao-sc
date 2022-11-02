@@ -29,6 +29,7 @@ elrond_wasm_node::wasm_endpoints! {
         getProposal
         getProposalIdCounter
         getProposalNftVotes
+        getProposalPollResults
         getProposalSignatureRoleCounts
         getProposalSigners
         getProposalStatus

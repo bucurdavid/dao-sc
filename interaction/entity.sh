@@ -336,6 +336,15 @@ getProposalAddressVotes() {
 }
 
 # params:
+#   $1 = proposal id
+getProposalPollResults() {
+    erdpy contract query $ADDRESS \
+        --function="getProposalPollResults" \
+        --arguments $1 \
+        --proxy=$PROXY || return
+}
+
+# params:
 #   $1 = address
 getWithdrawableProposalIds() {
     erdpy contract query $ADDRESS \
