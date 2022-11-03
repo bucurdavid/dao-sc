@@ -109,7 +109,7 @@ pub trait GovernanceModule:
         let proposal_id = proposal.id;
 
         if !proposer_roles.is_empty() {
-            self.sign_for_all_roles(&proposer, &proposal, option_id);
+            self.sign_for_all_roles(&proposer, &proposal);
         }
 
         self.commit_vote_payments(proposal_id);

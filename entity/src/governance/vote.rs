@@ -47,20 +47,17 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
 
         let signer = self.blockchain().get_caller();
 
-        self.sign_for_all_roles(&signer, &proposal, option_id);
+        self.sign_for_all_roles(&signer, &proposal);
+        self.cast_poll_vote(proposal.id, option_id, BigUint::from(1u8));
         self.emit_sign_event(proposal);
     }
 
-    fn sign_for_all_roles(&self, signer: &ManagedAddress, proposal: &Proposal<Self::Api>, option_id: u8) {
+    fn sign_for_all_roles(&self, signer: &ManagedAddress, proposal: &Proposal<Self::Api>) {
         let signer_id = self.users().get_or_create_user(&signer);
         let signer_roles = self.user_roles(signer_id);
 
         for role in signer_roles.iter() {
-            if !self.proposal_signers(proposal.id, &role).insert(signer_id) {
-                break;
-            }
-
-            self.cast_poll_vote(proposal.id, option_id, BigUint::from(1u8));
+            self.proposal_signers(proposal.id, &role).insert(signer_id);
         }
     }
 
