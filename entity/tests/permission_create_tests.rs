@@ -1,4 +1,3 @@
-use elrond_wasm::elrond_codec::multi_types::*;
 use elrond_wasm::types::*;
 use elrond_wasm_debug::*;
 use entity::permission::*;

@@ -24,11 +24,37 @@ fn it_executes_a_proposal_with_truthfully_announced_permissions() {
             sc.create_role(managed_buffer!(b"builder"));
             sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"builder"));
 
-            sc.create_permission(managed_buffer!(b"announced1"), managed_biguint!(0), managed_address!(&action_receiver), managed_buffer!(b"myendpoint1"), ManagedVec::new(), ManagedVec::new());
-            sc.create_permission(managed_buffer!(b"announced2"), managed_biguint!(0), managed_address!(&action_receiver), managed_buffer!(b"myendpoint2"), ManagedVec::new(), ManagedVec::new());
+            sc.create_permission(
+                managed_buffer!(b"announced1"),
+                managed_biguint!(0),
+                managed_address!(&action_receiver),
+                managed_buffer!(b"myendpoint1"),
+                ManagedVec::new(),
+                ManagedVec::new(),
+            );
+            sc.create_permission(
+                managed_buffer!(b"announced2"),
+                managed_biguint!(0),
+                managed_address!(&action_receiver),
+                managed_buffer!(b"myendpoint2"),
+                ManagedVec::new(),
+                ManagedVec::new(),
+            );
 
-            sc.create_policy(managed_buffer!(b"builder"), managed_buffer!(b"announced1"), PolicyMethod::Quorum, BigUint::from(1u64), 1);
-            sc.create_policy(managed_buffer!(b"builder"), managed_buffer!(b"announced2"), PolicyMethod::Weight, BigUint::from(1u64), 1);
+            sc.create_policy(
+                managed_buffer!(b"builder"),
+                managed_buffer!(b"announced1"),
+                PolicyMethod::Quorum,
+                BigUint::from(1u64),
+                1,
+            );
+            sc.create_policy(
+                managed_buffer!(b"builder"),
+                managed_buffer!(b"announced2"),
+                PolicyMethod::Weight,
+                BigUint::from(1u64),
+                1,
+            );
         })
         .assert_ok();
 
@@ -56,7 +82,14 @@ fn it_executes_a_proposal_with_truthfully_announced_permissions() {
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
             let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"announced1"), managed_buffer!(b"announced2")]);
 
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b""),
+                managed_buffer!(b""),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                actions_permissions,
+            );
         })
         .assert_ok();
 
@@ -104,11 +137,37 @@ fn it_fails_to_executes_a_proposal_with_untruthfully_announced_permissions() {
         .blockchain
         .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
             sc.assign_role(managed_address!(&proposer_address), managed_buffer!(ROLE_BUILTIN_LEADER));
-            sc.create_permission(managed_buffer!(b"announced"), managed_biguint!(0), managed_address!(&action_receiver), managed_buffer!(b"myendpoint1"), ManagedVec::new(), ManagedVec::new());
-            sc.create_permission(managed_buffer!(b"unannounced"), managed_biguint!(0), managed_address!(&action_receiver), managed_buffer!(b"myendpoint2"), ManagedVec::new(), ManagedVec::new());
+            sc.create_permission(
+                managed_buffer!(b"announced"),
+                managed_biguint!(0),
+                managed_address!(&action_receiver),
+                managed_buffer!(b"myendpoint1"),
+                ManagedVec::new(),
+                ManagedVec::new(),
+            );
+            sc.create_permission(
+                managed_buffer!(b"unannounced"),
+                managed_biguint!(0),
+                managed_address!(&action_receiver),
+                managed_buffer!(b"myendpoint2"),
+                ManagedVec::new(),
+                ManagedVec::new(),
+            );
 
-            sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"announced"), PolicyMethod::Quorum, BigUint::from(1u64), 10);
-            sc.create_policy(managed_buffer!(ROLE_BUILTIN_LEADER), managed_buffer!(b"unannounced"), PolicyMethod::Weight, BigUint::from(1u64), 12);
+            sc.create_policy(
+                managed_buffer!(ROLE_BUILTIN_LEADER),
+                managed_buffer!(b"announced"),
+                PolicyMethod::Quorum,
+                BigUint::from(1u64),
+                10,
+            );
+            sc.create_policy(
+                managed_buffer!(ROLE_BUILTIN_LEADER),
+                managed_buffer!(b"unannounced"),
+                PolicyMethod::Weight,
+                BigUint::from(1u64),
+                12,
+            );
         })
         .assert_ok();
 
@@ -136,7 +195,14 @@ fn it_fails_to_executes_a_proposal_with_untruthfully_announced_permissions() {
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
             let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"announced")]); // not announcing the 'unannounced' permission
 
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b""),
+                managed_buffer!(b""),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                actions_permissions,
+            );
         })
         .assert_ok();
 

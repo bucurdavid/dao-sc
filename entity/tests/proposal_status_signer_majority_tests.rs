@@ -1,3 +1,4 @@
+use elrond_wasm::elrond_codec::multi_types::*;
 use elrond_wasm::types::*;
 use elrond_wasm_debug::*;
 use entity::config::*;
@@ -42,7 +43,14 @@ fn it_requires_signer_majority_if_proposer_has_role_and_with_actions_that_do_not
 
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
 
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, MultiValueManagedVec::new());
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b""),
+                managed_buffer!(b""),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                MultiValueManagedVec::new(),
+            );
         })
         .assert_ok();
 
@@ -60,7 +68,7 @@ fn it_requires_signer_majority_if_proposer_has_role_and_with_actions_that_do_not
     setup
         .blockchain
         .execute_tx(&signer_one, &setup.contract, &rust_biguint!(0), |sc| {
-            sc.sign_endpoint(proposal_id);
+            sc.sign_endpoint(proposal_id, OptionalValue::None);
         })
         .assert_ok();
 
@@ -109,7 +117,14 @@ fn it_fails_if_signer_majority_not_met_if_proposer_has_role_and_with_actions_tha
 
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
 
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, MultiValueManagedVec::new());
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b""),
+                managed_buffer!(b""),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                MultiValueManagedVec::new(),
+            );
         })
         .assert_ok();
 
@@ -166,7 +181,14 @@ fn it_requires_signer_majority_for_multiple_roles() {
 
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
 
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, MultiValueManagedVec::new());
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b""),
+                managed_buffer!(b""),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                MultiValueManagedVec::new(),
+            );
         })
         .assert_ok();
 
@@ -175,7 +197,7 @@ fn it_requires_signer_majority_for_multiple_roles() {
     setup
         .blockchain
         .execute_tx(&signer, &setup.contract, &rust_biguint!(0), |sc| {
-            sc.sign_endpoint(proposal_id);
+            sc.sign_endpoint(proposal_id, OptionalValue::None);
         })
         .assert_ok();
 
@@ -195,7 +217,7 @@ fn it_requires_signer_majority_for_multiple_roles() {
     setup
         .blockchain
         .execute_tx(&signer_dev_one, &setup.contract, &rust_biguint!(0), |sc| {
-            sc.sign_endpoint(proposal_id);
+            sc.sign_endpoint(proposal_id, OptionalValue::None);
         })
         .assert_ok();
 
@@ -242,14 +264,21 @@ fn it_succeeds_early_if_has_all_required_signatures_for_proposal_with_actions() 
 
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
 
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, MultiValueManagedVec::new());
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b""),
+                managed_buffer!(b""),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                MultiValueManagedVec::new(),
+            );
         })
         .assert_ok();
 
     setup
         .blockchain
         .execute_tx(&signer_one, &setup.contract, &rust_biguint!(0), |sc| {
-            sc.sign_endpoint(proposal_id);
+            sc.sign_endpoint(proposal_id, OptionalValue::None);
         })
         .assert_ok();
 
@@ -294,14 +323,21 @@ fn it_returns_executed_for_an_executed_proposal_with_signer_quorum() {
 
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
 
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, MultiValueManagedVec::new());
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b""),
+                managed_buffer!(b""),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                MultiValueManagedVec::new(),
+            );
         })
         .assert_ok();
 
     setup
         .blockchain
         .execute_tx(&signer_one, &setup.contract, &rust_biguint!(0), |sc| {
-            sc.sign_endpoint(proposal_id);
+            sc.sign_endpoint(proposal_id, OptionalValue::None);
         })
         .assert_ok();
 

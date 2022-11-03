@@ -30,6 +30,7 @@ fn it_creates_a_proposal() {
                     managed_buffer!(b"content hash"),
                     managed_buffer!(b"content signature"),
                     managed_buffer!(b""),
+                    POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
             },
@@ -105,6 +106,7 @@ fn it_creates_a_proposal_with_actions() {
                     managed_buffer!(b"content hash"),
                     managed_buffer!(b"content signature"),
                     actions_hash,
+                    POLL_DEFAULT_ID,
                     actions_permissions,
                 );
             },
@@ -154,6 +156,7 @@ fn it_fails_if_bad_token() {
                     managed_buffer!(b""),
                     managed_buffer!(b""),
                     managed_buffer!(b""),
+                    POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
             },
@@ -181,6 +184,7 @@ fn it_fails_if_bad_vote_weight_amount() {
                     managed_buffer!(b""),
                     managed_buffer!(b""),
                     managed_buffer!(b""),
+                    POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
             },
@@ -208,6 +212,7 @@ fn it_fails_if_trusted_host_id_is_already_known() {
                     managed_buffer!(b""),
                     managed_buffer!(b""),
                     managed_buffer!(b""),
+                    POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
             },
@@ -228,6 +233,7 @@ fn it_fails_if_trusted_host_id_is_already_known() {
                     managed_buffer!(b""),
                     managed_buffer!(b""),
                     managed_buffer!(b""),
+                    POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
             },

@@ -100,6 +100,7 @@ fn it_sets_the_longest_policy_voting_period_for_the_proposal() {
                     managed_buffer!(b"content hash"),
                     managed_buffer!(b"content signature"),
                     actions_hash,
+                    POLL_DEFAULT_ID,
                     actions_permissions,
                 );
             },
@@ -155,6 +156,7 @@ fn it_allows_anyone_to_propose_if_leaderless() {
                     managed_buffer!(b"content hash"),
                     managed_buffer!(b"content signature"),
                     actions_hash,
+                    POLL_DEFAULT_ID,
                     actions_permissions,
                 );
             },

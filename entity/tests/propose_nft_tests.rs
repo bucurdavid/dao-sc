@@ -26,6 +26,7 @@ fn it_creates_a_proposal() {
                 managed_buffer!(b"content hash"),
                 managed_buffer!(b"content signature"),
                 managed_buffer!(b""),
+                POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
             );
         })
@@ -71,6 +72,7 @@ fn it_sends_the_nfts_back() {
                 managed_buffer!(b"content hash"),
                 managed_buffer!(b"content signature"),
                 managed_buffer!(b""),
+                POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
             );
         })

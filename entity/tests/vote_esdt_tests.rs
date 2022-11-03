@@ -1,3 +1,4 @@
+use elrond_wasm::elrond_codec::multi_types::*;
 use elrond_wasm::types::*;
 use elrond_wasm_debug::*;
 use entity::config::*;
@@ -28,6 +29,7 @@ fn it_votes_for_a_proposal() {
                     managed_buffer!(b""),
                     managed_buffer!(b""),
                     managed_buffer!(b""),
+                    POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
             },
@@ -37,7 +39,7 @@ fn it_votes_for_a_proposal() {
     setup
         .blockchain
         .execute_esdt_transfer(&voter_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
-            sc.vote_for_endpoint(proposal_id);
+            sc.vote_for_endpoint(proposal_id, OptionalValue::None);
 
             let proposal = sc.proposals(proposal_id).get();
 
@@ -56,7 +58,7 @@ fn it_votes_for_a_proposal() {
     setup
         .blockchain
         .execute_esdt_transfer(&voter_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
-            sc.vote_for_endpoint(proposal_id);
+            sc.vote_for_endpoint(proposal_id, OptionalValue::None);
 
             let proposal = sc.proposals(proposal_id).get();
 
@@ -93,6 +95,7 @@ fn it_votes_against_a_proposal() {
                     managed_buffer!(b""),
                     managed_buffer!(b""),
                     managed_buffer!(b""),
+                    POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
             },
@@ -102,7 +105,7 @@ fn it_votes_against_a_proposal() {
     setup
         .blockchain
         .execute_esdt_transfer(&voter_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
-            sc.vote_against_endpoint(proposal_id);
+            sc.vote_against_endpoint(proposal_id, OptionalValue::None);
 
             let proposal = sc.proposals(proposal_id).get();
 
@@ -121,7 +124,7 @@ fn it_votes_against_a_proposal() {
     setup
         .blockchain
         .execute_esdt_transfer(&voter_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
-            sc.vote_against_endpoint(proposal_id);
+            sc.vote_against_endpoint(proposal_id, OptionalValue::None);
 
             let proposal = sc.proposals(proposal_id).get();
 
@@ -157,6 +160,7 @@ fn it_fails_if_proposal_voting_period_has_ended() {
                     managed_buffer!(b""),
                     managed_buffer!(b""),
                     managed_buffer!(b""),
+                    POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
             },
@@ -168,7 +172,7 @@ fn it_fails_if_proposal_voting_period_has_ended() {
     setup
         .blockchain
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
-            sc.vote_against_endpoint(proposal_id);
+            sc.vote_against_endpoint(proposal_id, OptionalValue::None);
         })
         .assert_user_error("proposal is not active");
 }
@@ -194,6 +198,7 @@ fn it_fails_if_less_than_configured_min_vote_weight() {
                     managed_buffer!(b""),
                     managed_buffer!(b""),
                     managed_buffer!(b""),
+                    POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
 
@@ -205,7 +210,7 @@ fn it_fails_if_less_than_configured_min_vote_weight() {
     setup
         .blockchain
         .execute_esdt_transfer(&setup.user_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
-            sc.vote_for_endpoint(proposal_id);
+            sc.vote_for_endpoint(proposal_id, OptionalValue::None);
         })
         .assert_user_error("not enought vote weight");
 }

@@ -1,3 +1,4 @@
+use elrond_wasm::elrond_codec::multi_types::*;
 use elrond_wasm::types::*;
 use elrond_wasm_debug::*;
 use entity::config::*;
@@ -27,6 +28,7 @@ fn it_votes_for_a_proposal() {
                 managed_buffer!(b""),
                 managed_buffer!(b""),
                 managed_buffer!(b""),
+                POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
             );
         })
@@ -35,7 +37,7 @@ fn it_votes_for_a_proposal() {
     setup
         .blockchain
         .execute_esdt_transfer(&voter_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 2, &rust_biguint!(1), |sc| {
-            sc.vote_for_endpoint(proposal_id);
+            sc.vote_for_endpoint(proposal_id, OptionalValue::None);
 
             let proposal = sc.proposals(proposal_id).get();
 
@@ -69,6 +71,7 @@ fn it_votes_against_a_proposal() {
                 managed_buffer!(b""),
                 managed_buffer!(b""),
                 managed_buffer!(b""),
+                POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
             );
         })
@@ -77,7 +80,7 @@ fn it_votes_against_a_proposal() {
     setup
         .blockchain
         .execute_esdt_transfer(&voter_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 2, &rust_biguint!(1), |sc| {
-            sc.vote_against_endpoint(proposal_id);
+            sc.vote_against_endpoint(proposal_id, OptionalValue::None);
 
             let proposal = sc.proposals(proposal_id).get();
 
@@ -110,6 +113,7 @@ fn it_sends_the_nfts_back() {
                 managed_buffer!(b"content hash"),
                 managed_buffer!(b"content signature"),
                 managed_buffer!(b""),
+                POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
             );
         })
@@ -118,7 +122,7 @@ fn it_sends_the_nfts_back() {
     setup
         .blockchain
         .execute_esdt_transfer(&voter_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 2, &rust_biguint!(1), |sc| {
-            sc.vote_for_endpoint(proposal_id);
+            sc.vote_for_endpoint(proposal_id, OptionalValue::None);
 
             let proposal = sc.proposals(proposal_id).get();
 
@@ -155,6 +159,7 @@ fn it_fails_to_vote_twice_with_the_same_nft() {
                 managed_buffer!(b"content hash"),
                 managed_buffer!(b"content signature"),
                 managed_buffer!(b""),
+                POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
             );
         })
@@ -163,14 +168,14 @@ fn it_fails_to_vote_twice_with_the_same_nft() {
     setup
         .blockchain
         .execute_esdt_transfer(&voter_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 2, &rust_biguint!(1), |sc| {
-            sc.vote_for_endpoint(proposal_id);
+            sc.vote_for_endpoint(proposal_id, OptionalValue::None);
         })
         .assert_ok();
 
     setup
         .blockchain
         .execute_esdt_transfer(&voter_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 2, &rust_biguint!(1), |sc| {
-            sc.vote_for_endpoint(proposal_id);
+            sc.vote_for_endpoint(proposal_id, OptionalValue::None);
         })
         .assert_user_error("already voted with nft");
 }
@@ -195,6 +200,7 @@ fn it_fails_if_less_than_configured_min_vote_weight() {
                 managed_buffer!(b"content hash"),
                 managed_buffer!(b"content signature"),
                 managed_buffer!(b""),
+                POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
             );
 
@@ -205,7 +211,7 @@ fn it_fails_if_less_than_configured_min_vote_weight() {
     setup
         .blockchain
         .execute_esdt_transfer(&voter_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 2, &rust_biguint!(1), |sc| {
-            sc.vote_for_endpoint(proposal_id);
+            sc.vote_for_endpoint(proposal_id, OptionalValue::None);
         })
         .assert_user_error("not enought vote weight");
 }
