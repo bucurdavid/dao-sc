@@ -55,6 +55,34 @@ fn it_creates_a_proposal() {
 }
 
 #[test]
+fn it_creates_a_proposal_with_poll() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+    let owner_address = setup.owner_address.clone();
+
+    setup.configure_gov_token();
+
+    setup.blockchain.set_nft_balance(&owner_address, ENTITY_GOV_TOKEN_ID, 1, &rust_biguint!(2), &0);
+
+    setup
+        .blockchain
+        .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 1, &rust_biguint!(2), |sc| {
+            let poll_option_id = 2u8;
+
+            let proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b"content hash"),
+                managed_buffer!(b"content signature"),
+                managed_buffer!(b""),
+                poll_option_id,
+                MultiValueManagedVec::new(),
+            );
+
+            assert_eq!(managed_biguint!(2), sc.proposal_poll(proposal_id, poll_option_id).get());
+        })
+        .assert_ok();
+}
+
+#[test]
 fn it_sends_the_nfts_back() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let owner_address = setup.owner_address.clone();
