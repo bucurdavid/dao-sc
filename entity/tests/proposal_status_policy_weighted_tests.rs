@@ -21,8 +21,21 @@ fn it_returns_active_when_just_created() {
         .blockchain
         .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
             sc.create_role(managed_buffer!(b"testrole"));
-            sc.create_permission(managed_buffer!(b"testperm"), managed_biguint!(0), managed_address!(&sc_address), managed_buffer!(b"testendpoint"), ManagedVec::new(), ManagedVec::new());
-            sc.create_policy(managed_buffer!(b"testrole"), managed_buffer!(b"testperm"), PolicyMethod::Weight, managed_biguint!(QURUM), VOTING_PERIOD_MINUTES_DEFAULT);
+            sc.create_permission(
+                managed_buffer!(b"testperm"),
+                managed_biguint!(0),
+                managed_address!(&sc_address),
+                managed_buffer!(b"testendpoint"),
+                ManagedVec::new(),
+                ManagedVec::new(),
+            );
+            sc.create_policy(
+                managed_buffer!(b"testrole"),
+                managed_buffer!(b"testperm"),
+                PolicyMethod::Weight,
+                managed_biguint!(QURUM),
+                VOTING_PERIOD_MINUTES_DEFAULT,
+            );
             sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"testrole"));
         })
         .assert_ok();
@@ -43,7 +56,14 @@ fn it_returns_active_when_just_created() {
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
             let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"testperm")]);
 
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b""),
+                managed_buffer!(b""),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                actions_permissions,
+            );
         })
         .assert_ok();
 
@@ -68,8 +88,21 @@ fn it_succeeds_if_one_of_one_permission_policies_meets_quorum_and_passed_voting_
         .blockchain
         .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
             sc.create_role(managed_buffer!(b"testrole"));
-            sc.create_permission(managed_buffer!(b"testperm"), managed_biguint!(0), managed_address!(&sc_address), managed_buffer!(b"testendpoint"), ManagedVec::new(), ManagedVec::new());
-            sc.create_policy(managed_buffer!(b"testrole"), managed_buffer!(b"testperm"), PolicyMethod::Weight, managed_biguint!(QURUM), VOTING_PERIOD_MINUTES_DEFAULT);
+            sc.create_permission(
+                managed_buffer!(b"testperm"),
+                managed_biguint!(0),
+                managed_address!(&sc_address),
+                managed_buffer!(b"testendpoint"),
+                ManagedVec::new(),
+                ManagedVec::new(),
+            );
+            sc.create_policy(
+                managed_buffer!(b"testrole"),
+                managed_buffer!(b"testperm"),
+                PolicyMethod::Weight,
+                managed_biguint!(QURUM),
+                VOTING_PERIOD_MINUTES_DEFAULT,
+            );
             sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"testrole"));
         })
         .assert_ok();
@@ -90,7 +123,14 @@ fn it_succeeds_if_one_of_one_permission_policies_meets_quorum_and_passed_voting_
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
             let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"testperm")]);
 
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b""),
+                managed_buffer!(b""),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                actions_permissions,
+            );
         })
         .assert_ok();
 
@@ -117,8 +157,21 @@ fn it_returns_defeated_if_one_of_one_permission_policies_does_not_meet_quorum() 
         .blockchain
         .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
             sc.create_role(managed_buffer!(b"testrole"));
-            sc.create_permission(managed_buffer!(b"testperm"), managed_biguint!(0), managed_address!(&sc_address), managed_buffer!(b"testendpoint"), ManagedVec::new(), ManagedVec::new());
-            sc.create_policy(managed_buffer!(b"testrole"), managed_buffer!(b"testperm"), PolicyMethod::Weight, managed_biguint!(QURUM * 2), VOTING_PERIOD_MINUTES_DEFAULT);
+            sc.create_permission(
+                managed_buffer!(b"testperm"),
+                managed_biguint!(0),
+                managed_address!(&sc_address),
+                managed_buffer!(b"testendpoint"),
+                ManagedVec::new(),
+                ManagedVec::new(),
+            );
+            sc.create_policy(
+                managed_buffer!(b"testrole"),
+                managed_buffer!(b"testperm"),
+                PolicyMethod::Weight,
+                managed_biguint!(QURUM * 2),
+                VOTING_PERIOD_MINUTES_DEFAULT,
+            );
             sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"testrole"));
         })
         .assert_ok();
@@ -140,7 +193,14 @@ fn it_returns_defeated_if_one_of_one_permission_policies_does_not_meet_quorum() 
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
             let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"testperm")]);
 
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b""),
+                managed_buffer!(b""),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                actions_permissions,
+            );
         })
         .assert_ok();
 

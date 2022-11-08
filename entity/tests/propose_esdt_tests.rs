@@ -30,6 +30,7 @@ fn it_creates_a_proposal() {
                     managed_buffer!(b"content hash"),
                     managed_buffer!(b"content signature"),
                     managed_buffer!(b""),
+                    POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
             },
@@ -58,6 +59,38 @@ fn it_creates_a_proposal() {
             );
             assert!(sc.withdrawable_proposal_ids(&managed_address!(&owner_address)).contains(&proposal.id));
         })
+        .assert_ok();
+}
+
+#[test]
+fn it_creates_a_proposal_with_poll() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+
+    setup.configure_gov_token();
+
+    setup
+        .blockchain
+        .execute_esdt_transfer(
+            &setup.owner_address,
+            &setup.contract,
+            ENTITY_GOV_TOKEN_ID,
+            0,
+            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
+            |sc| {
+                let poll_option_id = 2u8;
+
+                let proposal_id = sc.propose_endpoint(
+                    managed_buffer!(b"id"),
+                    managed_buffer!(b"content hash"),
+                    managed_buffer!(b"content signature"),
+                    managed_buffer!(b""),
+                    poll_option_id,
+                    MultiValueManagedVec::new(),
+                );
+
+                assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL), sc.proposal_poll(proposal_id, poll_option_id).get());
+            },
+        )
         .assert_ok();
 }
 
@@ -105,6 +138,7 @@ fn it_creates_a_proposal_with_actions() {
                     managed_buffer!(b"content hash"),
                     managed_buffer!(b"content signature"),
                     actions_hash,
+                    POLL_DEFAULT_ID,
                     actions_permissions,
                 );
             },
@@ -154,6 +188,7 @@ fn it_fails_if_bad_token() {
                     managed_buffer!(b""),
                     managed_buffer!(b""),
                     managed_buffer!(b""),
+                    POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
             },
@@ -181,6 +216,7 @@ fn it_fails_if_bad_vote_weight_amount() {
                     managed_buffer!(b""),
                     managed_buffer!(b""),
                     managed_buffer!(b""),
+                    POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
             },
@@ -208,6 +244,7 @@ fn it_fails_if_trusted_host_id_is_already_known() {
                     managed_buffer!(b""),
                     managed_buffer!(b""),
                     managed_buffer!(b""),
+                    POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
             },
@@ -228,6 +265,7 @@ fn it_fails_if_trusted_host_id_is_already_known() {
                     managed_buffer!(b""),
                     managed_buffer!(b""),
                     managed_buffer!(b""),
+                    POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
             },

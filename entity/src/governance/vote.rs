@@ -16,7 +16,7 @@ pub enum VoteType {
 
 #[elrond_wasm::module]
 pub trait VoteModule: config::ConfigModule + permission::PermissionModule + proposal::ProposalModule + events::GovEventsModule {
-    fn vote(&self, proposal_id: u64, vote_type: VoteType, weight: BigUint) {
+    fn vote(&self, proposal_id: u64, vote_type: VoteType, weight: BigUint, option_id: u8) {
         self.require_payments_with_gov_token();
         require!(weight > 0, "vote weight must be greater than 0");
 
@@ -37,15 +37,18 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
         }
 
         self.proposals(proposal_id).set(&proposal);
+        self.cast_poll_vote(proposal_id, option_id, weight.clone());
         self.emit_vote_event(proposal, vote_type, weight);
     }
 
-    fn sign(&self, proposal_id: u64) {
+    fn sign(&self, proposal_id: u64, option_id: u8) {
         let proposal = self.proposals(proposal_id).get();
         require!(self.get_proposal_status(&proposal) == ProposalStatus::Active, "proposal is not active");
 
         let signer = self.blockchain().get_caller();
+
         self.sign_for_all_roles(&signer, &proposal);
+        self.cast_poll_vote(proposal.id, option_id, BigUint::from(1u8));
         self.emit_sign_event(proposal);
     }
 
@@ -56,6 +59,14 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
         for role in signer_roles.iter() {
             self.proposal_signers(proposal.id, &role).insert(signer_id);
         }
+    }
+
+    fn cast_poll_vote(&self, proposal_id: u64, option_id: u8, weight: BigUint) {
+        if option_id == 0 || weight == 0 {
+            return;
+        }
+
+        self.proposal_poll(proposal_id, option_id).update(|current| *current += weight);
     }
 
     fn withdraw_tokens(&self, proposal_id: u64) {

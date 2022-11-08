@@ -9,6 +9,7 @@ pub const ENTITY_GOV_TOKEN_ID: &[u8] = b"SUPER-abcdef";
 pub const ENTITY_GOV_TOKEN_SUPPLY: u64 = 1_000;
 pub const ENTITY_FAKE_TOKEN_ID: &[u8] = b"FAKE-abcdef";
 pub const MIN_WEIGHT_FOR_PROPOSAL: u64 = 2;
+pub const POLL_DEFAULT_ID: u8 = 0;
 pub const QURUM: u64 = 50;
 pub const WASM_PATH: &'static str = "output/entity.wasm";
 

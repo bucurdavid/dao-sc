@@ -54,7 +54,14 @@ fn it_returns_succeeded_when_just_created_but_only_required_proposers_signature(
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
             let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"testperm")]);
 
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b""),
+                managed_buffer!(b""),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                actions_permissions,
+            );
         })
         .assert_ok();
 
@@ -113,7 +120,14 @@ fn it_succeeds_if_one_of_one_permission_policies_reaches_signer_quorum() {
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
             let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"testperm")]);
 
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b""),
+                managed_buffer!(b""),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                actions_permissions,
+            );
         })
         .assert_ok();
 
@@ -192,7 +206,14 @@ fn it_returns_defeated_if_one_of_two_permission_policies_does_not_meet_quorum_af
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
             let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"testperm1"), managed_buffer!(b"testperm2")]);
 
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b""),
+                managed_buffer!(b""),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                actions_permissions,
+            );
         })
         .assert_ok();
 

@@ -25,8 +25,21 @@ fn it_matches_a_permission_based_on_destination_only() {
         .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
             sc.create_role(managed_buffer!(b"builder"));
             sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"builder"));
-            sc.create_permission(managed_buffer!(b"addressOnlyPerm"), managed_biguint!(0), managed_address!(&action_receiver), managed_buffer!(b""), ManagedVec::new(), ManagedVec::new());
-            sc.create_policy(managed_buffer!(b"builder"), managed_buffer!(b"addressOnlyPerm"), PolicyMethod::All, BigUint::from(0u64), 10);
+            sc.create_permission(
+                managed_buffer!(b"addressOnlyPerm"),
+                managed_biguint!(0),
+                managed_address!(&action_receiver),
+                managed_buffer!(b""),
+                ManagedVec::new(),
+                ManagedVec::new(),
+            );
+            sc.create_policy(
+                managed_buffer!(b"builder"),
+                managed_buffer!(b"addressOnlyPerm"),
+                PolicyMethod::All,
+                BigUint::from(0u64),
+                10,
+            );
         })
         .assert_ok();
 
@@ -46,7 +59,14 @@ fn it_matches_a_permission_based_on_destination_only() {
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
             let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"addressOnlyPerm")]);
 
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b""),
+                managed_buffer!(b""),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                actions_permissions,
+            );
         })
         .assert_ok();
 
@@ -95,7 +115,13 @@ fn it_matches_a_permission_based_on_destination_and_endpoint() {
                 ManagedVec::new(),
                 ManagedVec::new(),
             );
-            sc.create_policy(managed_buffer!(b"builder"), managed_buffer!(b"addressAndEndpoint"), PolicyMethod::All, BigUint::from(0u64), 10);
+            sc.create_policy(
+                managed_buffer!(b"builder"),
+                managed_buffer!(b"addressAndEndpoint"),
+                PolicyMethod::All,
+                BigUint::from(0u64),
+                10,
+            );
         })
         .assert_ok();
 
@@ -115,7 +141,14 @@ fn it_matches_a_permission_based_on_destination_and_endpoint() {
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
             let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"addressAndEndpoint")]);
 
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b""),
+                managed_buffer!(b""),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                actions_permissions,
+            );
         })
         .assert_ok();
 
@@ -166,7 +199,13 @@ fn it_matches_a_permission_based_on_destination_and_endpoint_and_one_argument() 
                 ManagedVec::new(),
             );
 
-            sc.create_policy(managed_buffer!(b"builder"), managed_buffer!(b"addressAndEndpoint"), PolicyMethod::All, BigUint::from(0u64), 10);
+            sc.create_policy(
+                managed_buffer!(b"builder"),
+                managed_buffer!(b"addressAndEndpoint"),
+                PolicyMethod::All,
+                BigUint::from(0u64),
+                10,
+            );
         })
         .assert_ok();
 
@@ -186,7 +225,14 @@ fn it_matches_a_permission_based_on_destination_and_endpoint_and_one_argument() 
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
             let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"addressAndEndpoint")]);
 
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b""),
+                managed_buffer!(b""),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                actions_permissions,
+            );
         })
         .assert_ok();
 

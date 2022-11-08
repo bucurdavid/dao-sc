@@ -62,7 +62,14 @@ fn it_signs_a_proposal_on_proposing_if_proposal_requires_signing() {
                 let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
                 let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"testperm")]);
 
-                proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
+                proposal_id = sc.propose_endpoint(
+                    managed_buffer!(b"id"),
+                    managed_buffer!(b""),
+                    managed_buffer!(b""),
+                    actions_hash,
+                    POLL_DEFAULT_ID,
+                    actions_permissions,
+                );
             },
         )
         .assert_ok();
@@ -93,6 +100,7 @@ fn it_creates_a_proposal_without_esdt_payment_if_not_required() {
                 managed_buffer!(b""),
                 managed_buffer!(b""),
                 managed_buffer!(b""),
+                POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
             );
         })
@@ -137,7 +145,14 @@ fn it_creates_a_proposal_without_esdt_payment_if_not_required() {
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
             let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"testperm")]);
 
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b""),
+                managed_buffer!(b""),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                actions_permissions,
+            );
         })
         .assert_ok();
 
@@ -180,6 +195,7 @@ fn it_does_not_self_sign_a_proposal_if_proposer_does_not_have_any_roles() {
                     managed_buffer!(b""),
                     managed_buffer!(b""),
                     managed_buffer!(b""),
+                    POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
             },

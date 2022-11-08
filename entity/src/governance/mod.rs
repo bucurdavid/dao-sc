@@ -1,7 +1,7 @@
 elrond_wasm::imports!();
 
 use self::vote::VoteType;
-use crate::config::{self, MIN_PROPOSAL_VOTE_WEIGHT_DEFAULT, QUORUM_DEFAULT, VOTING_PERIOD_MINUTES_DEFAULT};
+use crate::config::{self, MIN_PROPOSAL_VOTE_WEIGHT_DEFAULT, POLL_MAX_OPTIONS, QUORUM_DEFAULT, VOTING_PERIOD_MINUTES_DEFAULT};
 use crate::permission::{self, ROLE_BUILTIN_LEADER};
 use proposal::{Action, ProposalStatus};
 
@@ -84,6 +84,7 @@ pub trait GovernanceModule:
         content_hash: ManagedBuffer,
         content_sig: ManagedBuffer,
         actions_hash: ManagedBuffer,
+        option_id: u8,
         permissions: MultiValueManagedVec<ManagedBuffer>,
     ) -> u64 {
         let proposer = self.blockchain().get_caller();
@@ -112,6 +113,7 @@ pub trait GovernanceModule:
         }
 
         self.commit_vote_payments(proposal_id);
+        self.cast_poll_vote(proposal.id, option_id, vote_weight.clone());
         self.known_trusted_host_proposal_ids().insert(trusted_host_id);
         self.emit_propose_event(proposal, vote_weight);
 
@@ -120,23 +122,26 @@ pub trait GovernanceModule:
 
     #[payable("*")]
     #[endpoint(voteFor)]
-    fn vote_for_endpoint(&self, proposal_id: u64) {
+    fn vote_for_endpoint(&self, proposal_id: u64, opt_option_id: OptionalValue<u8>) {
         let vote_weight = self.get_weight_from_vote_payments();
-        self.vote(proposal_id, VoteType::For, vote_weight);
+        let option_id = opt_option_id.into_option().unwrap_or_default();
+        self.vote(proposal_id, VoteType::For, vote_weight, option_id);
         self.commit_vote_payments(proposal_id);
     }
 
     #[payable("*")]
     #[endpoint(voteAgainst)]
-    fn vote_against_endpoint(&self, proposal_id: u64) {
+    fn vote_against_endpoint(&self, proposal_id: u64, opt_option_id: OptionalValue<u8>) {
         let vote_weight = self.get_weight_from_vote_payments();
-        self.vote(proposal_id, VoteType::Against, vote_weight);
+        let option_id = opt_option_id.into_option().unwrap_or_default();
+        self.vote(proposal_id, VoteType::Against, vote_weight, option_id);
         self.commit_vote_payments(proposal_id);
     }
 
     #[endpoint(sign)]
-    fn sign_endpoint(&self, proposal_id: u64) {
-        self.sign(proposal_id);
+    fn sign_endpoint(&self, proposal_id: u64, opt_option_id: OptionalValue<u8>) {
+        let option_id = opt_option_id.into_option().unwrap_or_default();
+        self.sign(proposal_id, option_id);
     }
 
     #[endpoint(execute)]
@@ -280,6 +285,17 @@ pub trait GovernanceModule:
             }
         }
         signers
+    }
+
+    #[view(getProposalPollResults)]
+    fn get_proposal_poll_results_view(&self, proposal_id: u64) -> MultiValueEncoded<BigUint> {
+        let mut results = MultiValueEncoded::new();
+
+        for option_id in 1..=POLL_MAX_OPTIONS {
+            results.push(self.proposal_poll(proposal_id, option_id).get());
+        }
+
+        results
     }
 
     fn get_weight_from_vote_payments(&self) -> BigUint {

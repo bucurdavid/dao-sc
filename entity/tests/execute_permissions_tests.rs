@@ -51,7 +51,14 @@ fn it_fails_if_a_required_argument_is_missing() {
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
             let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"callSc")]);
 
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b""),
+                managed_buffer!(b""),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                actions_permissions,
+            );
         })
         .assert_ok();
 
@@ -90,8 +97,21 @@ fn it_fails_if_payment_value_is_higher_than_defined_by_permission() {
         .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
             sc.create_role(managed_buffer!(b"builder"));
             sc.assign_role(managed_address!(&proposer_address), managed_buffer!(b"builder"));
-            sc.create_permission(managed_buffer!(b"sendEGLD"), managed_biguint!(10), managed_address!(&action_receiver), managed_buffer!(b""), ManagedVec::new(), ManagedVec::new());
-            sc.create_policy(managed_buffer!(b"builder"), managed_buffer!(b"sendEGLD"), PolicyMethod::Quorum, BigUint::from(1u64), 1);
+            sc.create_permission(
+                managed_buffer!(b"sendEGLD"),
+                managed_biguint!(10),
+                managed_address!(&action_receiver),
+                managed_buffer!(b""),
+                ManagedVec::new(),
+                ManagedVec::new(),
+            );
+            sc.create_policy(
+                managed_buffer!(b"builder"),
+                managed_buffer!(b"sendEGLD"),
+                PolicyMethod::Quorum,
+                BigUint::from(1u64),
+                1,
+            );
         })
         .assert_ok();
 
@@ -111,7 +131,14 @@ fn it_fails_if_payment_value_is_higher_than_defined_by_permission() {
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
             let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"sendEGLD")]);
 
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b""),
+                managed_buffer!(b""),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                actions_permissions,
+            );
         })
         .assert_ok();
 
@@ -160,7 +187,13 @@ fn it_fails_if_token_payment_amount_is_higher_than_defined_by_permission() {
                 ManagedVec::from(vec![EsdtTokenPayment::new(managed_token_id!(b"SUPER-123456"), 0, managed_biguint!(10))]),
             );
 
-            sc.create_policy(managed_buffer!(b"builder"), managed_buffer!(b"sendSuper"), PolicyMethod::Quorum, BigUint::from(1u64), 1);
+            sc.create_policy(
+                managed_buffer!(b"builder"),
+                managed_buffer!(b"sendSuper"),
+                PolicyMethod::Quorum,
+                BigUint::from(1u64),
+                1,
+            );
         })
         .assert_ok();
 
@@ -180,7 +213,14 @@ fn it_fails_if_token_payment_amount_is_higher_than_defined_by_permission() {
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
             let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"sendSuper")]);
 
-            proposal_id = sc.propose_endpoint(managed_buffer!(b"id"), managed_buffer!(b""), managed_buffer!(b""), actions_hash, actions_permissions);
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b""),
+                managed_buffer!(b""),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                actions_permissions,
+            );
         })
         .assert_ok();
 
