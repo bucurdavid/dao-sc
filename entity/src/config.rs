@@ -11,6 +11,8 @@ pub const QUORUM_DEFAULT: u64 = 1;
 
 pub const POLL_MAX_OPTIONS: u8 = 4;
 
+pub const GAS_LIMIT_SET_TOKEN_ROLES: u64 = 60_000_000;
+
 #[elrond_wasm::module]
 pub trait ConfigModule {
     fn require_caller_self(&self) {

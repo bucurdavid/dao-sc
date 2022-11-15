@@ -1,7 +1,7 @@
 elrond_wasm::imports!();
 
 use self::vote::VoteType;
-use crate::config::{self, MIN_PROPOSAL_VOTE_WEIGHT_DEFAULT, POLL_MAX_OPTIONS, QUORUM_DEFAULT, VOTING_PERIOD_MINUTES_DEFAULT};
+use crate::config::{self, GAS_LIMIT_SET_TOKEN_ROLES, MIN_PROPOSAL_VOTE_WEIGHT_DEFAULT, POLL_MAX_OPTIONS, QUORUM_DEFAULT, VOTING_PERIOD_MINUTES_DEFAULT};
 use crate::permission::{self, ROLE_BUILTIN_LEADER};
 use proposal::{Action, ProposalStatus};
 
@@ -202,6 +202,7 @@ pub trait GovernanceModule:
         self.send()
             .esdt_system_sc_proxy()
             .set_special_roles(&entity_address, &gov_token_id, (&roles[..]).into_iter().cloned())
+            .with_gas_limit(GAS_LIMIT_SET_TOKEN_ROLES)
             .async_call()
             .call_and_exit();
     }
