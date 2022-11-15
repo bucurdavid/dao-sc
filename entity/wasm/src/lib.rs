@@ -9,6 +9,7 @@ elrond_wasm_node::wasm_endpoints! {
     (
         callBack
         assignRole
+        burn
         changeGovToken
         changeMinProposeWeight
         changeMinVoteWeight
@@ -45,6 +46,7 @@ elrond_wasm_node::wasm_endpoints! {
         getWithdrawableProposalIds
         initGovToken
         issueGovToken
+        mint
         propose
         registerDns
         removeRole
