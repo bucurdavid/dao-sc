@@ -220,6 +220,18 @@ pub trait GovernanceModule:
         }
     }
 
+    #[endpoint(mint)]
+    fn mint_endpoint(&self, token: TokenIdentifier, nonce: u64, amount: BigUint) {
+        self.require_caller_self();
+        self.send().esdt_local_mint(&token, nonce, &amount);
+    }
+
+    #[endpoint(burn)]
+    fn burn_endpoint(&self, token: TokenIdentifier, nonce: u64, amount: BigUint) {
+        self.require_caller_self();
+        self.send().esdt_local_burn(&token, nonce, &amount);
+    }
+
     #[view(getProposal)]
     fn get_proposal_view(&self, proposal_id: u64) -> OptionalValue<MultiValue6<ManagedBuffer, ManagedBuffer, ManagedAddress, u64, u64, bool>> {
         if !self.proposal_exists(proposal_id) {
