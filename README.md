@@ -13,7 +13,7 @@ Mainnet (Entity Template): [erd1qqqqqqqqqqqqqpgqces4kdydtp9ea29pymjjyg7vcfqfllly
 
 ## Requirements
 
-- Contract must possess the `ESDTRoleLocalMint` role for the configured token of `boost-reward-token-id` – [SUPERPOWER-6f4cee](https://explorer.elrond.com/tokens/SUPERPOWER-6f4cee) in our case
+- The Manager smart contract must possess the `ESDTRoleLocalMint` role for the configured token of `boost-reward-token-id` – [SUPERPOWER-6f4cee](https://explorer.elrond.com/tokens/SUPERPOWER-6f4cee) in our case
 
 ## Deploy
 
