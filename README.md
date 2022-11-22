@@ -1,6 +1,6 @@
 # Fellowship DAOs Smart Contracts
 
-Smart contract used for managing and running DAOs through [Superciety](https://superciety.com) on Elrond Blockchain.
+Smart contract used for managing and running DAOs through [Superciety](https://superciety.com) on MultiversX Blockchain.
 
 Specifically, two smart contracts:
 

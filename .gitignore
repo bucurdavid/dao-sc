@@ -5,7 +5,7 @@ wallets/*
 # vscode config
 .vscode
 
-# elrond
+# multiversx
 **/node_modules
 **/output/**
 **/testnet/**
