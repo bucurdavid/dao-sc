@@ -44,7 +44,7 @@ To upgrade the Entity Template smart contract:
 
 ## Testing
 
-Run all automated tests via:
+You can run the tests with:
 
 ```bash
 cargo test
