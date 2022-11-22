@@ -10,7 +10,7 @@ Specifically, two smart contracts:
 Find the mentioned smart contracts on the Explorer:
 
 - Entity Template: [erd1qqqqqqqqqqqqqpgqces4kdydtp9ea29pymjjyg7vcfqfllly27rsv3qats](https://explorer.elrond.com/accounts/erd1qqqqqqqqqqqqqpgqces4kdydtp9ea29pymjjyg7vcfqfllly27rsv3qats)
-- Manager: [erd1qqqqqqqqqqqqqpgq4kns8he9r84c58ed3jjuam3tp7u9zl4n27rsy2kv6u](https://explorer.elrond.com/accounts/erd1qqqqqqqqqqqqqpgq4kns8he9r84c58ed3jjuam3tp7u9zl4n27rsy2kv6u)
+- Manager: [erd1qqqqqqqqqqqqqpgqtatmxjhlxkehl37u5kz9tz7sm450xd7f27rsppynzj](https://explorer.elrond.com/accounts/erd1qqqqqqqqqqqqqpgqtatmxjhlxkehl37u5kz9tz7sm450xd7f27rsppynzj)
 
 ## Requirements
 
