@@ -41,6 +41,14 @@ To upgrade the Entity Template smart contract:
 . ./interaction/manager.sh && upgradeEntityTemplate
 ```
 
+## Testing
+
+Run all automated tests via:
+
+```bash
+cargo test
+```
+
 ## Security Vulnerabilities
 
 Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
