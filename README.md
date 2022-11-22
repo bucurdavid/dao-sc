@@ -12,6 +12,10 @@ Find the mentioned smart contracts on the Explorer:
 - Entity Template: [erd1qqqqqqqqqqqqqpgqces4kdydtp9ea29pymjjyg7vcfqfllly27rsv3qats](https://explorer.elrond.com/accounts/erd1qqqqqqqqqqqqqpgqces4kdydtp9ea29pymjjyg7vcfqfllly27rsv3qats)
 - Manager: [erd1qqqqqqqqqqqqqpgqtatmxjhlxkehl37u5kz9tz7sm450xd7f27rsppynzj](https://explorer.elrond.com/accounts/erd1qqqqqqqqqqqqqpgqtatmxjhlxkehl37u5kz9tz7sm450xd7f27rsppynzj)
 
+## Documentation
+
+Find the documentation in our [Knowledge Base](https://know.superciety.com/daos/get-started.html).
+
 ## Requirements
 
 - The Manager smart contract must possess the `ESDTRoleLocalMint` role for the configured token of `boost-reward-token-id` – [SUPERPOWER-6f4cee](https://explorer.elrond.com/tokens/SUPERPOWER-6f4cee) in our case
