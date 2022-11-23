@@ -354,7 +354,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
     ) {
         let proposer = self.blockchain().get_caller();
         let entity_address = self.blockchain().get_sc_address();
-        let trusted_host_signature = ManagedByteArray::try_from(content_sig).unwrap();
+        let trusted_host_signature = ManagedByteArray::try_from(content_sig).unwrap_or_default();
 
         let mut trusted_host_signable = sc_format!(
             "{}{}{}{}{}",
