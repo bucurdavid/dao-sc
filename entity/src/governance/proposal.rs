@@ -67,6 +67,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
 
         let starts_at = self.blockchain().get_block_timestamp();
         let ends_at = starts_at + voting_period_minutes as u64 * 60;
+        let sanitized_permissions = permissions.into_iter().filter(|perm| !perm.is_empty()).collect();
 
         let proposal = Proposal {
             id: proposal_id,
@@ -78,7 +79,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
             actions_hash,
             votes_for: vote_weight.clone(),
             votes_against: BigUint::zero(),
-            permissions,
+            permissions: sanitized_permissions,
         };
 
         self.proposals(proposal_id).set(&proposal);
