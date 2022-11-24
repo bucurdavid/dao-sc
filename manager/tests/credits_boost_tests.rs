@@ -12,30 +12,33 @@ fn it_increases_deposited_amounts_in_the_storage() {
 
     setup.blockchain.set_esdt_balance(&entity_address, COST_TOKEN_ID, &rust_biguint!(100));
 
-    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, COST_TOKEN_ID, 0, &rust_biguint!(50), |sc| {
-        sc.entities()
-            .insert(managed_address!(&entity_address));
+    setup
+        .blockchain
+        .execute_esdt_transfer(&setup.owner_address, &setup.contract, COST_TOKEN_ID, 0, &rust_biguint!(50), |sc| {
+            sc.entities().insert(managed_address!(&entity_address));
 
-        sc.boost_endpoint(managed_address!(&entity_address));
+            sc.boost_endpoint(managed_address!(&entity_address));
 
-        let actual = sc.credit_entries(&managed_address!(&entity_address)).get();
+            let actual = sc.credit_entries(&managed_address!(&entity_address)).get();
 
-        assert_eq!(managed_biguint!(50), actual.total_amount);
-        assert_eq!(managed_biguint!(50), actual.period_amount);
-        assert_eq!(managed_biguint!(50), sc.credit_total_deposits_amount().get());
-    })
-    .assert_ok();
+            assert_eq!(managed_biguint!(50), actual.total_amount);
+            assert_eq!(managed_biguint!(50), actual.period_amount);
+            assert_eq!(managed_biguint!(50), sc.credit_total_deposits_amount().get());
+        })
+        .assert_ok();
 
-    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, COST_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
-        sc.boost_endpoint(managed_address!(&entity_address));
+    setup
+        .blockchain
+        .execute_esdt_transfer(&setup.owner_address, &setup.contract, COST_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
+            sc.boost_endpoint(managed_address!(&entity_address));
 
-        let actual = sc.credit_entries(&managed_address!(&entity_address)).get();
+            let actual = sc.credit_entries(&managed_address!(&entity_address)).get();
 
-        assert_eq!(managed_biguint!(75), actual.total_amount);
-        assert_eq!(managed_biguint!(75), actual.period_amount);
-        assert_eq!(managed_biguint!(75), sc.credit_total_deposits_amount().get());
-    })
-    .assert_ok();
+            assert_eq!(managed_biguint!(75), actual.total_amount);
+            assert_eq!(managed_biguint!(75), actual.period_amount);
+            assert_eq!(managed_biguint!(75), sc.credit_total_deposits_amount().get());
+        })
+        .assert_ok();
 }
 
 #[test]
@@ -45,8 +48,10 @@ fn it_fails_if_the_entity_does_not_exist() {
 
     setup.blockchain.set_esdt_balance(&entity_address, COST_TOKEN_ID, &rust_biguint!(100));
 
-    setup.blockchain.execute_esdt_transfer(&setup.owner_address, &setup.contract, COST_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
-        sc.boost_endpoint(managed_address!(&entity_address));
-    })
-    .assert_user_error("entity does not exist");
+    setup
+        .blockchain
+        .execute_esdt_transfer(&setup.owner_address, &setup.contract, COST_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
+            sc.boost_endpoint(managed_address!(&entity_address));
+        })
+        .assert_user_error("entity does not exist");
 }
