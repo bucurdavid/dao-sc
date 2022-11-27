@@ -47,30 +47,42 @@ pub trait PermissionModule: config::ConfigModule {
         self.assign_role(leader, ManagedBuffer::from(ROLE_BUILTIN_LEADER));
     }
 
+    /// Create a custom role.
+    /// Can only be called by the contract itself.
     #[endpoint(createRole)]
     fn create_role_endpoint(&self, role_name: ManagedBuffer) {
         self.require_caller_self();
         self.create_role(role_name);
     }
 
+    /// Remove a custom role.
+    /// Will also unassign all users belonging to that role.
+    /// Can only be called by the contract itself.
     #[endpoint(removeRole)]
     fn remove_role_endpoint(&self, role_name: ManagedBuffer) {
         self.require_caller_self();
         self.remove_role(role_name);
     }
 
+    /// Assign a custom role to the given user.
+    /// Can only be called by the contract itself.
     #[endpoint(assignRole)]
     fn assign_role_endpoint(&self, role_name: ManagedBuffer, address: ManagedAddress) {
         self.require_caller_self();
         self.assign_role(address, role_name);
     }
 
+    /// Unassign a custom role from the given user.
+    /// Can only be called by the contract itself.
     #[endpoint(unassignRole)]
     fn unassign_role_endpoint(&self, role_name: ManagedBuffer, address: ManagedAddress) {
         self.require_caller_self();
         self.unassign_role(address, role_name);
     }
 
+    /// Create a general permission.
+    /// This permission can later be connected to custom roles through a policy.
+    /// Can only be called by the contract itself.
     #[endpoint(createPermission)]
     fn create_permission_endpoint(
         &self,
@@ -91,24 +103,32 @@ pub trait PermissionModule: config::ConfigModule {
         self.create_permission(permission_name, value, destination, endpoint, ManagedVec::new(), payments);
     }
 
+    /// Create a policy that requires role members to vote based on the provided parameters in order to invoke the permission.
+    /// Can only be called by the contract itself.
     #[endpoint(createPolicyWeighted)]
     fn create_policy_weighted_endpoint(&self, role_name: ManagedBuffer, permission_name: ManagedBuffer, quorum: BigUint, voting_period_minutes: usize) {
         self.require_caller_self();
         self.create_policy(role_name, permission_name, PolicyMethod::Weight, quorum, voting_period_minutes);
     }
 
+    /// Create a policy that allows permissions to be invoked unilaterally.
+    /// Can only be called by the contract itself.
     #[endpoint(createPolicyForOne)]
     fn create_policy_one_endpoint(&self, role_name: ManagedBuffer, permission_name: ManagedBuffer) {
         self.require_caller_self();
         self.create_policy(role_name, permission_name, PolicyMethod::One, BigUint::from(1u64), 0);
     }
 
+    /// Create a policy that requires all role members to sign in order to invoke the permission.
+    /// Can only be called by the contract itself.
     #[endpoint(createPolicyForAll)]
     fn create_policy_all_endpoint(&self, role_name: ManagedBuffer, permission_name: ManagedBuffer) {
         self.require_caller_self();
         self.create_policy(role_name, permission_name, PolicyMethod::All, BigUint::zero(), self.voting_period_in_minutes().get());
     }
 
+    /// Create a policy that requires role members to reach a defined quorum in order to invoke the permission.
+    /// Can only be called by the contract itself.
     #[endpoint(createPolicyQuorum)]
     fn create_policy_quorum_endpoint(&self, role_name: ManagedBuffer, permission_name: ManagedBuffer, quorum: usize) {
         self.require_caller_self();
