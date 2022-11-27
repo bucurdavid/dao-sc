@@ -102,7 +102,7 @@ pub trait GovernanceModule:
     ///     - permissions (optional): a list of permissions (their unique names) to be verified on proposal execution
     /// Payment:
     ///     - token id must be equal to configured governance token id
-    ///     - amount must be greater than the minimum_vote_weight
+    ///     - amount must be greater than the min_propose_weight
     ///     - amount will be used to vote in favor (FOR) the proposal
     /// Returns an incremental proposal id
     #[payable("*")]
@@ -151,6 +151,8 @@ pub trait GovernanceModule:
 
     /// Vote for of a proposal, optionally with a poll option.
     /// Payment:
+    ///     - token id must be equal to configured governance token id
+    ///     - amount must be greater than the min_vote_weight
     ///     - ESDTs will be deposited and locked until the voting period has ended
     ///     - NFTs/SFTs will be recorded as a vote and immediately returned
     #[payable("*")]
@@ -162,8 +164,10 @@ pub trait GovernanceModule:
         self.commit_vote_payments(proposal_id);
     }
 
-    /// Vote against of a proposal.
+    /// Vote against a proposal.
     /// Payment:
+    ///     - token id must be equal to configured governance token id
+    ///     - amount must be greater than the min_vote_weight
     ///     - ESDTs will be deposited and locked until the voting period has ended
     ///     - NFTs/SFTs will be recorded as a vote and immediately returned
     #[payable("*")]
