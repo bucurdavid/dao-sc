@@ -19,7 +19,7 @@ You can find extensive Documentation about DAOs & their supporting tools in our 
 - To learn more about DAOs in general, read our [Overview](https://know.superciety.com/daos/overview.html) page.
 - To create your own DAO, follow the simple steps on the [Setup](https://know.superciety.com/daos/setup.html) page.
 - To better understand roles & permissions, check out the [Roles & Permissions](https://know.superciety.com/daos/permissions.html) page.
-
+- To learn about the technical concepts, visit the [Technical](https://know.superciety.com/daos/technical.html) page.
 
 ## Development
 
