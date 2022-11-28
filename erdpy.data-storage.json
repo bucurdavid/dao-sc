@@ -11,10 +11,10 @@
     "dex-wrap-egld-contract": "erd1qqqqqqqqqqqqqpgq7ykazrzd905zvnlr88dpfw06677lxe9w0n4suz00uh",
     "organization-contract": "erd1qqqqqqqqqqqqqpgqqs8lzvcp4fzzm0z73scqc7ly23uae6vf27rsjquxrg",
     "boost-reward-token-id": "SUPERPOWER-46a488",
-    "entity--address": "erd1qqqqqqqqqqqqqpgqsxykwum9lrrn3xs3v6rcs47g6gndywly27rswajv0k",
-    "entity--deploy-transaction": "a4f19547b28c3dfe152d863d5b4aec9ccf863b3b71a266f992a09765f5894979",
-    "manager--address": "erd1qqqqqqqqqqqqqpgqhplgqhep8capp9rlv78aws0lr9v6t2xq27rsrkg59x",
-    "manager--deploy-transaction": "f530feeaec53412ab02ec295eaefb450473106c2dcd15f1f5a147d505c87edab"
+    "entity--address": "erd1qqqqqqqqqqqqqpgqppw8sc8heg6g7c8c7xtdp82lhhcvf0cf27rs9yqc8s",
+    "entity--deploy-transaction": "0e3bb7136d0efdda2ddccddd6bfe143ffc3ca44a4f7b800bf461bb91a06f885b",
+    "manager--address": "erd1qqqqqqqqqqqqqpgq0x8ug4s4ltyaa7w74w2ylxr90wpm5cr927rsfa4k2e",
+    "manager--deploy-transaction": "a42c47ced58fbf19f5680a19f20e1d3e5ea664b80fc4506c88b3ab25177a5e5e"
   },
   "testnet": {
     "proxy": "https://testnet-gateway.elrond.com",
