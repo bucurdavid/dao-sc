@@ -14,13 +14,20 @@ Find the mentioned smart contracts on the Explorer:
 
 ## Documentation
 
-Find the documentation in our [Knowledge Base](https://know.superciety.com/daos/get-started.html).
+You can find extensive Documentation about DAOs & their supporting tools in our [Knowledge Base](https://know.superciety.com):
 
-## Requirements
+- To learn more about DAOs in general, read our [Overview](https://know.superciety.com/daos/overview.html) page.
+- To create your own DAO, follow the simple steps on the [Setup](https://know.superciety.com/daos/setup.html) page.
+- To better understand roles & permissions, check out the [Roles & Permissions](https://know.superciety.com/daos/permissions.html) page.
+- To learn about the technical concepts, visit the [Technical](https://know.superciety.com/daos/technical.html) page.
+
+## Development
+
+### Requirements
 
 - The Manager smart contract must possess the `ESDTRoleLocalMint` role for the configured token of `boost-reward-token-id` – [SUPERPOWER-6f4cee](https://explorer.elrond.com/tokens/SUPERPOWER-6f4cee) in our case
 
-## Deploy
+### Deploy
 
 Before deploying the smart contract to the blockchain, be sure to:
 
@@ -32,7 +39,7 @@ Before deploying the smart contract to the blockchain, be sure to:
 . ./interaction/manager.sh && deploy
 ```
 
-## Upgrade
+### Upgrade
 
 To upgrade the Manager smart contract:
 
@@ -46,7 +53,7 @@ To upgrade the Entity Template smart contract:
 . ./interaction/manager.sh && upgradeEntityTemplate
 ```
 
-## Testing
+### Testing
 
 You can run the tests with:
 

@@ -35,6 +35,9 @@ pub trait GovernanceModule:
         self.try_change_min_propose_weight(BigUint::from(initial_min_tokens_for_proposing));
     }
 
+    /// Initially configures the governance token if non is set already.
+    /// It automatically calculates other governance setting defaults like quorum and minimum weight to propose.
+    /// Can only be called by caller with leader role.
     #[endpoint(initGovToken)]
     fn init_gov_token_endpoint(&self, token_id: TokenIdentifier, supply: BigUint) {
         require!(self.gov_token_id().is_empty(), "gov token is already set");
@@ -43,12 +46,17 @@ pub trait GovernanceModule:
         self.configure_governance_token(token_id, supply);
     }
 
+    /// Change the governance token.
+    /// Automatically calculates other governance setting defaults like quorum and minimum weight to propose.
+    /// Can only be called by the contract itself.
     #[endpoint(changeGovToken)]
     fn change_gov_token_endpoint(&self, token_id: TokenIdentifier, supply: BigUint) {
         self.require_caller_self();
         self.configure_governance_token(token_id, supply);
     }
 
+    /// Change the governance default quorum.
+    /// Can only be called by the contract itself.
     #[endpoint(changeQuorum)]
     fn change_quorum_endpoint(&self, value: BigUint) {
         self.require_caller_self();
@@ -56,6 +64,8 @@ pub trait GovernanceModule:
         self.try_change_quorum(value);
     }
 
+    /// Change the minimum weight required to vote.
+    /// Can only be called by the contract itself.
     #[endpoint(changeMinVoteWeight)]
     fn change_min_vote_weight_endpoint(&self, value: BigUint) {
         self.require_caller_self();
@@ -63,6 +73,8 @@ pub trait GovernanceModule:
         self.try_change_min_vote_weight(value);
     }
 
+    /// Change the minimumm weight required to create a proposal.
+    /// Can only be called by the contract itself.
     #[endpoint(changeMinProposeWeight)]
     fn change_min_propose_weight_endpoint(&self, value: BigUint) {
         self.require_caller_self();
@@ -70,12 +82,29 @@ pub trait GovernanceModule:
         self.try_change_min_propose_weight(value);
     }
 
+    /// Change the default voting period.
+    /// Can only be called by the contract itself.
+    /// Arguments:
+    ///     - value: voting period duration **in minutes**
     #[endpoint(changeVotingPeriodMinutes)]
     fn change_voting_period_in_minutes_endpoint(&self, value: usize) {
         self.require_caller_self();
         self.try_change_voting_period_in_minutes(value);
     }
 
+    /// Create a proposal with optional actions
+    /// Arguments:
+    ///     - trusted_host_id: a unique id given by the trusted host
+    ///     - content_hash: the hash of the proposed content to verify integrity on the frontend
+    ///     - content_sig: signature provided by the trusted host
+    ///     - actions_hash: the hash of serialized actions to verify on execution. leave empty if no actions attached
+    ///     - option_id: unique id of poll option. 0 = None
+    ///     - permissions (optional): a list of permissions (their unique names) to be verified on proposal execution
+    /// Payment:
+    ///     - token id must be equal to configured governance token id
+    ///     - amount must be greater than the min_propose_weight
+    ///     - amount will be used to vote in favor (FOR) the proposal
+    /// Returns an incremental proposal id
     #[payable("*")]
     #[endpoint(propose)]
     fn propose_endpoint(
@@ -120,6 +149,12 @@ pub trait GovernanceModule:
         proposal_id
     }
 
+    /// Vote for of a proposal, optionally with a poll option.
+    /// Payment:
+    ///     - token id must be equal to configured governance token id
+    ///     - amount must be greater than the min_vote_weight
+    ///     - ESDTs will be deposited and locked until the voting period has ended
+    ///     - NFTs/SFTs will be recorded as a vote and immediately returned
     #[payable("*")]
     #[endpoint(voteFor)]
     fn vote_for_endpoint(&self, proposal_id: u64, opt_option_id: OptionalValue<u8>) {
@@ -129,6 +164,12 @@ pub trait GovernanceModule:
         self.commit_vote_payments(proposal_id);
     }
 
+    /// Vote against a proposal.
+    /// Payment:
+    ///     - token id must be equal to configured governance token id
+    ///     - amount must be greater than the min_vote_weight
+    ///     - ESDTs will be deposited and locked until the voting period has ended
+    ///     - NFTs/SFTs will be recorded as a vote and immediately returned
     #[payable("*")]
     #[endpoint(voteAgainst)]
     fn vote_against_endpoint(&self, proposal_id: u64, opt_option_id: OptionalValue<u8>) {
@@ -138,12 +179,16 @@ pub trait GovernanceModule:
         self.commit_vote_payments(proposal_id);
     }
 
+    /// Sign a proposal, optionally with a poll option.
+    /// This is often required by role members to approve actions protected by policies.
     #[endpoint(sign)]
     fn sign_endpoint(&self, proposal_id: u64, opt_option_id: OptionalValue<u8>) {
         let option_id = opt_option_id.into_option().unwrap_or_default();
         self.sign(proposal_id, option_id);
     }
 
+    /// Execute the actions of a succeeded proposal.
+    /// This will update the proposals status to 'executed'.
     #[endpoint(execute)]
     fn execute_endpoint(&self, proposal_id: u64, actions: MultiValueManagedVec<Action<Self::Api>>) {
         require!(!actions.is_empty(), "no actions to execute");
@@ -166,6 +211,8 @@ pub trait GovernanceModule:
         self.emit_execute_event(proposal);
     }
 
+    /// Withdraw ESDT governance tokens once the proposals voting period has ended.
+    /// Used by members who voted FOR or AGAINST a proposal using ESDTs.
     #[endpoint(withdraw)]
     fn withdraw_endpoint(&self) {
         let caller = self.blockchain().get_caller();
@@ -175,6 +222,11 @@ pub trait GovernanceModule:
         }
     }
 
+    /// Issue and configure a fresh governance ESDT owned by the smart contract.
+    /// It automatically calculates other governance setting defaults like quorum and minimum weight to propose.
+    /// The initially minted tokens (supply) will be send to the caller.
+    /// Can only be called by caller with leader role.
+    /// Payment: EGLD in amount required by the protocol.
     #[payable("EGLD")]
     #[endpoint(issueGovToken)]
     fn issue_gov_token_endpoint(&self, token_name: ManagedBuffer, token_ticker: ManagedBuffer, supply: BigUint) {
@@ -191,6 +243,8 @@ pub trait GovernanceModule:
             .call_and_exit();
     }
 
+    /// Set local Mint & Burn roles of the governance token for the smart contract.
+    /// Usually called after `issueGovToken`.
     #[endpoint(setGovTokenLocalRoles)]
     fn set_gov_token_local_roles_endpoint(&self) {
         require!(!self.gov_token_id().is_empty(), "gov token must be set");
@@ -220,12 +274,16 @@ pub trait GovernanceModule:
         }
     }
 
+    /// Mint tokens of any ESDT locally.
+    /// This call will fail if the smart contract does not have the `ESDTRoleLocalMint` for the provided token id.
     #[endpoint(mint)]
     fn mint_endpoint(&self, token: TokenIdentifier, nonce: u64, amount: BigUint) {
         self.require_caller_self();
         self.send().esdt_local_mint(&token, nonce, &amount);
     }
 
+    /// Burn tokens of any ESDT locally.
+    /// This call will fail if the smart contract does not have the `ESDTRoleLocalBurn` for the provided token id.
     #[endpoint(burn)]
     fn burn_endpoint(&self, token: TokenIdentifier, nonce: u64, amount: BigUint) {
         self.require_caller_self();
@@ -318,6 +376,9 @@ pub trait GovernanceModule:
             .fold(BigUint::zero(), |carry, payment| carry + &payment.amount)
     }
 
+    /// Processes received vote payment tokens.
+    /// ESDTs will be deposited/locked, NFTs/SFTs recorded and immediately sent back.
+    /// Fails if the NFTs/SFTs nonce has been used to vote previously.
     fn commit_vote_payments(&self, proposal_id: u64) {
         let payments = self.call_value().all_esdt_transfers();
         let caller = self.blockchain().get_caller();
