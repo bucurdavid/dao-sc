@@ -45,8 +45,8 @@ fn it_signs_a_proposal() {
 
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 actions_hash,
                 POLL_DEFAULT_ID,
                 actions_permissions,

@@ -25,7 +25,7 @@ fn it_creates_a_proposal() {
                 managed_buffer!(b"id"),
                 managed_buffer!(b"content hash"),
                 managed_buffer!(b"content signature"),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
                 POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
             );
@@ -41,7 +41,7 @@ fn it_creates_a_proposal() {
             assert_eq!(1, proposal.id);
             assert_eq!(managed_address!(&owner_address), proposal.proposer);
             assert_eq!(managed_buffer!(b"content hash"), proposal.content_hash);
-            assert_eq!(managed_buffer!(b""), proposal.actions_hash);
+            assert_eq!(ManagedBuffer::new(), proposal.actions_hash);
             assert_eq!(false, proposal.was_executed);
             assert_eq!(managed_biguint!(1), proposal.votes_for);
             assert_eq!(managed_biguint!(0), proposal.votes_against);
@@ -72,7 +72,7 @@ fn it_creates_a_proposal_with_poll() {
                 managed_buffer!(b"id"),
                 managed_buffer!(b"content hash"),
                 managed_buffer!(b"content signature"),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
                 poll_option_id,
                 MultiValueManagedVec::new(),
             );
@@ -99,7 +99,7 @@ fn it_sends_the_nfts_back() {
                 managed_buffer!(b"id"),
                 managed_buffer!(b"content hash"),
                 managed_buffer!(b"content signature"),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
                 POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
             );

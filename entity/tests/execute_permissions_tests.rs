@@ -16,6 +16,7 @@ fn it_fails_if_a_required_argument_is_missing() {
     let executor_address = setup.blockchain.create_user_account(&rust_biguint!(5));
     let mut proposal_id = 0;
 
+    // configure permissions
     setup
         .blockchain
         .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
@@ -26,7 +27,7 @@ fn it_fails_if_a_required_argument_is_missing() {
                 managed_buffer!(b"callSc"),
                 managed_biguint!(10),
                 managed_address!(&action_receiver),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
                 ManagedVec::from(vec![managed_buffer!(b"testarg1"), managed_buffer!(b"testarg2")]),
                 ManagedVec::new(),
             );
@@ -35,13 +36,14 @@ fn it_fails_if_a_required_argument_is_missing() {
         })
         .assert_ok();
 
+    // propose
     setup
         .blockchain
         .execute_tx(&proposer_address, &setup.contract, &rust_biguint!(0), |sc| {
             let mut actions = Vec::<Action<DebugApi>>::new();
             actions.push(Action::<DebugApi> {
                 destination: managed_address!(&action_receiver),
-                endpoint: managed_buffer!(b""),
+                endpoint: ManagedBuffer::new(),
                 arguments: ManagedVec::from(vec![managed_buffer!(b"testarg1")]),
                 gas_limit: 5_000_000u64,
                 value: managed_biguint!(0),
@@ -53,8 +55,8 @@ fn it_fails_if_a_required_argument_is_missing() {
 
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 actions_hash,
                 POLL_DEFAULT_ID,
                 actions_permissions,
@@ -64,13 +66,14 @@ fn it_fails_if_a_required_argument_is_missing() {
 
     setup.blockchain.set_block_timestamp(VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60 + 1);
 
+    // execute the proposal by someone else (not proposer)
     setup
         .blockchain
         .execute_tx(&executor_address, &setup.contract, &rust_biguint!(0), |sc| {
             let mut actions = Vec::<Action<DebugApi>>::new();
             actions.push(Action::<DebugApi> {
                 destination: managed_address!(&action_receiver),
-                endpoint: managed_buffer!(b""),
+                endpoint: ManagedBuffer::new(),
                 arguments: ManagedVec::from(vec![managed_buffer!(b"testarg1")]),
                 gas_limit: 5_000_000u64,
                 value: managed_biguint!(0),
@@ -101,7 +104,7 @@ fn it_fails_if_payment_value_is_higher_than_defined_by_permission() {
                 managed_buffer!(b"sendEGLD"),
                 managed_biguint!(10),
                 managed_address!(&action_receiver),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
                 ManagedVec::new(),
                 ManagedVec::new(),
             );
@@ -121,7 +124,7 @@ fn it_fails_if_payment_value_is_higher_than_defined_by_permission() {
             let mut actions = Vec::<Action<DebugApi>>::new();
             actions.push(Action::<DebugApi> {
                 destination: managed_address!(&action_receiver),
-                endpoint: managed_buffer!(b""),
+                endpoint: ManagedBuffer::new(),
                 arguments: ManagedVec::new(),
                 gas_limit: 5_000_000u64,
                 value: managed_biguint!(11),
@@ -133,8 +136,8 @@ fn it_fails_if_payment_value_is_higher_than_defined_by_permission() {
 
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 actions_hash,
                 POLL_DEFAULT_ID,
                 actions_permissions,
@@ -150,7 +153,7 @@ fn it_fails_if_payment_value_is_higher_than_defined_by_permission() {
             let mut actions = Vec::<Action<DebugApi>>::new();
             actions.push(Action::<DebugApi> {
                 destination: managed_address!(&action_receiver),
-                endpoint: managed_buffer!(b""),
+                endpoint: ManagedBuffer::new(),
                 arguments: ManagedVec::new(),
                 gas_limit: 5_000_000u64,
                 value: managed_biguint!(11),
@@ -182,7 +185,7 @@ fn it_fails_if_token_payment_amount_is_higher_than_defined_by_permission() {
                 managed_buffer!(b"sendSuper"),
                 managed_biguint!(0),
                 managed_address!(&action_receiver),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
                 ManagedVec::new(),
                 ManagedVec::from(vec![EsdtTokenPayment::new(managed_token_id!(b"SUPER-123456"), 0, managed_biguint!(10))]),
             );
@@ -203,7 +206,7 @@ fn it_fails_if_token_payment_amount_is_higher_than_defined_by_permission() {
             let mut actions = Vec::<Action<DebugApi>>::new();
             actions.push(Action::<DebugApi> {
                 destination: managed_address!(&action_receiver),
-                endpoint: managed_buffer!(b""),
+                endpoint: ManagedBuffer::new(),
                 arguments: ManagedVec::new(),
                 gas_limit: 5_000_000u64,
                 value: managed_biguint!(0),
@@ -215,8 +218,8 @@ fn it_fails_if_token_payment_amount_is_higher_than_defined_by_permission() {
 
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 actions_hash,
                 POLL_DEFAULT_ID,
                 actions_permissions,
@@ -230,7 +233,7 @@ fn it_fails_if_token_payment_amount_is_higher_than_defined_by_permission() {
             let mut actions = Vec::<Action<DebugApi>>::new();
             actions.push(Action::<DebugApi> {
                 destination: managed_address!(&action_receiver),
-                endpoint: managed_buffer!(b""),
+                endpoint: ManagedBuffer::new(),
                 arguments: ManagedVec::new(),
                 gas_limit: 5_000_000u64,
                 value: managed_biguint!(0),

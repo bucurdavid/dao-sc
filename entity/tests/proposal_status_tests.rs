@@ -24,9 +24,9 @@ fn it_returns_active_for_a_newly_created_proposal() {
         .execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
             );
@@ -55,9 +55,9 @@ fn it_returns_defeated_if_for_votes_quorum_not_met() {
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM - 10), |sc| {
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
             );
@@ -93,9 +93,9 @@ fn it_returns_defeated_if_quorum_met_but_votes_against_is_more_than_for() {
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(10), |sc| {
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
             );
@@ -138,9 +138,9 @@ fn it_returns_succeeded_if_for_votes_quorum_met_and_more_for_than_against_votes(
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
             );
@@ -220,8 +220,8 @@ fn it_returns_executed_for_an_executed_proposal() {
 
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 actions_hash,
                 POLL_DEFAULT_ID,
                 actions_permissions,

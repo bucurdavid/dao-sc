@@ -23,7 +23,7 @@ pub struct Proposal<M: ManagedTypeApi> {
     pub permissions: ManagedVec<M, ManagedBuffer<M>>,
 }
 
-#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, TypeAbi, ManagedVecItem)]
+#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, TypeAbi, ManagedVecItem, Clone)]
 pub struct Action<M: ManagedTypeApi> {
     pub destination: ManagedAddress<M>,
     pub endpoint: ManagedBuffer<M>,
@@ -266,7 +266,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
                     let permission_details = self.permission_details(&permission).get();
 
                     if self.does_permission_apply_to_action(&permission_details, &action) {
-                        actual_permissions.push(permission.clone());
+                        actual_permissions.push(permission);
                         has_permission_for_action = true;
                     }
                 }
@@ -284,38 +284,47 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
     }
 
     fn does_permission_apply_to_action(&self, permission_details: &PermissionDetails<Self::Api>, action: &Action<Self::Api>) -> bool {
-        let mut applies = action.value <= permission_details.value;
-
-        if applies && !permission_details.destination.is_zero() {
-            applies = permission_details.destination == action.destination;
+        if permission_details.value < action.value {
+            return false;
         }
 
-        if applies && !permission_details.endpoint.is_empty() {
-            applies = permission_details.endpoint == action.endpoint;
+        if !permission_details.destination.is_zero() && permission_details.destination != action.destination {
+            return false;
         }
 
-        if applies && !permission_details.arguments.is_empty() {
+        if permission_details.endpoint != action.endpoint {
+            return false;
+        }
+
+        if !permission_details.arguments.is_empty() {
             for (i, perm_arg) in permission_details.arguments.into_iter().enumerate() {
                 if let Option::Some(arg_at_index) = action.arguments.try_get(i).as_deref() {
-                    applies = arg_at_index == &perm_arg;
-                } else {
-                    applies = false;
-                    break;
+                    let applies = arg_at_index == &perm_arg;
+
+                    if applies {
+                        continue;
+                    }
                 }
+
+                return false;
             }
         }
 
-        if applies && !permission_details.payments.is_empty() {
-            applies = action.payments.into_iter().all(|payment| {
+        if !permission_details.payments.is_empty() {
+            let applies = action.payments.into_iter().all(|payment| {
                 if let Some(guard) = permission_details.payments.into_iter().find(|p| p.token_identifier == payment.token_identifier) {
                     payment.amount <= guard.amount
                 } else {
-                    true
+                    false
                 }
             });
+
+            if !applies {
+                return false;
+            }
         }
 
-        applies
+        return true;
     }
 
     fn is_proposal_active(&self, proposal: &Proposal<Self::Api>) -> bool {

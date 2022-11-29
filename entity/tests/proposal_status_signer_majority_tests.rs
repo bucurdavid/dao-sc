@@ -45,8 +45,8 @@ fn it_requires_signer_majority_if_proposer_has_role_and_with_actions_that_do_not
 
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 actions_hash,
                 POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
@@ -119,8 +119,8 @@ fn it_fails_if_signer_majority_not_met_if_proposer_has_role_and_with_actions_tha
 
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 actions_hash,
                 POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
@@ -183,8 +183,8 @@ fn it_requires_signer_majority_for_multiple_roles() {
 
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 actions_hash,
                 POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
@@ -266,8 +266,8 @@ fn it_succeeds_early_if_has_all_required_signatures_for_proposal_with_actions() 
 
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 actions_hash,
                 POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
@@ -325,8 +325,8 @@ fn it_returns_executed_for_an_executed_proposal_with_signer_quorum() {
 
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 actions_hash,
                 POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),

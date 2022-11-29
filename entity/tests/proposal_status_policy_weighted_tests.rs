@@ -58,8 +58,8 @@ fn it_returns_active_when_just_created() {
 
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 actions_hash,
                 POLL_DEFAULT_ID,
                 actions_permissions,
@@ -125,8 +125,8 @@ fn it_succeeds_if_one_of_one_permission_policies_meets_quorum_and_passed_voting_
 
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 actions_hash,
                 POLL_DEFAULT_ID,
                 actions_permissions,
@@ -195,8 +195,8 @@ fn it_returns_defeated_if_one_of_one_permission_policies_does_not_meet_quorum() 
 
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 actions_hash,
                 POLL_DEFAULT_ID,
                 actions_permissions,
