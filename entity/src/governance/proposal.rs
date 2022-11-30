@@ -292,7 +292,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         }
 
         // check destination mismatch
-        if !permission_details.destination.is_zero() && permission_details.destination != action.destination {
+        if !permission_details.destination.is_zero() && action.destination != permission_details.destination {
             return false;
         }
 
@@ -300,7 +300,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         if !permission_details.endpoint.is_empty() {
             is_pure_value_perm = false;
 
-            if permission_details.endpoint != action.endpoint {
+            if action.endpoint != permission_details.endpoint {
                 return false;
             }
         }
