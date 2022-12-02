@@ -28,6 +28,7 @@ elrond_wasm_node::wasm_endpoints! {
         getPermissions
         getPolicies
         getProposal
+        getProposalAddressVotes
         getProposalIdCounter
         getProposalNftVotes
         getProposalPollResults
