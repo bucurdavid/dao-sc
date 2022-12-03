@@ -92,6 +92,7 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
             self.withdrawable_proposal_ids(&caller).swap_remove(&proposal_id);
             self.send().direct_esdt(&caller, &gov_token_id, 0, &votes);
             votes_mapper.clear();
+            self.emit_withdraw_event(proposal);
         }
     }
 }

@@ -55,6 +55,13 @@ pub trait GovEventsModule {
             self.blockchain().get_block_epoch(),
         );
     }
+
+    fn emit_withdraw_event(&self, proposal: Proposal<Self::Api>) {
+        self.withdraw_event(
+            self.blockchain().get_caller(),
+            proposal,
+            self.blockchain().get_block_timestamp(),
+            self.blockchain().get_block_epoch(),
         );
     }
 
@@ -93,4 +100,7 @@ pub trait GovEventsModule {
 
     #[event("execute")]
     fn execute_event(&self, #[indexed] caller: ManagedAddress, #[indexed] proposal: Proposal<Self::Api>, #[indexed] timestamp: u64, #[indexed] epoch: u64);
+
+    #[event("withdraw")]
+    fn withdraw_event(&self, #[indexed] caller: ManagedAddress, #[indexed] proposal: Proposal<Self::Api>, #[indexed] timestamp: u64, #[indexed] epoch: u64);
 }
