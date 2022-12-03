@@ -11,7 +11,7 @@ pub trait GovEventsModule {
             proposal,
             weight,
             self.blockchain().get_block_timestamp(),
-            self.blockchain().get_block_nonce(),
+            self.blockchain().get_block_epoch(),
         );
     }
 
@@ -23,7 +23,7 @@ pub trait GovEventsModule {
                     proposal,
                     weight,
                     self.blockchain().get_block_timestamp(),
-                    self.blockchain().get_block_nonce(),
+                    self.blockchain().get_block_epoch(),
                 );
             }
             VoteType::Against => {
@@ -32,7 +32,7 @@ pub trait GovEventsModule {
                     proposal,
                     weight,
                     self.blockchain().get_block_timestamp(),
-                    self.blockchain().get_block_nonce(),
+                    self.blockchain().get_block_epoch(),
                 );
             }
         }
@@ -43,7 +43,7 @@ pub trait GovEventsModule {
             self.blockchain().get_caller(),
             proposal,
             self.blockchain().get_block_timestamp(),
-            self.blockchain().get_block_nonce(),
+            self.blockchain().get_block_epoch(),
         );
     }
 
@@ -52,7 +52,9 @@ pub trait GovEventsModule {
             self.blockchain().get_caller(),
             proposal,
             self.blockchain().get_block_timestamp(),
-            self.blockchain().get_block_nonce(),
+            self.blockchain().get_block_epoch(),
+        );
+    }
         );
     }
 
