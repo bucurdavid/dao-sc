@@ -144,7 +144,7 @@ pub trait GovernanceModule:
         self.commit_vote_payments(proposal_id);
         self.cast_poll_vote(proposal.id, option_id, vote_weight.clone());
         self.known_trusted_host_proposal_ids().insert(trusted_host_id);
-        self.emit_propose_event(proposal, vote_weight);
+        self.emit_propose_event(&proposal, vote_weight);
 
         proposal_id
     }
@@ -208,7 +208,7 @@ pub trait GovernanceModule:
         self.proposals(proposal_id).set(&proposal);
 
         self.execute_actions(&actions);
-        self.emit_execute_event(proposal);
+        self.emit_execute_event(&proposal);
     }
 
     /// Withdraw ESDT governance tokens once the proposals voting period has ended.

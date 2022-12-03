@@ -38,7 +38,7 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
 
         self.proposals(proposal_id).set(&proposal);
         self.cast_poll_vote(proposal_id, option_id, weight.clone());
-        self.emit_vote_event(proposal, vote_type, weight);
+        self.emit_vote_event(&proposal, vote_type, weight);
     }
 
     fn sign(&self, proposal_id: u64, option_id: u8) {
@@ -49,7 +49,7 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
 
         self.sign_for_all_roles(&signer, &proposal);
         self.cast_poll_vote(proposal.id, option_id, BigUint::from(1u8));
-        self.emit_sign_event(proposal);
+        self.emit_sign_event(&proposal);
     }
 
     fn sign_for_all_roles(&self, signer: &ManagedAddress, proposal: &Proposal<Self::Api>) {
@@ -92,7 +92,7 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
             self.withdrawable_proposal_ids(&caller).swap_remove(&proposal_id);
             self.send().direct_esdt(&caller, &gov_token_id, 0, &votes);
             votes_mapper.clear();
-            self.emit_withdraw_event(proposal);
+            self.emit_withdraw_event(&proposal);
         }
     }
 }
