@@ -28,8 +28,17 @@ pub trait GovernanceModule:
             return;
         }
 
-        let initial_quorum = &supply / &BigUint::from(20u64); // 5% of supply
-        let initial_min_tokens_for_proposing = &supply / &BigUint::from(1000u64); // 0.1% of supply
+        let initial_quorum = if &supply > &BigUint::from(100u64) {
+            &supply * &BigUint::from(5u64) / &BigUint::from(100u64) // 5% of supply
+        } else {
+            BigUint::from(1u64)
+        };
+
+        let initial_min_tokens_for_proposing = if &supply > &BigUint::from(100u64) {
+            &supply / &BigUint::from(100u64) // 1% of supply
+        } else {
+            BigUint::from(1u64)
+        };
 
         self.try_change_quorum(BigUint::from(initial_quorum));
         self.try_change_min_propose_weight(BigUint::from(initial_min_tokens_for_proposing));
