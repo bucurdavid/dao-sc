@@ -14,7 +14,7 @@ fn it_creates_a_proposal() {
     let owner_address = setup.owner_address.clone();
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -70,7 +70,7 @@ fn it_creates_a_proposal() {
 fn it_creates_a_proposal_with_poll() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -105,7 +105,7 @@ fn it_creates_a_proposal_with_actions() {
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -176,7 +176,7 @@ fn it_creates_a_proposal_with_actions() {
 fn it_fails_if_bad_token() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -204,7 +204,7 @@ fn it_fails_if_bad_token() {
 fn it_fails_if_bad_vote_weight_amount() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -232,7 +232,7 @@ fn it_fails_if_bad_vote_weight_amount() {
 fn it_fails_if_trusted_host_id_is_already_known() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain

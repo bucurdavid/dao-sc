@@ -15,7 +15,7 @@ fn it_signs_a_proposal_on_proposing_if_proposal_requires_signing() {
     let proposer_address = setup.user_address.clone();
     let mut proposal_id: u64 = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -172,7 +172,7 @@ fn it_does_not_self_sign_a_proposal_if_proposer_does_not_have_any_roles() {
     let proposer_address = setup.owner_address.clone();
     let mut proposal_id: u64 = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain

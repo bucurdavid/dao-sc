@@ -21,7 +21,7 @@ fn it_sets_the_governance_token_initially_by_leader() {
     setup
         .blockchain
         .execute_tx(&proposer_address, &setup.contract, &rust_biguint!(0), |sc| {
-            sc.init_gov_token_endpoint(managed_token_id!(b"GOV-123456"), managed_biguint!(1_000));
+            sc.init_gov_token_endpoint(managed_token_id!(b"GOV-123456"), managed_biguint!(1_000), true);
 
             assert_eq!(sc.gov_token_id().get(), managed_token_id!(b"GOV-123456"));
         })
@@ -35,7 +35,7 @@ fn it_fails_if_caller_not_leader() {
     setup
         .blockchain
         .execute_tx(&setup.user_address, &setup.contract, &rust_biguint!(0), |sc| {
-            sc.init_gov_token_endpoint(managed_token_id!(b"GOV-123456"), managed_biguint!(1_000));
+            sc.init_gov_token_endpoint(managed_token_id!(b"GOV-123456"), managed_biguint!(1_000), true);
         })
         .assert_user_error("caller must be leader");
 }
@@ -49,7 +49,7 @@ fn it_fails_if_gov_token_already_set() {
         .execute_tx(&setup.user_address, &setup.contract, &rust_biguint!(0), |sc| {
             sc.gov_token_id().set(managed_token_id!(b"GOV-123456"));
 
-            sc.init_gov_token_endpoint(managed_token_id!(b"NEW-123456"), managed_biguint!(1_000));
+            sc.init_gov_token_endpoint(managed_token_id!(b"NEW-123456"), managed_biguint!(1_000), true);
         })
         .assert_user_error("gov token is already set");
 }

@@ -15,7 +15,7 @@ fn it_sets_the_longest_policy_voting_period_for_the_proposal() {
     let proposer_address = setup.user_address.clone();
     let longest_voting_period_minutes: usize = 180;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -124,7 +124,7 @@ fn it_allows_anyone_to_propose_if_leaderless() {
     let sc_address = setup.contract.address_ref().clone();
     let proposer_address = setup.user_address.clone();
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain

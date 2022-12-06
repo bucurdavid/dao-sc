@@ -18,7 +18,7 @@ fn it_matches_a_permission_based_on_destination_only() {
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -100,7 +100,7 @@ fn it_matches_a_permission_based_on_destination_and_endpoint() {
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -182,7 +182,7 @@ fn it_matches_a_permission_based_on_destination_and_endpoint_and_one_argument() 
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain

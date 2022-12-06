@@ -16,7 +16,7 @@ fn it_marks_a_proposal_as_executed() {
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -97,7 +97,7 @@ fn it_fails_if_attempted_to_execute_again() {
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -188,7 +188,7 @@ fn it_fails_if_the_proposal_is_still_active() {
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -278,7 +278,7 @@ fn it_executes_actions_of_a_proposal() {
     let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup.blockchain.set_egld_balance(setup.contract.address_ref(), &rust_biguint!(1000));
 
@@ -369,7 +369,7 @@ fn it_fails_if_actions_to_execute_are_incongruent_to_actions_proposed() {
     let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup.blockchain.set_egld_balance(setup.contract.address_ref(), &rust_biguint!(1000));
 
@@ -453,7 +453,7 @@ fn it_executes_a_contract_call_action() {
     let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -547,7 +547,7 @@ fn it_fails_to_spend_vote_tokens() {
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     // set available balance to 5
     setup

@@ -16,7 +16,7 @@ fn it_executes_a_proposal_with_truthfully_announced_permissions() {
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -131,7 +131,7 @@ fn it_fails_to_executes_a_proposal_with_untruthfully_announced_permissions() {
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain

@@ -175,7 +175,7 @@ fn it_returns_defeated_if_one_of_one_permission_policies_does_not_meet_quorum_af
     let mut proposal_id = 0;
     let quorum = 3;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -252,7 +252,7 @@ fn it_returns_defeated_if_one_of_two_permission_policies_does_not_meet_quorum_af
     let proposer_address = setup.user_address.clone();
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain

@@ -15,7 +15,7 @@ fn it_returns_active_when_just_created() {
     let proposer_address = setup.user_address.clone();
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -82,7 +82,7 @@ fn it_succeeds_if_one_of_one_permission_policies_meets_quorum_and_passed_voting_
     let proposer_address = setup.user_address.clone();
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -151,7 +151,7 @@ fn it_returns_defeated_if_one_of_one_permission_policies_does_not_meet_quorum() 
     let proposer_address = setup.user_address.clone();
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain

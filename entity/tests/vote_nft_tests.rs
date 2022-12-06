@@ -13,7 +13,7 @@ fn it_votes_for_a_proposal() {
     let voter_address = setup.user_address.clone();
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(false);
 
     setup
         .blockchain
@@ -58,7 +58,7 @@ fn it_votes_for_a_proposal_with_poll() {
     let mut proposal_id = 0;
     let poll_option_id = 2u8;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(false);
 
     setup
         .blockchain
@@ -95,7 +95,7 @@ fn it_votes_against_a_proposal() {
     let voter_address = setup.user_address.clone();
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(false);
 
     setup
         .blockchain
@@ -139,7 +139,7 @@ fn it_sends_the_nfts_back() {
     let voter_address = setup.user_address.clone();
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(false);
 
     setup.blockchain.set_nft_balance(&owner_address, ENTITY_GOV_TOKEN_ID, 1, &rust_biguint!(1), &0u32);
     setup.blockchain.set_nft_balance(&voter_address, ENTITY_GOV_TOKEN_ID, 2, &rust_biguint!(1), &0u32);
@@ -185,7 +185,7 @@ fn it_fails_to_vote_twice_with_the_same_nft() {
     let voter_address = setup.user_address.clone();
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(false);
 
     setup.blockchain.set_nft_balance(&owner_address, ENTITY_GOV_TOKEN_ID, 1, &rust_biguint!(1), &0u32);
     setup.blockchain.set_nft_balance(&voter_address, ENTITY_GOV_TOKEN_ID, 2, &rust_biguint!(1), &0u32);
@@ -226,7 +226,7 @@ fn it_fails_if_less_than_configured_min_vote_weight() {
     let voter_address = setup.user_address.clone();
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(false);
 
     setup.blockchain.set_nft_balance(&owner_address, ENTITY_GOV_TOKEN_ID, 1, &rust_biguint!(1), &0u32);
     setup.blockchain.set_nft_balance(&voter_address, ENTITY_GOV_TOKEN_ID, 2, &rust_biguint!(1), &0u32);

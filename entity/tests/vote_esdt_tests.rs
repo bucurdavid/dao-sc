@@ -13,7 +13,7 @@ fn it_votes_for_a_proposal() {
     let voter_address = setup.user_address.clone();
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -80,7 +80,7 @@ fn it_votes_for_a_proposal_with_poll() {
     let mut proposal_id = 0;
     let poll_option_id = 2u8;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -119,7 +119,7 @@ fn it_votes_against_a_proposal() {
     let voter_address = setup.user_address.clone();
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -184,7 +184,7 @@ fn it_fails_if_proposal_voting_period_has_ended() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -222,7 +222,7 @@ fn it_fails_if_less_than_configured_min_vote_weight() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain

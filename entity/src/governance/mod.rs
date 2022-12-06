@@ -21,8 +21,8 @@ pub trait GovernanceModule:
         self.quorum().set_if_empty(BigUint::from(QUORUM_DEFAULT));
     }
 
-    fn configure_governance_token(&self, gov_token_id: TokenIdentifier, supply: BigUint) {
-        self.try_change_governance_token(gov_token_id);
+    fn configure_governance_token(&self, gov_token_id: TokenIdentifier, supply: BigUint, lock_vote_tokens: bool) {
+        self.try_change_governance_token(&gov_token_id);
 
         if supply == 0 {
             return;
@@ -42,26 +42,27 @@ pub trait GovernanceModule:
 
         self.try_change_quorum(BigUint::from(initial_quorum));
         self.try_change_min_propose_weight(BigUint::from(initial_min_tokens_for_proposing));
+        self.lock_vote_tokens(&gov_token_id).set(lock_vote_tokens);
     }
 
     /// Initially configures the governance token if non is set already.
     /// It automatically calculates other governance setting defaults like quorum and minimum weight to propose.
     /// Can only be called by caller with leader role.
     #[endpoint(initGovToken)]
-    fn init_gov_token_endpoint(&self, token_id: TokenIdentifier, supply: BigUint) {
+    fn init_gov_token_endpoint(&self, token_id: TokenIdentifier, supply: BigUint, lock_vote_tokens: bool) {
         require!(self.gov_token_id().is_empty(), "gov token is already set");
         self.require_caller_has_leader_role();
 
-        self.configure_governance_token(token_id, supply);
+        self.configure_governance_token(token_id, supply, lock_vote_tokens);
     }
 
     /// Change the governance token.
     /// Automatically calculates other governance setting defaults like quorum and minimum weight to propose.
     /// Can only be called by the contract itself.
     #[endpoint(changeGovToken)]
-    fn change_gov_token_endpoint(&self, token_id: TokenIdentifier, supply: BigUint) {
+    fn change_gov_token_endpoint(&self, token_id: TokenIdentifier, supply: BigUint, lock_vote_tokens: bool) {
         self.require_caller_self();
-        self.configure_governance_token(token_id, supply);
+        self.configure_governance_token(token_id, supply, lock_vote_tokens);
     }
 
     /// Change the governance default quorum.
@@ -277,7 +278,7 @@ pub trait GovernanceModule:
             ManagedAsyncCallResult::Ok(_) => {
                 let payment = self.call_value().single_esdt();
                 self.send().direct_esdt(&initial_caller, &payment.token_identifier, 0, &payment.amount);
-                self.configure_governance_token(payment.token_identifier, payment.amount);
+                self.configure_governance_token(payment.token_identifier, payment.amount, true);
             }
             ManagedAsyncCallResult::Err(_) => self.send_received_egld(&initial_caller),
         }
@@ -386,15 +387,16 @@ pub trait GovernanceModule:
     }
 
     /// Processes received vote payment tokens.
-    /// ESDTs will be deposited/locked, NFTs/SFTs recorded and immediately sent back.
-    /// Fails if the NFTs/SFTs nonce has been used to vote previously.
+    /// ESDTs will be deposited/locked in the contract.
+    /// NFTs, SFTs & MetaESDTs are treated similarily if locked_vote_tokens is set to true (default).
+    /// Fails if the NFT's nonce has been used to vote previously.
     fn commit_vote_payments(&self, proposal_id: u64) {
         let payments = self.call_value().all_esdt_transfers();
         let caller = self.blockchain().get_caller();
         let mut returnables = ManagedVec::new();
 
         for payment in payments.into_iter() {
-            if payment.token_nonce == 0 {
+            if payment.token_nonce == 0 || self.lock_vote_tokens(&payment.token_identifier).get() {
                 self.protected_vote_tokens(&payment.token_identifier).update(|current| *current += &payment.amount);
                 self.votes(proposal_id, &caller).update(|current| *current += &payment.amount);
                 self.withdrawable_proposal_ids(&caller).insert(proposal_id);

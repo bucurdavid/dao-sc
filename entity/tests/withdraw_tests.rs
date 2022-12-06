@@ -13,7 +13,7 @@ fn it_withdraws_tokens_used_for_voting() {
     let user_address = &setup.user_address.clone();
     let mut proposal_id = 0u64;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -70,7 +70,7 @@ fn it_clears_the_voters_withdrawable_storage_for_the_proposal() {
     let voter_address = setup.user_address.clone();
     let mut proposal_id = 0u64;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -117,7 +117,7 @@ fn it_reduces_the_protected_vote_token_amount() {
     let voter_address = setup.user_address.clone();
     let mut proposal_id = 0u64;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -163,7 +163,7 @@ fn it_does_not_withdraw_tokens_from_proposals_that_are_still_active() {
     let user_address = &setup.user_address.clone();
     let mut proposal_id = 0u64;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain

@@ -58,7 +58,7 @@ pub trait ConfigModule {
         require!(trusted, "not a trusted host");
     }
 
-    fn try_change_governance_token(&self, token_id: TokenIdentifier) {
+    fn try_change_governance_token(&self, token_id: &TokenIdentifier) {
         require!(token_id.is_valid_esdt_identifier(), "invalid token id");
         self.gov_token_id().set(token_id);
     }
@@ -98,6 +98,10 @@ pub trait ConfigModule {
     #[view(getProtectedVoteTokens)]
     #[storage_mapper("protected_vote_tokens")]
     fn protected_vote_tokens(&self, token_id: &TokenIdentifier) -> SingleValueMapper<BigUint>;
+
+    #[view(isLockingVoteTokens)]
+    #[storage_mapper("lock_vote_tokens")]
+    fn lock_vote_tokens(&self, token_id: &TokenIdentifier) -> SingleValueMapper<bool>;
 
     #[storage_mapper("proposals")]
     fn proposals(&self, id: u64) -> SingleValueMapper<Proposal<Self::Api>>;
