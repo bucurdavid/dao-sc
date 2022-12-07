@@ -21,14 +21,9 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
         require!(weight > 0, "vote weight must be greater than 0");
 
         let mut proposal = self.proposals(proposal_id).get();
-        let caller = self.blockchain().get_caller();
         let min_vote_weight = self.min_vote_weight().get();
-        let is_first_vote = self.votes(proposal.id, &caller).is_empty();
 
-        if is_first_vote {
-            require!(weight >= min_vote_weight, "not enought vote weight");
-        }
-
+        require!(weight >= min_vote_weight, "not enought vote weight");
         require!(self.get_proposal_status(&proposal) == ProposalStatus::Active, "proposal is not active");
 
         match vote_type {
@@ -70,8 +65,6 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
     }
 
     fn withdraw_tokens(&self, proposal_id: u64) {
-        let caller = self.blockchain().get_caller();
-
         if self.proposals(proposal_id).is_empty() {
             return;
         }
@@ -83,16 +76,36 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
             return;
         }
 
+        let caller = self.blockchain().get_caller();
         let gov_token_id = self.gov_token_id().get();
+
+        // keep for backwards compatibility
         let votes_mapper = self.votes(proposal_id, &caller);
         let votes = votes_mapper.get();
 
         if votes > 0 {
-            self.protected_vote_tokens(&gov_token_id).update(|current| *current -= &votes);
-            self.withdrawable_proposal_ids(&caller).swap_remove(&proposal_id);
-            self.send().direct_esdt(&caller, &gov_token_id, 0, &votes);
+            self.guarded_vote_tokens(&gov_token_id, 0).update(|current| *current -= &votes);
             votes_mapper.clear();
+
+            self.send().direct_esdt(&caller, &gov_token_id, 0, &votes);
             self.emit_withdraw_event(&proposal);
         }
+        // *end backwards compatibility
+
+        for nonce in self.withdrawable_proposal_token_nonces(proposal_id, &caller).iter() {
+            let votes_mapper = self.withdrawable_votes(proposal_id, &caller, &gov_token_id, nonce);
+            let votes = votes_mapper.get();
+
+            if votes > 0 {
+                self.guarded_vote_tokens(&gov_token_id, nonce).update(|current| *current -= &votes);
+                self.send().direct_esdt(&caller, &gov_token_id, nonce, &votes);
+                self.emit_withdraw_event(&proposal);
+
+                self.withdrawable_proposal_token_nonces(proposal_id, &caller).swap_remove(&nonce);
+                votes_mapper.clear();
+            }
+        }
+
+        self.withdrawable_proposal_ids(&caller).swap_remove(&proposal_id);
     }
 }

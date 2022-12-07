@@ -3,8 +3,10 @@ elrond_wasm::imports!();
 use self::vote::VoteType;
 use crate::config::{self, GAS_LIMIT_SET_TOKEN_ROLES, MIN_PROPOSAL_VOTE_WEIGHT_DEFAULT, POLL_MAX_OPTIONS, QUORUM_DEFAULT, VOTING_PERIOD_MINUTES_DEFAULT};
 use crate::permission::{self, ROLE_BUILTIN_LEADER};
+use errors::ALREADY_VOTED_WITH_TOKEN;
 use proposal::{Action, ProposalStatus};
 
+pub mod errors;
 pub mod events;
 pub mod proposal;
 pub mod token;
@@ -23,6 +25,7 @@ pub trait GovernanceModule:
 
     fn configure_governance_token(&self, gov_token_id: TokenIdentifier, supply: BigUint, lock_vote_tokens: bool) {
         self.try_change_governance_token(&gov_token_id);
+        self.lock_vote_tokens(&gov_token_id).set(lock_vote_tokens);
 
         if supply == 0 {
             return;
@@ -42,7 +45,6 @@ pub trait GovernanceModule:
 
         self.try_change_quorum(BigUint::from(initial_quorum));
         self.try_change_min_propose_weight(BigUint::from(initial_min_tokens_for_proposing));
-        self.lock_vote_tokens(&gov_token_id).set(lock_vote_tokens);
     }
 
     /// Initially configures the governance token if non is set already.
@@ -397,12 +399,15 @@ pub trait GovernanceModule:
 
         for payment in payments.into_iter() {
             if payment.token_nonce == 0 || self.lock_vote_tokens(&payment.token_identifier).get() {
-                self.protected_vote_tokens(&payment.token_identifier).update(|current| *current += &payment.amount);
-                self.votes(proposal_id, &caller).update(|current| *current += &payment.amount);
                 self.withdrawable_proposal_ids(&caller).insert(proposal_id);
+                self.withdrawable_proposal_token_nonces(proposal_id, &caller).insert(payment.token_nonce);
+                self.guarded_vote_tokens(&payment.token_identifier, payment.token_nonce)
+                    .update(|current| *current += &payment.amount);
+                self.withdrawable_votes(proposal_id, &caller, &payment.token_identifier, payment.token_nonce)
+                    .update(|current| *current += &payment.amount);
             } else {
                 let inserted = self.proposal_nft_votes(proposal_id).insert(payment.token_nonce);
-                require!(inserted, "already voted with nft");
+                require!(inserted, ALREADY_VOTED_WITH_TOKEN);
                 returnables.push(payment);
             }
         }

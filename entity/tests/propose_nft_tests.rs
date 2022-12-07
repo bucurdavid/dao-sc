@@ -46,7 +46,11 @@ fn it_creates_a_proposal() {
 
             // storage
             assert_eq!(2, sc.next_proposal_id().get());
-            assert_eq!(managed_biguint!(0), sc.votes(proposal.id, &managed_address!(&owner_address)).get());
+            assert_eq!(
+                managed_biguint!(0),
+                sc.withdrawable_votes(proposal.id, &managed_address!(&owner_address), &managed_token_id!(ENTITY_GOV_TOKEN_ID), 1)
+                    .get()
+            );
             assert!(sc.proposal_nft_votes(proposal_id).contains(&1));
         })
         .assert_ok();

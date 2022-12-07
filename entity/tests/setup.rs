@@ -68,6 +68,9 @@ where
                 // override defaults
                 sc.quorum().set(managed_biguint!(QURUM));
                 sc.min_propose_weight().set(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL));
+
+                // assert
+                assert_eq!(lock_vote_tokens, sc.lock_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID)).get());
             })
             .assert_ok();
     }

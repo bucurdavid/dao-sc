@@ -24,6 +24,19 @@ pub trait Entity:
         if let OptionalValue::Some(leader) = opt_leader {
             self.init_permission_module(leader);
         }
+
+        // Upgrade (idempotency is given)
+        // TODO: remove after upgraded
+        if !self.gov_token_id().is_empty() {
+            let gov_token_id = self.gov_token_id().get();
+
+            // Set true only here - it's done also on gov token init, but we need to do it for already configured daos too
+            self.lock_vote_tokens(&gov_token_id).set(true);
+
+            let old_protected = self.protected_vote_tokens(&gov_token_id).get();
+            self.guarded_vote_tokens(&gov_token_id, 0).set_if_empty(old_protected);
+        }
+        // end upgrade
     }
 
     #[payable("EGLD")]

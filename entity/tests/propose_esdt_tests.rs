@@ -55,11 +55,12 @@ fn it_creates_a_proposal() {
             assert_eq!(2, sc.next_proposal_id().get());
             assert_eq!(
                 managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
-                sc.votes(proposal.id, &managed_address!(&owner_address)).get()
+                sc.withdrawable_votes(proposal.id, &managed_address!(&owner_address), &managed_token_id!(ENTITY_GOV_TOKEN_ID), 0)
+                    .get()
             );
             assert_eq!(
                 managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
-                sc.protected_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID)).get()
+                sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), 0).get()
             );
             assert!(sc.withdrawable_proposal_ids(&managed_address!(&owner_address)).contains(&proposal.id));
         })

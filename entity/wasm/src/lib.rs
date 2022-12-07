@@ -23,6 +23,7 @@ elrond_wasm_node::wasm_endpoints! {
         createRole
         execute
         getGovTokenId
+        getGuardedVoteTokens
         getMinProposeWeight
         getMinVoteWeight
         getPermissions
@@ -45,7 +46,10 @@ elrond_wasm_node::wasm_endpoints! {
         getVersion
         getVotingPeriodMinutes
         getWithdrawableProposalIds
+        getWithdrawableProposalTokenNonces
+        getWithdrawableVotes
         initGovToken
+        isLockingVoteTokens
         issueGovToken
         mint
         propose

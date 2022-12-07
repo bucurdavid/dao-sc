@@ -47,9 +47,13 @@ fn it_votes_for_a_proposal() {
             assert_eq!(managed_biguint!(0), proposal.votes_against);
             assert_eq!(
                 managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 25),
-                sc.protected_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID)).get()
+                sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), 0).get()
             );
-            assert_eq!(managed_biguint!(25), sc.votes(proposal.id, &managed_address!(&voter_address)).get());
+            assert_eq!(
+                managed_biguint!(25),
+                sc.withdrawable_votes(proposal.id, &managed_address!(&voter_address), &managed_token_id!(ENTITY_GOV_TOKEN_ID), 0)
+                    .get()
+            );
             assert!(sc.withdrawable_proposal_ids(&managed_address!(&voter_address)).contains(&proposal.id));
         })
         .assert_ok();
@@ -66,9 +70,13 @@ fn it_votes_for_a_proposal() {
             assert_eq!(managed_biguint!(0), proposal.votes_against);
             assert_eq!(
                 managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 50),
-                sc.protected_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID)).get()
+                sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), 0).get()
             );
-            assert_eq!(managed_biguint!(50), sc.votes(proposal.id, &managed_address!(&voter_address)).get());
+            assert_eq!(
+                managed_biguint!(50),
+                sc.withdrawable_votes(proposal.id, &managed_address!(&voter_address), &managed_token_id!(ENTITY_GOV_TOKEN_ID), 0)
+                    .get()
+            );
         })
         .assert_ok();
 }
@@ -153,9 +161,13 @@ fn it_votes_against_a_proposal() {
             assert_eq!(managed_biguint!(25), proposal.votes_against);
             assert_eq!(
                 managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 25),
-                sc.protected_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID)).get()
+                sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), 0).get()
             );
-            assert_eq!(managed_biguint!(25), sc.votes(proposal.id, &managed_address!(&voter_address)).get());
+            assert_eq!(
+                managed_biguint!(25),
+                sc.withdrawable_votes(proposal.id, &managed_address!(&voter_address), &managed_token_id!(ENTITY_GOV_TOKEN_ID), 0)
+                    .get()
+            );
             assert!(sc.withdrawable_proposal_ids(&managed_address!(&voter_address)).contains(&proposal.id));
         })
         .assert_ok();
@@ -172,9 +184,13 @@ fn it_votes_against_a_proposal() {
             assert_eq!(managed_biguint!(50), proposal.votes_against);
             assert_eq!(
                 managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 50),
-                sc.protected_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID)).get()
+                sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), 0).get()
             );
-            assert_eq!(managed_biguint!(50), sc.votes(proposal.id, &managed_address!(&voter_address)).get());
+            assert_eq!(
+                managed_biguint!(50),
+                sc.withdrawable_votes(proposal.id, &managed_address!(&voter_address), &managed_token_id!(ENTITY_GOV_TOKEN_ID), 0)
+                    .get()
+            );
         })
         .assert_ok();
 }

@@ -1,9 +1,7 @@
 use elrond_wasm::types::*;
 use elrond_wasm_debug::*;
 use entity::config::*;
-use entity::governance::proposal::*;
 use entity::governance::*;
-use entity::permission::*;
 use setup::*;
 
 mod setup;
@@ -12,15 +10,18 @@ mod setup;
 fn it_creates_a_proposal() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let owner_address = setup.owner_address.clone();
+    let vote_sft_nonce = 1;
     let mut proposal_id = 0;
 
     setup.configure_gov_token(true);
 
-    setup.blockchain.set_nft_balance(&owner_address, ENTITY_GOV_TOKEN_ID, 1, &rust_biguint!(5), &0);
+    setup
+        .blockchain
+        .set_nft_balance(&owner_address, ENTITY_GOV_TOKEN_ID, vote_sft_nonce, &rust_biguint!(5), &0);
 
     setup
         .blockchain
-        .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 1, &rust_biguint!(3), |sc| {
+        .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, vote_sft_nonce, &rust_biguint!(3), |sc| {
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
                 managed_buffer!(b"content hash"),
@@ -48,8 +49,20 @@ fn it_creates_a_proposal() {
 
             // storage
             assert_eq!(2, sc.next_proposal_id().get());
-            assert_eq!(managed_biguint!(3), sc.votes(proposal.id, &managed_address!(&owner_address)).get());
-            assert_eq!(managed_biguint!(3), sc.protected_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID)).get());
+            assert_eq!(
+                managed_biguint!(3),
+                sc.withdrawable_votes(
+                    proposal.id,
+                    &managed_address!(&owner_address),
+                    &managed_token_id!(ENTITY_GOV_TOKEN_ID),
+                    vote_sft_nonce
+                )
+                .get()
+            );
+            assert_eq!(
+                managed_biguint!(3),
+                sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), vote_sft_nonce).get()
+            );
         })
         .assert_ok();
 }

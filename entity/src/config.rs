@@ -34,10 +34,10 @@ pub trait ConfigModule {
         }
     }
 
-    fn require_gov_tokens_available(&self, amount: &BigUint) {
+    fn require_gov_tokens_available(&self, amount: &BigUint, nonce: u64) {
         let gov_token_id = self.gov_token_id().get();
-        let protected = self.protected_vote_tokens(&gov_token_id).get();
-        let balance = self.blockchain().get_sc_balance(&EgldOrEsdtTokenIdentifier::esdt(gov_token_id), 0u64);
+        let protected = self.guarded_vote_tokens(&gov_token_id, nonce).get();
+        let balance = self.blockchain().get_sc_balance(&EgldOrEsdtTokenIdentifier::esdt(gov_token_id), nonce);
         let available = balance - protected;
 
         require!(amount <= &available, "not enough governance tokens available");
@@ -95,9 +95,14 @@ pub trait ConfigModule {
     #[storage_mapper("gov_token_id")]
     fn gov_token_id(&self) -> SingleValueMapper<TokenIdentifier>;
 
+    // TODO: remove after upgrade
     #[view(getProtectedVoteTokens)]
     #[storage_mapper("protected_vote_tokens")]
     fn protected_vote_tokens(&self, token_id: &TokenIdentifier) -> SingleValueMapper<BigUint>;
+
+    #[view(getGuardedVoteTokens)]
+    #[storage_mapper("guarded_vote_tokens")]
+    fn guarded_vote_tokens(&self, token_id: &TokenIdentifier, nonce: u64) -> SingleValueMapper<BigUint>;
 
     #[view(isLockingVoteTokens)]
     #[storage_mapper("lock_vote_tokens")]
@@ -124,6 +129,15 @@ pub trait ConfigModule {
     #[storage_mapper("withdrawable_proposal_ids")]
     fn withdrawable_proposal_ids(&self, voter: &ManagedAddress) -> UnorderedSetMapper<u64>;
 
+    #[view(getWithdrawableProposalTokenNonces)]
+    #[storage_mapper("withdrawable_proposal_ids")]
+    fn withdrawable_proposal_token_nonces(&self, proposal_id: u64, voter: &ManagedAddress) -> UnorderedSetMapper<u64>;
+
+    #[view(getWithdrawableVotes)]
+    #[storage_mapper("withdrawable_votes")]
+    fn withdrawable_votes(&self, proposal_id: u64, voter: &ManagedAddress, token_id: &TokenIdentifier, nonce: u64) -> SingleValueMapper<BigUint>;
+
+    // keep for backwards compatibility
     #[view(getProposalAddressVotes)]
     #[storage_mapper("votes")]
     fn votes(&self, proposal_id: u64, voter: &ManagedAddress) -> SingleValueMapper<BigUint>;
