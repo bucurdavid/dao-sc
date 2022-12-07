@@ -23,7 +23,7 @@ pub struct Proposal<M: ManagedTypeApi> {
     pub permissions: ManagedVec<M, ManagedBuffer<M>>,
 }
 
-#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, TypeAbi, ManagedVecItem)]
+#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, TypeAbi, ManagedVecItem, Clone)]
 pub struct Action<M: ManagedTypeApi> {
     pub destination: ManagedAddress<M>,
     pub endpoint: ManagedBuffer<M>,
@@ -266,7 +266,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
                     let permission_details = self.permission_details(&permission).get();
 
                     if self.does_permission_apply_to_action(&permission_details, &action) {
-                        actual_permissions.push(permission.clone());
+                        actual_permissions.push(permission);
                         has_permission_for_action = true;
                     }
                 }
@@ -284,38 +284,73 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
     }
 
     fn does_permission_apply_to_action(&self, permission_details: &PermissionDetails<Self::Api>, action: &Action<Self::Api>) -> bool {
-        let mut applies = action.value <= permission_details.value;
+        let mut is_pure_value_perm = true;
 
-        if applies && !permission_details.destination.is_zero() {
-            applies = permission_details.destination == action.destination;
+        // check value/EGLD mismatch
+        if permission_details.value != 0 && action.value > permission_details.value {
+            return false;
         }
 
-        if applies && !permission_details.endpoint.is_empty() {
-            applies = permission_details.endpoint == action.endpoint;
+        // check destination mismatch
+        if !permission_details.destination.is_zero() && action.destination != permission_details.destination {
+            return false;
         }
 
-        if applies && !permission_details.arguments.is_empty() {
-            for (i, perm_arg) in permission_details.arguments.into_iter().enumerate() {
-                if let Option::Some(arg_at_index) = action.arguments.try_get(i).as_deref() {
-                    applies = arg_at_index == &perm_arg;
-                } else {
-                    applies = false;
-                    break;
-                }
+        // check endpoint mismatch
+        if !permission_details.endpoint.is_empty() {
+            is_pure_value_perm = false;
+
+            if action.endpoint != permission_details.endpoint {
+                return false;
             }
         }
 
-        if applies && !permission_details.payments.is_empty() {
-            applies = action.payments.into_iter().all(|payment| {
+        // check arguments mismatch. ignored if permission contains no arguments.
+        // the permission can scope the argument sequence down as far as needed:
+        //      - passes: arg1, arg2 (permission) -> arg1, arg2, arg3 (action)
+        //      - fails: arg1, arg2 (permission) -> arg1, arg3 (action)
+        //      - fails: arg1, arg2 (permission) -> arg1 (action)
+        if !permission_details.arguments.is_empty() {
+            is_pure_value_perm = false;
+
+            for (i, perm_arg) in permission_details.arguments.into_iter().enumerate() {
+                if let Option::Some(arg_at_index) = action.arguments.try_get(i).as_deref() {
+                    let applies = arg_at_index == &perm_arg;
+
+                    if applies {
+                        continue;
+                    }
+                }
+
+                return false;
+            }
+        }
+
+        // check payments mismatch. ignored if permission contains no payments.
+        // returns false, if a payment is not in the permissions or exceeds payment amount.
+        if !permission_details.payments.is_empty() {
+            is_pure_value_perm = false;
+
+            let applies = action.payments.into_iter().all(|payment| {
                 if let Some(guard) = permission_details.payments.into_iter().find(|p| p.token_identifier == payment.token_identifier) {
                     payment.amount <= guard.amount
                 } else {
-                    true
+                    false
                 }
             });
+
+            if !applies {
+                return false;
+            }
         }
 
-        applies
+        // ensure that pure value transfer permissions are
+        // not applied to smart contract calls with 0 value.
+        if is_pure_value_perm && action.value == 0 {
+            return false;
+        }
+
+        true
     }
 
     fn is_proposal_active(&self, proposal: &Proposal<Self::Api>) -> bool {

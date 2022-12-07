@@ -58,8 +58,8 @@ fn it_marks_a_proposal_as_executed() {
 
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 actions_hash,
                 POLL_DEFAULT_ID,
                 actions_permissions,
@@ -139,8 +139,8 @@ fn it_fails_if_attempted_to_execute_again() {
 
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 actions_hash,
                 POLL_DEFAULT_ID,
                 actions_permissions,
@@ -231,8 +231,8 @@ fn it_fails_if_the_proposal_is_still_active() {
 
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 actions_hash,
                 POLL_DEFAULT_ID,
                 actions_permissions,
@@ -564,7 +564,7 @@ fn it_fails_to_spend_vote_tokens() {
                 managed_address!(&action_receiver),
                 managed_buffer!(b"myendpoint"),
                 ManagedVec::new(),
-                ManagedVec::new(),
+                ManagedVec::from(vec![EsdtTokenPayment::new(managed_token_id!(ENTITY_GOV_TOKEN_ID), 0, managed_biguint!(10))]),
             );
             sc.create_policy(
                 managed_buffer!(ROLE_BUILTIN_LEADER),
