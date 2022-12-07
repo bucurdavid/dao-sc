@@ -64,8 +64,8 @@ fn it_signs_a_proposal_on_proposing_if_proposal_requires_signing() {
 
                 proposal_id = sc.propose_endpoint(
                     managed_buffer!(b"id"),
-                    managed_buffer!(b""),
-                    managed_buffer!(b""),
+                    ManagedBuffer::new(),
+                    ManagedBuffer::new(),
                     actions_hash,
                     POLL_DEFAULT_ID,
                     actions_permissions,
@@ -97,9 +97,9 @@ fn it_creates_a_proposal_without_esdt_payment_if_not_required() {
         .execute_tx(&proposer_address, &setup.contract, &rust_biguint!(0), |sc| {
             sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
             );
@@ -147,8 +147,8 @@ fn it_creates_a_proposal_without_esdt_payment_if_not_required() {
 
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 actions_hash,
                 POLL_DEFAULT_ID,
                 actions_permissions,
@@ -192,9 +192,9 @@ fn it_does_not_self_sign_a_proposal_if_proposer_does_not_have_any_roles() {
             |sc| {
                 proposal_id = sc.propose_endpoint(
                     managed_buffer!(b"id"),
-                    managed_buffer!(b""),
-                    managed_buffer!(b""),
-                    managed_buffer!(b""),
+                    ManagedBuffer::new(),
+                    ManagedBuffer::new(),
+                    ManagedBuffer::new(),
                     POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );

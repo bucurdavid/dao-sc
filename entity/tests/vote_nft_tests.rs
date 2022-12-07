@@ -27,9 +27,9 @@ fn it_votes_for_a_proposal() {
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 1, &rust_biguint!(1), |sc| {
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
             );
@@ -68,6 +68,7 @@ fn it_votes_for_a_proposal_with_poll() {
     setup
         .blockchain
         .set_nft_balance(&setup.owner_address, ENTITY_GOV_TOKEN_ID, 1, &rust_biguint!(1), &0u32);
+
     setup.blockchain.set_nft_balance(&voter_address, ENTITY_GOV_TOKEN_ID, 2, &rust_biguint!(1), &0u32);
 
     setup
@@ -75,9 +76,9 @@ fn it_votes_for_a_proposal_with_poll() {
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 1, &rust_biguint!(1), |sc| {
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 poll_option_id,
                 MultiValueManagedVec::new(),
             );
@@ -112,9 +113,9 @@ fn it_votes_against_a_proposal() {
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 1, &rust_biguint!(1), |sc| {
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
             );
@@ -160,7 +161,7 @@ fn it_sends_the_nfts_back() {
                 managed_buffer!(b"id"),
                 managed_buffer!(b"content hash"),
                 managed_buffer!(b"content signature"),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
                 POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
             );
@@ -210,7 +211,7 @@ fn it_fails_to_vote_twice_with_the_same_nft() {
                 managed_buffer!(b"id"),
                 managed_buffer!(b"content hash"),
                 managed_buffer!(b"content signature"),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
                 POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
             );
@@ -251,7 +252,7 @@ fn it_fails_if_less_than_configured_min_vote_weight() {
                 managed_buffer!(b"id"),
                 managed_buffer!(b"content hash"),
                 managed_buffer!(b"content signature"),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
                 POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
             );

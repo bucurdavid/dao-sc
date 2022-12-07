@@ -1,4 +1,4 @@
-use elrond_wasm::types::MultiValueManagedVec;
+use elrond_wasm::types::*;
 use elrond_wasm_debug::*;
 use entity::config::*;
 use entity::governance::*;
@@ -19,9 +19,9 @@ fn it_fails_to_verify_trusted_host_when_no_signature_given() {
 
             let _ = sc.propose_endpoint(
                 managed_buffer!(b"id"),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
-                managed_buffer!(b""),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
                 POLL_DEFAULT_ID,
                 MultiValueManagedVec::new(),
             );

@@ -29,7 +29,7 @@ fn it_creates_a_proposal() {
                     managed_buffer!(b"id"),
                     managed_buffer!(b"content hash"),
                     managed_buffer!(b"content signature"),
-                    managed_buffer!(b""),
+                    ManagedBuffer::new(),
                     POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
@@ -46,7 +46,7 @@ fn it_creates_a_proposal() {
             assert_eq!(1, proposal.id);
             assert_eq!(managed_address!(&owner_address), proposal.proposer);
             assert_eq!(managed_buffer!(b"content hash"), proposal.content_hash);
-            assert_eq!(managed_buffer!(b""), proposal.actions_hash);
+            assert_eq!(ManagedBuffer::new(), proposal.actions_hash);
             assert_eq!(false, proposal.was_executed);
             assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL), proposal.votes_for);
             assert_eq!(managed_biguint!(0), proposal.votes_against);
@@ -88,7 +88,7 @@ fn it_creates_a_proposal_with_poll() {
                     managed_buffer!(b"id"),
                     managed_buffer!(b"content hash"),
                     managed_buffer!(b"content signature"),
-                    managed_buffer!(b""),
+                    ManagedBuffer::new(),
                     poll_option_id,
                     MultiValueManagedVec::new(),
                 );
@@ -190,9 +190,9 @@ fn it_fails_if_bad_token() {
             |sc| {
                 sc.propose_endpoint(
                     managed_buffer!(b"id"),
-                    managed_buffer!(b""),
-                    managed_buffer!(b""),
-                    managed_buffer!(b""),
+                    ManagedBuffer::new(),
+                    ManagedBuffer::new(),
+                    ManagedBuffer::new(),
                     POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
@@ -218,9 +218,9 @@ fn it_fails_if_bad_vote_weight_amount() {
             |sc| {
                 sc.propose_endpoint(
                     managed_buffer!(b"id"),
-                    managed_buffer!(b""),
-                    managed_buffer!(b""),
-                    managed_buffer!(b""),
+                    ManagedBuffer::new(),
+                    ManagedBuffer::new(),
+                    ManagedBuffer::new(),
                     POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
@@ -246,9 +246,9 @@ fn it_fails_if_trusted_host_id_is_already_known() {
             |sc| {
                 sc.propose_endpoint(
                     managed_buffer!(b"thesame"),
-                    managed_buffer!(b""),
-                    managed_buffer!(b""),
-                    managed_buffer!(b""),
+                    ManagedBuffer::new(),
+                    ManagedBuffer::new(),
+                    ManagedBuffer::new(),
                     POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
@@ -267,9 +267,9 @@ fn it_fails_if_trusted_host_id_is_already_known() {
             |sc| {
                 sc.propose_endpoint(
                     managed_buffer!(b"thesame"),
-                    managed_buffer!(b""),
-                    managed_buffer!(b""),
-                    managed_buffer!(b""),
+                    ManagedBuffer::new(),
+                    ManagedBuffer::new(),
+                    ManagedBuffer::new(),
                     POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );

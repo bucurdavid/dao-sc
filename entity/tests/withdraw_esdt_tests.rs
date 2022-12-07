@@ -1,8 +1,8 @@
 use elrond_wasm::elrond_codec::multi_types::*;
-use elrond_wasm::types::MultiValueManagedVec;
+use elrond_wasm::types::*;
 use elrond_wasm_debug::*;
 use entity::config::*;
-use entity::governance::GovernanceModule;
+use entity::governance::*;
 use setup::*;
 
 mod setup;
@@ -28,7 +28,7 @@ fn it_withdraws_tokens_used_for_voting() {
                     managed_buffer!(b"id"),
                     managed_buffer!(b"content hash"),
                     managed_buffer!(b"content signature"),
-                    managed_buffer!(b""),
+                    ManagedBuffer::new(),
                     POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
@@ -85,7 +85,7 @@ fn it_clears_the_voters_withdrawable_storage_for_the_proposal() {
                     managed_buffer!(b"id"),
                     managed_buffer!(b"content hash"),
                     managed_buffer!(b"content signature"),
-                    managed_buffer!(b""),
+                    ManagedBuffer::new(),
                     POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
@@ -137,7 +137,7 @@ fn it_reduces_the_protected_vote_token_amount() {
                     managed_buffer!(b"id"),
                     managed_buffer!(b"content hash"),
                     managed_buffer!(b"content signature"),
-                    managed_buffer!(b""),
+                    ManagedBuffer::new(),
                     POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
@@ -183,7 +183,7 @@ fn it_does_not_withdraw_tokens_from_proposals_that_are_still_active() {
                     managed_buffer!(b"id"),
                     managed_buffer!(b"content hash"),
                     managed_buffer!(b"content signature"),
-                    managed_buffer!(b""),
+                    ManagedBuffer::new(),
                     POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );

@@ -26,9 +26,9 @@ fn it_votes_for_a_proposal() {
             |sc| {
                 proposal_id = sc.propose_endpoint(
                     managed_buffer!(b"id"),
-                    managed_buffer!(b""),
-                    managed_buffer!(b""),
-                    managed_buffer!(b""),
+                    ManagedBuffer::new(),
+                    ManagedBuffer::new(),
+                    ManagedBuffer::new(),
                     POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
@@ -101,9 +101,9 @@ fn it_votes_for_a_proposal_with_poll() {
             |sc| {
                 proposal_id = sc.propose_endpoint(
                     managed_buffer!(b"id"),
-                    managed_buffer!(b""),
-                    managed_buffer!(b""),
-                    managed_buffer!(b""),
+                    ManagedBuffer::new(),
+                    ManagedBuffer::new(),
+                    ManagedBuffer::new(),
                     poll_option_id,
                     MultiValueManagedVec::new(),
                 );
@@ -140,9 +140,9 @@ fn it_votes_against_a_proposal() {
             |sc| {
                 proposal_id = sc.propose_endpoint(
                     managed_buffer!(b"id"),
-                    managed_buffer!(b""),
-                    managed_buffer!(b""),
-                    managed_buffer!(b""),
+                    ManagedBuffer::new(),
+                    ManagedBuffer::new(),
+                    ManagedBuffer::new(),
                     POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
@@ -213,9 +213,9 @@ fn it_fails_if_proposal_voting_period_has_ended() {
             |sc| {
                 proposal_id = sc.propose_endpoint(
                     managed_buffer!(b"id"),
-                    managed_buffer!(b""),
-                    managed_buffer!(b""),
-                    managed_buffer!(b""),
+                    ManagedBuffer::new(),
+                    ManagedBuffer::new(),
+                    ManagedBuffer::new(),
                     POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
@@ -251,9 +251,9 @@ fn it_fails_if_less_than_configured_min_vote_weight() {
             |sc| {
                 proposal_id = sc.propose_endpoint(
                     managed_buffer!(b"id"),
-                    managed_buffer!(b""),
-                    managed_buffer!(b""),
-                    managed_buffer!(b""),
+                    ManagedBuffer::new(),
+                    ManagedBuffer::new(),
+                    ManagedBuffer::new(),
                     POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
