@@ -14,6 +14,7 @@ elrond_wasm_node::wasm_endpoints! {
         getBaseDailyCost
         getCostTokenId
         getCredits
+        getEntities
         getEntityCreationCost
         getEntityTemplateAddress
         getFeatureDailyCost
