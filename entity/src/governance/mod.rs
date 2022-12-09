@@ -389,8 +389,9 @@ pub trait GovernanceModule:
     }
 
     /// Processes received vote payment tokens.
-    /// ESDTs will be deposited/locked in the contract.
-    /// NFTs, SFTs & MetaESDTs are treated similarily if locked_vote_tokens is set to true (default).
+    /// Either keeps track of them for withdrawals or sends them back immediately depending on the token type.
+    /// - ESDTs will >always< be deposited/locked in the contract.
+    /// - NFTs, SFTs & MetaESDTs are only locked if locked_vote_tokens is set to true (default).
     /// Fails if the NFT's nonce has been used to vote previously.
     fn commit_vote_payments(&self, proposal_id: u64) {
         let payments = self.call_value().all_esdt_transfers();
