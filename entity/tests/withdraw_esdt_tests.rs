@@ -117,7 +117,7 @@ fn it_clears_the_voters_withdrawable_storage_for_the_proposal() {
 }
 
 #[test]
-fn it_reduces_the_protected_vote_token_amount() {
+fn it_reduces_the_guarded_vote_token_amount() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let voter_address = setup.user_address.clone();
     let mut proposal_id = 0u64;

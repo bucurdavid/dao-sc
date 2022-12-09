@@ -80,6 +80,8 @@ where
 fn it_initializes_the_contract() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
+    setup.configure_gov_token(true);
+
     setup
         .blockchain
         .execute_query(&setup.contract, |_| {
