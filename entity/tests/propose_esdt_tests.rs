@@ -19,7 +19,7 @@ fn it_creates_a_proposal() {
     setup
         .blockchain
         .execute_esdt_transfer(
-            &setup.owner_address,
+            &owner_address,
             &setup.contract,
             ENTITY_GOV_TOKEN_ID,
             0,
@@ -53,11 +53,11 @@ fn it_creates_a_proposal() {
 
             // storage
             assert_eq!(2, sc.next_proposal_id().get());
-            assert_eq!(
-                managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
-                sc.withdrawable_votes(proposal.id, &managed_address!(&owner_address), &managed_token_id!(ENTITY_GOV_TOKEN_ID), 0)
-                    .get()
-            );
+
+            let withdrawable_mapper = sc.withdrawable_votes(proposal.id, &managed_address!(&owner_address)).get(1);
+            assert_eq!(managed_token_id!(ENTITY_GOV_TOKEN_ID), withdrawable_mapper.token_identifier);
+            assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL), withdrawable_mapper.amount);
+
             assert_eq!(
                 managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
                 sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), 0).get()

@@ -400,12 +400,10 @@ pub trait GovernanceModule:
 
         for payment in payments.into_iter() {
             if payment.token_nonce == 0 || self.lock_vote_tokens(&payment.token_identifier).get() {
-                self.withdrawable_proposal_ids(&caller).insert(proposal_id);
-                self.withdrawable_proposal_token_nonces(proposal_id, &caller).insert(payment.token_nonce);
                 self.guarded_vote_tokens(&payment.token_identifier, payment.token_nonce)
                     .update(|current| *current += &payment.amount);
-                self.withdrawable_votes(proposal_id, &caller, &payment.token_identifier, payment.token_nonce)
-                    .update(|current| *current += &payment.amount);
+                self.withdrawable_proposal_ids(&caller).insert(proposal_id);
+                self.withdrawable_votes(proposal_id, &caller).push(&payment);
             } else {
                 let inserted = self.proposal_nft_votes(proposal_id).insert(payment.token_nonce);
                 require!(inserted, ALREADY_VOTED_WITH_TOKEN);

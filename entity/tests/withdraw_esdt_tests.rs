@@ -105,13 +105,8 @@ fn it_clears_the_voters_withdrawable_storage_for_the_proposal() {
     setup
         .blockchain
         .execute_query(&setup.contract, |sc| {
-            assert_eq!(
-                managed_biguint!(0),
-                sc.withdrawable_votes(proposal_id, &managed_address!(&voter_address), &managed_token_id!(ENTITY_GOV_TOKEN_ID), 0)
-                    .get()
-            );
             assert!(!sc.withdrawable_proposal_ids(&managed_address!(&voter_address)).contains(&proposal_id));
-            assert!(!sc.withdrawable_proposal_token_nonces(proposal_id, &managed_address!(&voter_address)).contains(&0));
+            assert!(sc.withdrawable_votes(proposal_id, &managed_address!(&voter_address)).is_empty());
         })
         .assert_ok();
 }
@@ -141,6 +136,11 @@ fn it_reduces_the_guarded_vote_token_amount() {
                     POLL_DEFAULT_ID,
                     MultiValueManagedVec::new(),
                 );
+
+                assert_eq!(
+                    managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
+                    sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), 0).get()
+                );
             },
         )
         .assert_ok();
@@ -151,12 +151,7 @@ fn it_reduces_the_guarded_vote_token_amount() {
         .blockchain
         .execute_tx(&voter_address, &setup.contract, &rust_biguint!(0), |sc| {
             sc.withdraw_endpoint();
-        })
-        .assert_ok();
 
-    setup
-        .blockchain
-        .execute_query(&setup.contract, |sc| {
             assert_eq!(managed_biguint!(0), sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), 0).get());
         })
         .assert_ok();
@@ -201,12 +196,11 @@ fn it_does_not_withdraw_tokens_from_proposals_that_are_still_active() {
     setup
         .blockchain
         .execute_query(&setup.contract, |sc| {
-            assert_eq!(
-                managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
-                sc.withdrawable_votes(proposal_id, &managed_address!(&user_address), &managed_token_id!(ENTITY_GOV_TOKEN_ID), 0)
-                    .get()
-            );
             assert!(sc.withdrawable_proposal_ids(&managed_address!(&user_address)).contains(&proposal_id));
+
+            let withdrawable_mapper = sc.withdrawable_votes(proposal_id, &managed_address!(&user_address)).get(1);
+            assert_eq!(managed_token_id!(ENTITY_GOV_TOKEN_ID), withdrawable_mapper.token_identifier);
+            assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL), withdrawable_mapper.amount);
         })
         .assert_ok();
 }

@@ -36,6 +36,7 @@ fn it_votes_for_a_proposal() {
         )
         .assert_ok();
 
+    // vote for
     setup
         .blockchain
         .execute_esdt_transfer(&voter_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
@@ -49,12 +50,11 @@ fn it_votes_for_a_proposal() {
                 managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 25),
                 sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), 0).get()
             );
-            assert_eq!(
-                managed_biguint!(25),
-                sc.withdrawable_votes(proposal.id, &managed_address!(&voter_address), &managed_token_id!(ENTITY_GOV_TOKEN_ID), 0)
-                    .get()
-            );
             assert!(sc.withdrawable_proposal_ids(&managed_address!(&voter_address)).contains(&proposal.id));
+
+            let withdrawable_mapper = sc.withdrawable_votes(proposal.id, &managed_address!(&voter_address)).get(1);
+            assert_eq!(managed_token_id!(ENTITY_GOV_TOKEN_ID), withdrawable_mapper.token_identifier);
+            assert_eq!(managed_biguint!(25), withdrawable_mapper.amount);
         })
         .assert_ok();
 
@@ -72,11 +72,10 @@ fn it_votes_for_a_proposal() {
                 managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 50),
                 sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), 0).get()
             );
-            assert_eq!(
-                managed_biguint!(50),
-                sc.withdrawable_votes(proposal.id, &managed_address!(&voter_address), &managed_token_id!(ENTITY_GOV_TOKEN_ID), 0)
-                    .get()
-            );
+
+            // let withdrawable_mapper = sc.withdrawable_votes(proposal.id, &managed_address!(&voter_address)).get_by_index(2);
+            // assert_eq!(managed_token_id!(ENTITY_GOV_TOKEN_ID), withdrawable_mapper.token_identifier);
+            // assert_eq!(managed_biguint!(50), withdrawable_mapper.amount);
         })
         .assert_ok();
 }
@@ -163,12 +162,11 @@ fn it_votes_against_a_proposal() {
                 managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 25),
                 sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), 0).get()
             );
-            assert_eq!(
-                managed_biguint!(25),
-                sc.withdrawable_votes(proposal.id, &managed_address!(&voter_address), &managed_token_id!(ENTITY_GOV_TOKEN_ID), 0)
-                    .get()
-            );
             assert!(sc.withdrawable_proposal_ids(&managed_address!(&voter_address)).contains(&proposal.id));
+
+            let withdrawable_mapper = sc.withdrawable_votes(proposal.id, &managed_address!(&voter_address)).get(1);
+            assert_eq!(managed_token_id!(ENTITY_GOV_TOKEN_ID), withdrawable_mapper.token_identifier);
+            assert_eq!(managed_biguint!(25), withdrawable_mapper.amount);
         })
         .assert_ok();
 
@@ -186,11 +184,10 @@ fn it_votes_against_a_proposal() {
                 managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 50),
                 sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), 0).get()
             );
-            assert_eq!(
-                managed_biguint!(50),
-                sc.withdrawable_votes(proposal.id, &managed_address!(&voter_address), &managed_token_id!(ENTITY_GOV_TOKEN_ID), 0)
-                    .get()
-            );
+
+            let withdrawable_mapper = sc.withdrawable_votes(proposal.id, &managed_address!(&voter_address)).get(2);
+            assert_eq!(managed_token_id!(ENTITY_GOV_TOKEN_ID), withdrawable_mapper.token_identifier);
+            assert_eq!(managed_biguint!(25), withdrawable_mapper.amount);
         })
         .assert_ok();
 }

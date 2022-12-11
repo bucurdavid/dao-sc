@@ -51,18 +51,12 @@ fn it_creates_a_proposal() {
             assert_eq!(2, sc.next_proposal_id().get());
             assert_eq!(
                 managed_biguint!(3),
-                sc.withdrawable_votes(
-                    proposal.id,
-                    &managed_address!(&owner_address),
-                    &managed_token_id!(ENTITY_GOV_TOKEN_ID),
-                    vote_sft_nonce
-                )
-                .get()
-            );
-            assert_eq!(
-                managed_biguint!(3),
                 sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), vote_sft_nonce).get()
             );
+
+            let withdrawable_mapper = sc.withdrawable_votes(proposal.id, &managed_address!(&owner_address)).get(1);
+            assert_eq!(managed_token_id!(ENTITY_GOV_TOKEN_ID), withdrawable_mapper.token_identifier);
+            assert_eq!(managed_biguint!(3), withdrawable_mapper.amount);
         })
         .assert_ok();
 }

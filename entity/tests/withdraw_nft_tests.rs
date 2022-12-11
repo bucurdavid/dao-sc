@@ -115,13 +115,8 @@ fn it_clears_the_voters_withdrawable_storage_for_the_proposal() {
     setup
         .blockchain
         .execute_query(&setup.contract, |sc| {
-            assert_eq!(
-                managed_biguint!(0),
-                sc.withdrawable_votes(proposal_id, &managed_address!(&voter_address), &managed_token_id!(ENTITY_GOV_TOKEN_ID), 1)
-                    .get()
-            );
             assert!(!sc.withdrawable_proposal_ids(&managed_address!(&voter_address)).contains(&proposal_id));
-            assert!(!sc.withdrawable_proposal_token_nonces(proposal_id, &managed_address!(&voter_address)).contains(&1));
+            assert!(sc.withdrawable_votes(proposal_id, &managed_address!(&voter_address)).is_empty());
         })
         .assert_ok();
 }
@@ -205,12 +200,11 @@ fn it_does_not_withdraw_tokens_from_proposals_that_are_still_active() {
     setup
         .blockchain
         .execute_query(&setup.contract, |sc| {
-            assert_eq!(
-                managed_biguint!(1),
-                sc.withdrawable_votes(proposal_id, &managed_address!(&user_address), &managed_token_id!(ENTITY_GOV_TOKEN_ID), 1)
-                    .get()
-            );
             assert!(sc.withdrawable_proposal_ids(&managed_address!(&user_address)).contains(&proposal_id));
+
+            let withdrawable_mapper = sc.withdrawable_votes(proposal_id, &managed_address!(&user_address)).get(1);
+            assert_eq!(managed_token_id!(ENTITY_GOV_TOKEN_ID), withdrawable_mapper.token_identifier);
+            assert_eq!(managed_biguint!(1), withdrawable_mapper.amount);
         })
         .assert_ok();
 }

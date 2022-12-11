@@ -46,12 +46,8 @@ fn it_votes_for_a_proposal() {
             assert_eq!(managed_biguint!(2), proposal.votes_for);
             assert_eq!(managed_biguint!(0), proposal.votes_against);
             assert_eq!(managed_biguint!(0), sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), 0).get());
-            assert_eq!(
-                managed_biguint!(0),
-                sc.withdrawable_votes(proposal.id, &managed_address!(&voter_address), &managed_token_id!(ENTITY_GOV_TOKEN_ID), 0)
-                    .get()
-            );
             assert_eq!(0, sc.withdrawable_proposal_ids(&managed_address!(&voter_address)).len());
+            assert!(sc.withdrawable_votes(proposal.id, &managed_address!(&voter_address)).is_empty());
         })
         .assert_ok();
 }
@@ -132,12 +128,8 @@ fn it_votes_against_a_proposal() {
             assert_eq!(managed_biguint!(1), proposal.votes_for);
             assert_eq!(managed_biguint!(1), proposal.votes_against);
             assert_eq!(managed_biguint!(0), sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), 0).get());
-            assert_eq!(
-                managed_biguint!(0),
-                sc.withdrawable_votes(proposal.id, &managed_address!(&voter_address), &managed_token_id!(ENTITY_GOV_TOKEN_ID), 0)
-                    .get()
-            );
             assert_eq!(0, sc.withdrawable_proposal_ids(&managed_address!(&voter_address)).len());
+            assert!(sc.withdrawable_votes(proposal.id, &managed_address!(&voter_address)).is_empty());
         })
         .assert_ok();
 }
@@ -178,12 +170,8 @@ fn it_sends_the_nfts_back() {
             assert_eq!(managed_biguint!(2), proposal.votes_for);
             assert_eq!(managed_biguint!(0), proposal.votes_against);
             assert_eq!(managed_biguint!(0), sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), 0).get());
-            assert_eq!(
-                managed_biguint!(0),
-                sc.withdrawable_votes(proposal.id, &managed_address!(&voter_address), &managed_token_id!(ENTITY_GOV_TOKEN_ID), 0)
-                    .get()
-            );
             assert_eq!(0, sc.withdrawable_proposal_ids(&managed_address!(&voter_address)).len());
+            assert!(sc.withdrawable_votes(proposal.id, &managed_address!(&voter_address)).is_empty());
         })
         .assert_ok();
 

@@ -77,9 +77,9 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
         }
 
         let caller = self.blockchain().get_caller();
-        let gov_token_id = self.gov_token_id().get();
 
         // keep for backwards compatibility
+        let gov_token_id = self.gov_token_id().get();
         let votes_mapper = self.votes(proposal_id, &caller);
         let votes = votes_mapper.get();
 
@@ -88,24 +88,21 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
             votes_mapper.clear();
 
             self.send().direct_esdt(&caller, &gov_token_id, 0, &votes);
-            self.emit_withdraw_event(&proposal);
         }
         // *end backwards compatibility
 
-        for nonce in self.withdrawable_proposal_token_nonces(proposal_id, &caller).iter() {
-            let votes_mapper = self.withdrawable_votes(proposal_id, &caller, &gov_token_id, nonce);
-            let votes = votes_mapper.get();
+        let mut returnables = ManagedVec::new();
 
-            if votes > 0 {
-                self.guarded_vote_tokens(&gov_token_id, nonce).update(|current| *current -= &votes);
-                self.send().direct_esdt(&caller, &gov_token_id, nonce, &votes);
-                self.emit_withdraw_event(&proposal);
+        for vote in self.withdrawable_votes(proposal_id, &caller).iter() {
+            self.guarded_vote_tokens(&vote.token_identifier, vote.token_nonce)
+                .update(|current| *current -= &vote.amount);
 
-                self.withdrawable_proposal_token_nonces(proposal_id, &caller).swap_remove(&nonce);
-                votes_mapper.clear();
-            }
+            returnables.push(vote);
         }
 
+        self.withdrawable_votes(proposal_id, &caller).clear();
         self.withdrawable_proposal_ids(&caller).swap_remove(&proposal_id);
+        self.emit_withdraw_event(&proposal);
+        self.send().direct_multi(&caller, &returnables);
     }
 }

@@ -129,13 +129,9 @@ pub trait ConfigModule {
     #[storage_mapper("withdrawable_proposal_ids")]
     fn withdrawable_proposal_ids(&self, voter: &ManagedAddress) -> UnorderedSetMapper<u64>;
 
-    #[view(getWithdrawableProposalTokenNonces)]
-    #[storage_mapper("withdrawable_proposal_ids")]
-    fn withdrawable_proposal_token_nonces(&self, proposal_id: u64, voter: &ManagedAddress) -> UnorderedSetMapper<u64>;
-
     #[view(getWithdrawableVotes)]
     #[storage_mapper("withdrawable_votes")]
-    fn withdrawable_votes(&self, proposal_id: u64, voter: &ManagedAddress, token_id: &TokenIdentifier, nonce: u64) -> SingleValueMapper<BigUint>;
+    fn withdrawable_votes(&self, proposal_id: u64, voter: &ManagedAddress) -> VecMapper<EsdtTokenPayment>;
 
     // keep for backwards compatibility
     #[view(getProposalAddressVotes)]
