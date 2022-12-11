@@ -77,6 +77,7 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
         }
 
         let caller = self.blockchain().get_caller();
+        let mut returnables = ManagedVec::new();
 
         // keep for backwards compatibility
         let gov_token_id = self.gov_token_id().get();
@@ -86,12 +87,9 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
         if votes > 0 {
             self.guarded_vote_tokens(&gov_token_id, 0).update(|current| *current -= &votes);
             votes_mapper.clear();
-
-            self.send().direct_esdt(&caller, &gov_token_id, 0, &votes);
+            returnables.push(EsdtTokenPayment::new(gov_token_id, 0, votes));
         }
         // *end backwards compatibility
-
-        let mut returnables = ManagedVec::new();
 
         for vote in self.withdrawable_votes(proposal_id, &caller).iter() {
             self.guarded_vote_tokens(&vote.token_identifier, vote.token_nonce)
