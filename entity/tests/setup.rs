@@ -74,6 +74,16 @@ where
             })
             .assert_ok();
     }
+
+    pub fn configure_trusted_host(&mut self) {
+        let trusted_host_address = self.trusted_host_address.clone();
+
+        self.blockchain
+            .execute_tx(&self.owner_address, &self.contract, &rust_biguint!(0), |sc| {
+                sc.trusted_host_address().set(managed_address!(&trusted_host_address));
+            })
+            .assert_ok();
+    }
 }
 
 #[test]

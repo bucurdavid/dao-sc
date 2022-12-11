@@ -21,6 +21,12 @@ pub trait ConfigModule {
         require!(caller == sc_address, "action not allowed by user");
     }
 
+    fn require_caller_trusted_host(&self) {
+        let caller = self.blockchain().get_caller();
+        let trusted_host_address = self.trusted_host_address().get();
+        require!(caller == trusted_host_address, "action not allowed by user");
+    }
+
     fn require_gov_token_set(&self) {
         require!(!self.gov_token_id().is_empty(), "gov token must be set");
     }

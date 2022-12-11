@@ -39,6 +39,12 @@ pub trait Entity:
         // end upgrade
     }
 
+    #[endpoint(changeVoteTokenLock)]
+    fn change_vote_token_lock_endpoint(&self, token: TokenIdentifier, lock: bool) {
+        self.require_caller_trusted_host();
+        self.lock_vote_tokens(&token).set(lock);
+    }
+
     #[payable("EGLD")]
     #[endpoint(registerDns)]
     fn register_dns(&self, dns_address: ManagedAddress, name: ManagedBuffer) {
