@@ -73,9 +73,9 @@ fn it_votes_for_a_proposal() {
                 sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), 0).get()
             );
 
-            // let withdrawable_mapper = sc.withdrawable_votes(proposal.id, &managed_address!(&voter_address)).get_by_index(2);
-            // assert_eq!(managed_token_id!(ENTITY_GOV_TOKEN_ID), withdrawable_mapper.token_identifier);
-            // assert_eq!(managed_biguint!(50), withdrawable_mapper.amount);
+            let withdrawable_mapper = sc.withdrawable_votes(proposal.id, &managed_address!(&voter_address)).get(2);
+            assert_eq!(managed_token_id!(ENTITY_GOV_TOKEN_ID), withdrawable_mapper.token_identifier);
+            assert_eq!(managed_biguint!(25), withdrawable_mapper.amount);
         })
         .assert_ok();
 }
