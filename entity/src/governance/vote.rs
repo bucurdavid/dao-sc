@@ -64,20 +64,20 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
         self.proposal_poll(proposal_id, option_id).update(|current| *current += weight);
     }
 
-    fn withdraw_tokens(&self, proposal_id: u64) {
+    fn withdraw_tokens(&self, proposal_id: u64) -> SCResult<(), ()> {
         if self.proposals(proposal_id).is_empty() {
-            return;
+            return Ok(());
         }
 
         let proposal = self.proposals(proposal_id).get();
         let status = self.get_proposal_status(&proposal);
 
         if status == ProposalStatus::Active || status == ProposalStatus::Pending {
-            return;
+            return Err(());
         }
 
         let caller = self.blockchain().get_caller();
-        let mut returnables = ManagedVec::new();
+        let mut returnables: ManagedVec<EsdtTokenPayment> = ManagedVec::new();
 
         // keep for backwards compatibility
         let gov_token_id = self.gov_token_id().get();
@@ -101,6 +101,11 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
         self.withdrawable_votes(proposal_id, &caller).clear();
         self.withdrawable_proposal_ids(&caller).swap_remove(&proposal_id);
         self.emit_withdraw_event(&proposal);
-        self.send().direct_multi(&caller, &returnables);
+
+        if !returnables.is_empty() {
+            self.send().direct_multi(&caller, &returnables);
+        }
+
+        return Ok(());
     }
 }

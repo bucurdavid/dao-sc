@@ -229,8 +229,15 @@ pub trait GovernanceModule:
     fn withdraw_endpoint(&self) {
         let caller = self.blockchain().get_caller();
 
-        for proposal_id in self.withdrawable_proposal_ids(&caller).iter() {
-            self.withdraw_tokens(proposal_id);
+        let mut proposal_ids_mapper = self.withdrawable_proposal_ids(&caller);
+        let safe_proposal_ids = proposal_ids_mapper.iter().collect::<ManagedVec<u64>>();
+
+        for proposal_id in safe_proposal_ids.iter() {
+            let withdrawn = self.withdraw_tokens(proposal_id);
+
+            if withdrawn.is_ok() {
+                proposal_ids_mapper.swap_remove(&proposal_id);
+            }
         }
     }
 
@@ -400,10 +407,10 @@ pub trait GovernanceModule:
 
         for payment in payments.into_iter() {
             if payment.token_nonce == 0 || self.lock_vote_tokens(&payment.token_identifier).get() {
-                self.guarded_vote_tokens(&payment.token_identifier, payment.token_nonce)
-                    .update(|current| *current += &payment.amount);
                 self.withdrawable_proposal_ids(&caller).insert(proposal_id);
                 self.withdrawable_votes(proposal_id, &caller).push(&payment);
+                self.guarded_vote_tokens(&payment.token_identifier, payment.token_nonce)
+                    .update(|current| *current += &payment.amount);
             } else {
                 let inserted = self.proposal_nft_votes(proposal_id).insert(payment.token_nonce);
                 require!(inserted, ALREADY_VOTED_WITH_TOKEN);
