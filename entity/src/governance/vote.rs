@@ -99,7 +99,6 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
         }
 
         self.withdrawable_votes(proposal_id, &caller).clear();
-        self.withdrawable_proposal_ids(&caller).swap_remove(&proposal_id);
         self.emit_withdraw_event(&proposal);
 
         if !returnables.is_empty() {
