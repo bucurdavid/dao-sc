@@ -204,3 +204,130 @@ fn it_does_not_withdraw_tokens_from_proposals_that_are_still_active() {
         })
         .assert_ok();
 }
+
+#[test]
+fn it_withdraws_tokens_from_multiple_proposals() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+    let user_address = &setup.user_address.clone();
+    let mut proposal_id = 0u64;
+
+    setup.configure_gov_token(true);
+
+    setup
+        .blockchain
+        .execute_esdt_transfer(
+            &user_address,
+            &setup.contract,
+            ENTITY_GOV_TOKEN_ID,
+            0,
+            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
+            |sc| {
+                proposal_id = sc.propose_endpoint(
+                    managed_buffer!(b"id1"),
+                    managed_buffer!(b"content hash"),
+                    managed_buffer!(b"content signature"),
+                    ManagedBuffer::new(),
+                    POLL_DEFAULT_ID,
+                    MultiValueManagedVec::new(),
+                );
+            },
+        )
+        .assert_ok();
+
+    setup
+        .blockchain
+        .execute_esdt_transfer(
+            &user_address,
+            &setup.contract,
+            ENTITY_GOV_TOKEN_ID,
+            0,
+            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
+            |sc| {
+                proposal_id = sc.propose_endpoint(
+                    managed_buffer!(b"id2"),
+                    managed_buffer!(b"content hash"),
+                    managed_buffer!(b"content signature"),
+                    ManagedBuffer::new(),
+                    POLL_DEFAULT_ID,
+                    MultiValueManagedVec::new(),
+                );
+            },
+        )
+        .assert_ok();
+
+    setup
+        .blockchain
+        .execute_esdt_transfer(
+            &user_address,
+            &setup.contract,
+            ENTITY_GOV_TOKEN_ID,
+            0,
+            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
+            |sc| {
+                proposal_id = sc.propose_endpoint(
+                    managed_buffer!(b"id3"),
+                    managed_buffer!(b"content hash"),
+                    managed_buffer!(b"content signature"),
+                    ManagedBuffer::new(),
+                    POLL_DEFAULT_ID,
+                    MultiValueManagedVec::new(),
+                );
+            },
+        )
+        .assert_ok();
+
+    setup
+        .blockchain
+        .execute_esdt_transfer(
+            &user_address,
+            &setup.contract,
+            ENTITY_GOV_TOKEN_ID,
+            0,
+            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
+            |sc| {
+                proposal_id = sc.propose_endpoint(
+                    managed_buffer!(b"id4"),
+                    managed_buffer!(b"content hash"),
+                    managed_buffer!(b"content signature"),
+                    ManagedBuffer::new(),
+                    POLL_DEFAULT_ID,
+                    MultiValueManagedVec::new(),
+                );
+            },
+        )
+        .assert_ok();
+
+    setup
+        .blockchain
+        .execute_esdt_transfer(
+            &user_address,
+            &setup.contract,
+            ENTITY_GOV_TOKEN_ID,
+            0,
+            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
+            |sc| {
+                proposal_id = sc.propose_endpoint(
+                    managed_buffer!(b"id5"),
+                    managed_buffer!(b"content hash"),
+                    managed_buffer!(b"content signature"),
+                    ManagedBuffer::new(),
+                    POLL_DEFAULT_ID,
+                    MultiValueManagedVec::new(),
+                );
+            },
+        )
+        .assert_ok();
+
+    setup.blockchain.set_block_timestamp(VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60 + 1);
+
+    setup
+        .blockchain
+        .execute_tx(&user_address, &setup.contract, &rust_biguint!(0), |sc| {
+            sc.withdraw_endpoint();
+        })
+        .assert_ok();
+
+    setup
+        .blockchain
+        .check_esdt_balance(&user_address, ENTITY_GOV_TOKEN_ID, &rust_biguint!(ENTITY_GOV_TOKEN_SUPPLY));
+}
