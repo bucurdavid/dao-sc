@@ -5,15 +5,16 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                           52
+// Endpoints:                           53
 // Async Callback:                       1
-// Total number of exported functions:  54
+// Total number of exported functions:  55
 
 #![no_std]
 
 elrond_wasm_node::wasm_endpoints! {
     entity
     (
+        changeVoteTokenLock
         registerDns
         getVersion
         getTrustedHostAddress
