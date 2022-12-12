@@ -33,6 +33,7 @@ pub trait ConfigModule {
         self.cost_feature_daily_amount(&feature).set(amount);
     }
 
+    #[view(getEntities)]
     #[storage_mapper("entities")]
     fn entities(&self) -> UnorderedSetMapper<ManagedAddress>;
 

@@ -15,7 +15,7 @@ fn it_returns_active_for_a_newly_created_proposal() {
     let proposer_address = setup.user_address.clone();
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup.blockchain.set_block_timestamp(0);
 
@@ -48,7 +48,7 @@ fn it_returns_defeated_if_for_votes_quorum_not_met() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -86,7 +86,7 @@ fn it_returns_defeated_if_quorum_met_but_votes_against_is_more_than_for() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -131,7 +131,7 @@ fn it_returns_succeeded_if_for_votes_quorum_met_and_more_for_than_against_votes(
     let mut setup = EntitySetup::new(entity::contract_obj);
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -178,7 +178,7 @@ fn it_returns_executed_for_an_executed_proposal() {
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain

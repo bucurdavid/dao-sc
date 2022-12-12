@@ -1,9 +1,7 @@
 use elrond_wasm::types::*;
 use elrond_wasm_debug::*;
 use entity::config::*;
-use entity::governance::proposal::*;
 use entity::governance::*;
-use entity::permission::*;
 use setup::*;
 
 mod setup;
@@ -14,7 +12,7 @@ fn it_creates_a_proposal() {
     let owner_address = setup.owner_address.clone();
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(false);
 
     setup.blockchain.set_nft_balance(&owner_address, ENTITY_GOV_TOKEN_ID, 1, &rust_biguint!(1), &0);
 
@@ -48,8 +46,8 @@ fn it_creates_a_proposal() {
 
             // storage
             assert_eq!(2, sc.next_proposal_id().get());
-            assert_eq!(managed_biguint!(0), sc.votes(proposal.id, &managed_address!(&owner_address)).get());
             assert!(sc.proposal_nft_votes(proposal_id).contains(&1));
+            assert!(sc.withdrawable_votes(proposal.id, &managed_address!(&owner_address)).is_empty());
         })
         .assert_ok();
 }
@@ -59,13 +57,13 @@ fn it_creates_a_proposal_with_poll() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let owner_address = setup.owner_address.clone();
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(false);
 
-    setup.blockchain.set_nft_balance(&owner_address, ENTITY_GOV_TOKEN_ID, 1, &rust_biguint!(2), &0);
+    setup.blockchain.set_nft_balance(&owner_address, ENTITY_GOV_TOKEN_ID, 1, &rust_biguint!(1), &0);
 
     setup
         .blockchain
-        .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 1, &rust_biguint!(2), |sc| {
+        .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 1, &rust_biguint!(1), |sc| {
             let poll_option_id = 2u8;
 
             let proposal_id = sc.propose_endpoint(
@@ -77,7 +75,7 @@ fn it_creates_a_proposal_with_poll() {
                 MultiValueManagedVec::new(),
             );
 
-            assert_eq!(managed_biguint!(2), sc.proposal_poll(proposal_id, poll_option_id).get());
+            assert_eq!(managed_biguint!(1), sc.proposal_poll(proposal_id, poll_option_id).get());
         })
         .assert_ok();
 }
@@ -88,9 +86,9 @@ fn it_sends_the_nfts_back() {
     let owner_address = setup.owner_address.clone();
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(false);
 
-    setup.blockchain.set_nft_balance(&owner_address, ENTITY_GOV_TOKEN_ID, 1, &rust_biguint!(1), &0u32);
+    setup.blockchain.set_nft_balance(&owner_address, ENTITY_GOV_TOKEN_ID, 1, &rust_biguint!(1), &0);
 
     setup
         .blockchain

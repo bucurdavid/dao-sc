@@ -16,7 +16,7 @@ fn it_matches_a_permission_based_on_value_only() {
     let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     // configure permissions
     setup
@@ -82,7 +82,7 @@ fn it_matches_a_permission_based_on_destination_only() {
     let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     // configure permissions
     setup
@@ -148,7 +148,7 @@ fn it_matches_a_permission_based_on_endpoint_only() {
     let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     // configure permissions
     setup
@@ -214,7 +214,7 @@ fn it_matches_a_permission_based_on_arguments_only() {
     let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     // configure permissions
     setup
@@ -280,7 +280,7 @@ fn it_matches_a_permission_based_on_payments_only() {
     let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     // configure permissions
     setup
@@ -354,7 +354,7 @@ fn it_matches_a_permission_based_on_destination_and_endpoint() {
     let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     // configure permissions
     setup
@@ -421,7 +421,7 @@ fn it_matches_a_permission_based_on_destination_and_endpoint_and_one_argument() 
     let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     // configure permissions
     setup
@@ -494,7 +494,7 @@ fn it_does_not_match_zero_value_when_permission_value_is_zero() {
     let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     // configure permissions
     setup
@@ -553,7 +553,7 @@ fn it_does_not_match_one_of_many_payments_that_exceeds_permission_max_amount() {
     let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     // configure permissions
     setup
@@ -618,7 +618,7 @@ fn it_does_not_match_a_payment_when_there_is_no_permission_for_it() {
     let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     // configure permissions
     setup

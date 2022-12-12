@@ -189,7 +189,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
 
             for payment in action.payments.iter() {
                 if payment.token_identifier == gov_token_id {
-                    self.require_gov_tokens_available(&payment.amount);
+                    self.require_gov_tokens_available(&payment.amount, payment.token_nonce);
                 }
 
                 call = call.add_esdt_token_transfer(payment.token_identifier, payment.token_nonce, payment.amount);

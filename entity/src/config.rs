@@ -21,6 +21,12 @@ pub trait ConfigModule {
         require!(caller == sc_address, "action not allowed by user");
     }
 
+    fn require_caller_trusted_host(&self) {
+        let caller = self.blockchain().get_caller();
+        let trusted_host_address = self.trusted_host_address().get();
+        require!(caller == trusted_host_address, "action not allowed by user");
+    }
+
     fn require_gov_token_set(&self) {
         require!(!self.gov_token_id().is_empty(), "gov token must be set");
     }
@@ -34,10 +40,10 @@ pub trait ConfigModule {
         }
     }
 
-    fn require_gov_tokens_available(&self, amount: &BigUint) {
+    fn require_gov_tokens_available(&self, amount: &BigUint, nonce: u64) {
         let gov_token_id = self.gov_token_id().get();
-        let protected = self.protected_vote_tokens(&gov_token_id).get();
-        let balance = self.blockchain().get_sc_balance(&EgldOrEsdtTokenIdentifier::esdt(gov_token_id), 0u64);
+        let protected = self.guarded_vote_tokens(&gov_token_id, nonce).get();
+        let balance = self.blockchain().get_sc_balance(&EgldOrEsdtTokenIdentifier::esdt(gov_token_id), nonce);
         let available = balance - protected;
 
         require!(amount <= &available, "not enough governance tokens available");
@@ -58,7 +64,7 @@ pub trait ConfigModule {
         require!(trusted, "not a trusted host");
     }
 
-    fn try_change_governance_token(&self, token_id: TokenIdentifier) {
+    fn try_change_governance_token(&self, token_id: &TokenIdentifier) {
         require!(token_id.is_valid_esdt_identifier(), "invalid token id");
         self.gov_token_id().set(token_id);
     }
@@ -95,9 +101,13 @@ pub trait ConfigModule {
     #[storage_mapper("gov_token_id")]
     fn gov_token_id(&self) -> SingleValueMapper<TokenIdentifier>;
 
-    #[view(getProtectedVoteTokens)]
-    #[storage_mapper("protected_vote_tokens")]
-    fn protected_vote_tokens(&self, token_id: &TokenIdentifier) -> SingleValueMapper<BigUint>;
+    #[view(getGuardedVoteTokens)]
+    #[storage_mapper("guarded_vote_tokens")]
+    fn guarded_vote_tokens(&self, token_id: &TokenIdentifier, nonce: u64) -> SingleValueMapper<BigUint>;
+
+    #[view(isLockingVoteTokens)]
+    #[storage_mapper("lock_vote_tokens")]
+    fn lock_vote_tokens(&self, token_id: &TokenIdentifier) -> SingleValueMapper<bool>;
 
     #[storage_mapper("proposals")]
     fn proposals(&self, id: u64) -> SingleValueMapper<Proposal<Self::Api>>;
@@ -120,6 +130,11 @@ pub trait ConfigModule {
     #[storage_mapper("withdrawable_proposal_ids")]
     fn withdrawable_proposal_ids(&self, voter: &ManagedAddress) -> UnorderedSetMapper<u64>;
 
+    #[view(getWithdrawableVotes)]
+    #[storage_mapper("withdrawable_votes")]
+    fn withdrawable_votes(&self, proposal_id: u64, voter: &ManagedAddress) -> VecMapper<EsdtTokenPayment>;
+
+    // keep for backwards compatibility
     #[view(getProposalAddressVotes)]
     #[storage_mapper("votes")]
     fn votes(&self, proposal_id: u64, voter: &ManagedAddress) -> SingleValueMapper<BigUint>;

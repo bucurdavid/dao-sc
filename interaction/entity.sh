@@ -249,10 +249,30 @@ getGovTokenId() {
         --proxy=$PROXY || return
 }
 
+# backwards compatibility
 getProtectedVoteTokens() {
     erdpy contract query $ADDRESS \
         --function="getProtectedVoteTokens" \
         --arguments "str:$GOV_TOKEN_ID" \
+        --proxy=$PROXY || return
+}
+
+# params:
+#   $1 = token id
+#   $2 = nonce
+getGuardedVoteTokens() {
+    erdpy contract query $ADDRESS \
+        --function="getGuardedVoteTokens" \
+        --arguments "str:$1" $2 \
+        --proxy=$PROXY || return
+}
+
+# params:
+#   $1 = token id
+isLockingVoteTokens() {
+    erdpy contract query $ADDRESS \
+        --function="isLockingVoteTokens" \
+        --arguments "str:$1" \
         --proxy=$PROXY || return
 }
 
@@ -322,16 +342,6 @@ getProposalSignatureRoleCounts() {
     erdpy contract query $ADDRESS \
         --function="getProposalSignatureRoleCounts" \
         --arguments $1 \
-        --proxy=$PROXY || return
-}
-
-# params:
-#   $1 = proposal id
-#   $2 = address
-getProposalAddressVotes() {
-    erdpy contract query $ADDRESS \
-        --function="getProposalAddressVotes" \
-        --arguments $1 $2 \
         --proxy=$PROXY || return
 }
 

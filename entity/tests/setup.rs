@@ -3,6 +3,7 @@ elrond_wasm::imports!();
 use elrond_wasm_debug::testing_framework::*;
 use elrond_wasm_debug::*;
 use entity::config::*;
+use entity::governance::GovernanceModule;
 use entity::*;
 
 pub const ENTITY_GOV_TOKEN_ID: &[u8] = b"SUPER-abcdef";
@@ -59,12 +60,27 @@ where
         }
     }
 
-    pub fn configure_gov_token(&mut self) {
+    pub fn configure_gov_token(&mut self, lock_vote_tokens: bool) {
         self.blockchain
             .execute_tx(&self.owner_address, &self.contract, &rust_biguint!(0), |sc| {
-                sc.gov_token_id().set(managed_token_id!(ENTITY_GOV_TOKEN_ID));
+                sc.configure_governance_token(managed_token_id!(ENTITY_GOV_TOKEN_ID), managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL), lock_vote_tokens);
+
+                // override defaults
                 sc.quorum().set(managed_biguint!(QURUM));
                 sc.min_propose_weight().set(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL));
+
+                // assert
+                assert_eq!(lock_vote_tokens, sc.lock_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID)).get());
+            })
+            .assert_ok();
+    }
+
+    pub fn configure_trusted_host(&mut self) {
+        let trusted_host_address = self.trusted_host_address.clone();
+
+        self.blockchain
+            .execute_tx(&self.owner_address, &self.contract, &rust_biguint!(0), |sc| {
+                sc.trusted_host_address().set(managed_address!(&trusted_host_address));
             })
             .assert_ok();
     }
@@ -73,6 +89,8 @@ where
 #[test]
 fn it_initializes_the_contract() {
     let mut setup = EntitySetup::new(entity::contract_obj);
+
+    setup.configure_gov_token(true);
 
     setup
         .blockchain

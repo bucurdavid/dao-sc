@@ -18,7 +18,7 @@ fn it_returns_active_when_just_created() {
     let signer_two = setup.blockchain.create_user_account(&rust_biguint!(1));
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -89,7 +89,7 @@ fn it_succeeds_if_one_of_one_permission_policies_reaches_signer_quorum() {
     let signer_two = setup.blockchain.create_user_account(&rust_biguint!(1));
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -183,7 +183,7 @@ fn it_returns_defeated_if_one_of_one_permission_policies_does_not_meet_quorum_af
     let signer_two = setup.blockchain.create_user_account(&rust_biguint!(1));
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
@@ -271,7 +271,7 @@ fn it_returns_defeated_if_one_of_two_permission_policies_does_not_meet_quorum_af
     let signer_two = setup.blockchain.create_user_account(&rust_biguint!(1));
     let mut proposal_id = 0;
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain

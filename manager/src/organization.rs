@@ -17,10 +17,11 @@ pub trait OrganizationModule: config::ConfigModule {
 
         let org_contract = self.org_contract_address().get();
 
-        self.org_contract_proxy(org_contract)
+        let _ = self
+            .org_contract_proxy(org_contract)
             .with_share_profits_endpoint()
             .add_esdt_token_transfer(token_id, 0, amount)
-            .execute_on_dest_context_ignore_result();
+            .execute_on_dest_context::<()>();
     }
 
     #[storage_mapper("org:organization_contract_address")]

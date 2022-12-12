@@ -9,7 +9,7 @@ mod setup;
 fn it_changes_the_min_propose_weight_if_contract_calls_itself() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
-    setup.configure_gov_token();
+    setup.configure_gov_token(true);
 
     setup
         .blockchain

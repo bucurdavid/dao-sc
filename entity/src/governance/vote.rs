@@ -21,14 +21,9 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
         require!(weight > 0, "vote weight must be greater than 0");
 
         let mut proposal = self.proposals(proposal_id).get();
-        let caller = self.blockchain().get_caller();
         let min_vote_weight = self.min_vote_weight().get();
-        let is_first_vote = self.votes(proposal.id, &caller).is_empty();
 
-        if is_first_vote {
-            require!(weight >= min_vote_weight, "not enought vote weight");
-        }
-
+        require!(weight >= min_vote_weight, "not enought vote weight");
         require!(self.get_proposal_status(&proposal) == ProposalStatus::Active, "proposal is not active");
 
         match vote_type {
@@ -69,30 +64,47 @@ pub trait VoteModule: config::ConfigModule + permission::PermissionModule + prop
         self.proposal_poll(proposal_id, option_id).update(|current| *current += weight);
     }
 
-    fn withdraw_tokens(&self, proposal_id: u64) {
-        let caller = self.blockchain().get_caller();
-
+    fn withdraw_tokens(&self, proposal_id: u64) -> SCResult<(), ()> {
         if self.proposals(proposal_id).is_empty() {
-            return;
+            return Ok(());
         }
 
         let proposal = self.proposals(proposal_id).get();
         let status = self.get_proposal_status(&proposal);
 
         if status == ProposalStatus::Active || status == ProposalStatus::Pending {
-            return;
+            return Err(());
         }
 
+        let caller = self.blockchain().get_caller();
+        let mut returnables: ManagedVec<EsdtTokenPayment> = ManagedVec::new();
+
+        // keep for backwards compatibility
         let gov_token_id = self.gov_token_id().get();
         let votes_mapper = self.votes(proposal_id, &caller);
         let votes = votes_mapper.get();
 
         if votes > 0 {
-            self.protected_vote_tokens(&gov_token_id).update(|current| *current -= &votes);
-            self.withdrawable_proposal_ids(&caller).swap_remove(&proposal_id);
-            self.send().direct_esdt(&caller, &gov_token_id, 0, &votes);
+            self.guarded_vote_tokens(&gov_token_id, 0).update(|current| *current -= &votes);
             votes_mapper.clear();
-            self.emit_withdraw_event(&proposal);
+            returnables.push(EsdtTokenPayment::new(gov_token_id, 0, votes));
         }
+        // *end backwards compatibility
+
+        for vote in self.withdrawable_votes(proposal_id, &caller).iter() {
+            self.guarded_vote_tokens(&vote.token_identifier, vote.token_nonce)
+                .update(|current| *current -= &vote.amount);
+
+            returnables.push(vote);
+        }
+
+        self.withdrawable_votes(proposal_id, &caller).clear();
+        self.emit_withdraw_event(&proposal);
+
+        if !returnables.is_empty() {
+            self.send().direct_multi(&caller, &returnables);
+        }
+
+        return Ok(());
     }
 }
