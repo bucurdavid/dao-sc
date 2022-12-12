@@ -101,11 +101,6 @@ pub trait ConfigModule {
     #[storage_mapper("gov_token_id")]
     fn gov_token_id(&self) -> SingleValueMapper<TokenIdentifier>;
 
-    // TODO: remove after upgrade
-    #[view(getProtectedVoteTokens)]
-    #[storage_mapper("protected_vote_tokens")]
-    fn protected_vote_tokens(&self, token_id: &TokenIdentifier) -> SingleValueMapper<BigUint>;
-
     #[view(getGuardedVoteTokens)]
     #[storage_mapper("guarded_vote_tokens")]
     fn guarded_vote_tokens(&self, token_id: &TokenIdentifier, nonce: u64) -> SingleValueMapper<BigUint>;
