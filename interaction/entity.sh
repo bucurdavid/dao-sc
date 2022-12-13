@@ -249,14 +249,6 @@ getGovTokenId() {
         --proxy=$PROXY || return
 }
 
-# backwards compatibility
-getProtectedVoteTokens() {
-    erdpy contract query $ADDRESS \
-        --function="getProtectedVoteTokens" \
-        --arguments "str:$GOV_TOKEN_ID" \
-        --proxy=$PROXY || return
-}
-
 # params:
 #   $1 = token id
 #   $2 = nonce
