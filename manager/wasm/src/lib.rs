@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                           22
+// Endpoints:                           23
 // Async Callback (empty):               1
-// Total number of exported functions:  24
+// Total number of exported functions:  25
 
 #![no_std]
 
@@ -36,6 +36,7 @@ elrond_wasm_node::wasm_endpoints! {
         getCredits
         initDexModule
         initOrgModule
+        forwardCostTokensToOrg
     )
 }
 

@@ -146,6 +146,15 @@ initOrgModule() {
         --send || return
 }
 
+forwardCostTokensToOrg() {
+    erdpy --verbose contract call $MANAGER_ADDRESS \
+        --function="forwardCostTokensToOrg" \
+        --recall-nonce --gas-limit=5000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
+
 setEntityCreationCost() {
     erdpy --verbose contract call $MANAGER_ADDRESS \
         --function="setEntityCreationCost" \
