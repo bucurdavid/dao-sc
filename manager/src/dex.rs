@@ -27,13 +27,13 @@ pub trait DexModule: config::ConfigModule {
     fn swap_tokens_to_wegld(&self, payment_token: TokenIdentifier, payment_amount: BigUint, swap_contract: ManagedAddress) -> EsdtTokenPayment {
         let wegld_token_id = self.wegld_token_id().get();
 
-        let swapped_wegld_legacy: dex_pair_proxy::LegacyDexPayment<Self::Api> = self
+        let swapped_wegld: dex_pair_proxy::SwapTokensFixedInputResultType<Self::Api> = self
             .dex_pair_contract_proxy(swap_contract)
             .swap_tokens_fixed_input(wegld_token_id, BigUint::from(1u32))
             .add_esdt_token_transfer(payment_token, 0, payment_amount)
             .execute_on_dest_context();
 
-        swapped_wegld_legacy.token_payment
+        swapped_wegld
     }
 
     fn swap_wegld_to_cost_tokens(&self, amount: BigUint) -> EsdtTokenPayment {
@@ -41,13 +41,11 @@ pub trait DexModule: config::ConfigModule {
         let wegld_token_id = self.wegld_token_id().get();
         let cost_token_wegld_swap_contract = self.cost_token_wegld_swap_contract().get();
 
-        let swapped_cost_payment_legacy: dex_pair_proxy::LegacyDexPayment<Self::Api> = self
+        let swapped_cost_payment: dex_pair_proxy::SwapTokensFixedInputResultType<Self::Api> = self
             .dex_pair_contract_proxy(cost_token_wegld_swap_contract)
             .swap_tokens_fixed_input(cost_token_id.clone(), BigUint::from(1u32))
             .add_esdt_token_transfer(wegld_token_id, 0, amount)
             .execute_on_dest_context();
-
-        let swapped_cost_payment = swapped_cost_payment_legacy.token_payment;
 
         require!(swapped_cost_payment.token_identifier == cost_token_id, "swapped invalid cost token");
 
@@ -74,19 +72,13 @@ mod dex_pair_proxy {
     elrond_wasm::imports!();
     elrond_wasm::derive_imports!();
 
-    #[derive(TopEncode, TopDecode, TypeAbi)]
-    pub struct LegacyDexPayment<M: ManagedTypeApi> {
-        pub token_type: u8,
-        pub token_payment: SwapTokensFixedInputResultType<M>,
-    }
-
     pub type SwapTokensFixedInputResultType<M> = EsdtTokenPayment<M>;
 
     #[elrond_wasm::proxy]
     pub trait DexRouterContractProxy {
         #[payable("*")]
         #[endpoint(swapTokensFixedInput)]
-        fn swap_tokens_fixed_input(&self, token_out: TokenIdentifier, amount_out_min: BigUint) -> LegacyDexPayment<Self::Api>;
+        fn swap_tokens_fixed_input(&self, token_out: TokenIdentifier, amount_out_min: BigUint) -> SwapTokensFixedInputResultType<Self::Api>;
     }
 }
 
