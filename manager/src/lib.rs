@@ -43,10 +43,12 @@ pub trait Manager:
         require!(payment.token_identifier == self.cost_token_id().get(), "invalid cost token");
         require!(payment.amount >= self.cost_creation_amount().get(), "invalid cost amount");
 
+        let caller = self.blockchain().get_caller();
         let entity_address = self.create_entity();
 
         self.set_features(&entity_address, features.into_vec());
         self.recalculate_daily_cost(&entity_address);
+        self.boost(caller, entity_address.clone(), payment.amount);
         self.entities().insert(entity_address.clone());
 
         entity_address
