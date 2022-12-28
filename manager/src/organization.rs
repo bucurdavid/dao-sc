@@ -10,17 +10,14 @@ pub trait OrganizationModule: config::ConfigModule {
         self.org_contract_address().set(org_contract);
     }
 
-    fn forward_payment_with_profit_share(&self, token_id: TokenIdentifier, amount: BigUint) {
+    fn forward_payment_to_org(&self, payment: EsdtTokenPayment) {
         if self.org_contract_address().is_empty() {
             return;
         }
 
-        let org_contract = self.org_contract_address().get();
-
-        let _ = self
-            .org_contract_proxy(org_contract)
-            .with_share_profits_endpoint()
-            .add_esdt_token_transfer(token_id, 0, amount)
+        self.org_contract_proxy(self.org_contract_address().get())
+            .deposit_endpoint()
+            .add_esdt_token_transfer(payment.token_identifier, payment.token_nonce, payment.amount)
             .execute_on_dest_context::<()>();
     }
 
@@ -37,7 +34,7 @@ mod organization_proxy {
     #[elrond_wasm::proxy]
     pub trait OrganizationContractProxy {
         #[payable("*")]
-        #[endpoint(withShareProfits)]
-        fn with_share_profits_endpoint(&self);
+        #[endpoint(deposit)]
+        fn deposit_endpoint(&self);
     }
 }
