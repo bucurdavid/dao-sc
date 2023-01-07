@@ -50,7 +50,7 @@ where
                 managed_biguint!(COST_AMOUNT_ENTITY_CREATION),
             );
 
-            sc.init_credits_module(managed_token_id!(BOOST_REWARD_TOKEN_ID));
+            sc.init_credits_module(managed_token_id!(BOOST_REWARD_TOKEN_ID), 1, 1);
         })
         .assert_ok();
 

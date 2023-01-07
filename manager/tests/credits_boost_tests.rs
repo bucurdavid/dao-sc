@@ -19,11 +19,11 @@ fn it_increases_deposited_amounts_in_the_storage() {
 
             sc.boost_endpoint(managed_address!(&entity_address));
 
-            let actual = sc.credit_entries(&managed_address!(&entity_address)).get();
+            let actual = sc.credits_entries(&managed_address!(&entity_address)).get();
 
             assert_eq!(managed_biguint!(50), actual.total_amount);
             assert_eq!(managed_biguint!(50), actual.period_amount);
-            assert_eq!(managed_biguint!(50), sc.credit_total_deposits_amount().get());
+            assert_eq!(managed_biguint!(50), sc.credits_total_deposits_amount().get());
         })
         .assert_ok();
 
@@ -32,11 +32,11 @@ fn it_increases_deposited_amounts_in_the_storage() {
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, COST_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
             sc.boost_endpoint(managed_address!(&entity_address));
 
-            let actual = sc.credit_entries(&managed_address!(&entity_address)).get();
+            let actual = sc.credits_entries(&managed_address!(&entity_address)).get();
 
             assert_eq!(managed_biguint!(75), actual.total_amount);
             assert_eq!(managed_biguint!(75), actual.period_amount);
-            assert_eq!(managed_biguint!(75), sc.credit_total_deposits_amount().get());
+            assert_eq!(managed_biguint!(75), sc.credits_total_deposits_amount().get());
         })
         .assert_ok();
 }
