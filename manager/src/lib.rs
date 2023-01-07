@@ -45,12 +45,13 @@ pub trait Manager:
 
         let caller = self.blockchain().get_caller();
         let entity_address = self.create_entity();
-        let initial_boost_factor = 25u32; // days to test level 1 = (creation_cost * initial_boost_factor - level_min) / daily_base_cost
+        let initial_boost_factor = self.credits_bonus_factor_entity_creation().get(); // days to test level 1 = (creation_cost * initial_boost_factor - level_min) / daily_base_cost
 
         self.entities().insert(entity_address.clone());
         self.set_features(&entity_address, features.into_vec());
         self.recalculate_daily_cost(&entity_address);
-        self.boost(caller, entity_address.clone(), payment.amount * initial_boost_factor);
+        self.boost(caller, entity_address.clone(), payment.amount.clone(), Some(initial_boost_factor));
+        self.forward_payment_to_org(payment);
 
         entity_address
     }

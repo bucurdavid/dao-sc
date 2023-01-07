@@ -19,8 +19,10 @@ pub struct CreditEntry<M: ManagedTypeApi> {
 pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::DexModule + organization::OrganizationModule + events::EventsModule {
     #[only_owner]
     #[endpoint(initCreditsModule)]
-    fn init_credits_module(&self, boost_reward_token_id: TokenIdentifier) {
-        self.credit_boost_reward_token().set(boost_reward_token_id);
+    fn init_credits_module(&self, boost_reward_token_id: TokenIdentifier, bonus_factor: u8, bonus_factor_entity_creation: u8) {
+        self.credits_reward_token().set(boost_reward_token_id);
+        self.credits_bonus_factor().set(bonus_factor);
+        self.credits_bonus_factor_entity_creation().set(bonus_factor_entity_creation);
     }
 
     #[payable("*")]
@@ -31,7 +33,9 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
         require!(payment.token_identifier == self.cost_token_id().get(), "invalid token");
         require!(payment.amount > 0, "amount can not be zero");
 
-        self.boost(caller, entity_address, payment.amount.clone());
+        let bonus_factor = self.credits_bonus_factor().get();
+
+        self.boost(caller, entity_address, payment.amount.clone(), Some(bonus_factor));
         self.forward_payment_to_org(payment);
     }
 
@@ -53,8 +57,9 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
         };
 
         let cost_payment = self.swap_wegld_to_cost_tokens(wegld.amount);
+        let bonus_factor = self.credits_bonus_factor().get();
 
-        self.boost(caller, entity, cost_payment.amount.clone());
+        self.boost(caller, entity, cost_payment.amount.clone(), Some(bonus_factor));
         self.forward_payment_to_org(cost_payment);
     }
 
@@ -66,32 +71,37 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
 
         require!(is_trusted_host || is_owner, "not allowed");
 
-        self.boost(booster, entity, amount);
+        self.boost(booster, entity, amount, None);
     }
 
     #[view(getCredits)]
     fn get_credits_view(&self, entity_address: ManagedAddress) -> MultiValue2<BigUint, BigUint> {
-        if self.credit_entries(&entity_address).is_empty() {
+        if self.credits_entries(&entity_address).is_empty() {
             return (BigUint::zero(), BigUint::zero()).into();
         }
 
-        let entry = self.credit_entries(&entity_address).get();
+        let entry = self.credits_entries(&entity_address).get();
         let available = self.calculate_available_credits(&entry);
 
         (available, entry.daily_cost).into()
     }
 
-    fn boost(&self, booster: ManagedAddress, entity: ManagedAddress, amount: BigUint) {
+    fn boost(&self, booster: ManagedAddress, entity: ManagedAddress, amount: BigUint, bonus_factor: Option<u8>) {
+        let bonus_factor = bonus_factor.unwrap_or(1u8);
+
+        require!(bonus_factor > 0, "bonus factor can not be zero");
         self.require_entity_exists(&entity);
 
+        let virtual_amount = amount.clone() * BigUint::from(bonus_factor);
         let mut entry = self.get_or_create_entry(&entity);
-        entry.total_amount += &amount;
-        entry.period_amount += &amount;
 
-        self.credit_entries(&entity).set(entry);
-        self.credit_total_deposits_amount().update(|current| *current += &amount);
+        entry.total_amount += &virtual_amount;
+        entry.period_amount += &virtual_amount;
+
+        self.credits_entries(&entity).set(entry);
+        self.credits_total_deposits_amount().update(|current| *current += &amount);
         self.mint_and_send_reward_tokens(&booster, &amount);
-        self.boost_event(booster, entity, amount);
+        self.boost_event(booster, entity, virtual_amount, bonus_factor);
     }
 
     fn recalculate_daily_cost(&self, entity_address: &ManagedAddress) {
@@ -107,7 +117,7 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
 
         entry.daily_cost = daily_cost;
 
-        self.credit_entries(&entity_address).set(entry);
+        self.credits_entries(&entity_address).set(entry);
     }
 
     fn calculate_available_credits(&self, entry: &CreditEntry<Self::Api>) -> BigUint {
@@ -124,7 +134,7 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
     }
 
     fn get_or_create_entry(&self, entity_address: &ManagedAddress) -> CreditEntry<Self::Api> {
-        if self.credit_entries(&entity_address).is_empty() {
+        if self.credits_entries(&entity_address).is_empty() {
             CreditEntry {
                 total_amount: BigUint::zero(),
                 period_amount: BigUint::zero(),
@@ -132,22 +142,28 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
                 last_period_change: self.blockchain().get_block_timestamp(),
             }
         } else {
-            self.credit_entries(&entity_address).get()
+            self.credits_entries(&entity_address).get()
         }
     }
 
     fn mint_and_send_reward_tokens(&self, address: &ManagedAddress, amount: &BigUint) {
-        let reward_token = self.credit_boost_reward_token().get();
+        let reward_token = self.credits_reward_token().get();
         self.send().esdt_local_mint(&reward_token, 0, &amount);
         self.send().direct_esdt(&address, &reward_token, 0, &amount);
     }
 
     #[storage_mapper("credits:entries")]
-    fn credit_entries(&self, entity_address: &ManagedAddress) -> SingleValueMapper<CreditEntry<Self::Api>>;
+    fn credits_entries(&self, entity_address: &ManagedAddress) -> SingleValueMapper<CreditEntry<Self::Api>>;
 
     #[storage_mapper("credits:total_deposits")]
-    fn credit_total_deposits_amount(&self) -> SingleValueMapper<BigUint>;
+    fn credits_total_deposits_amount(&self) -> SingleValueMapper<BigUint>;
 
     #[storage_mapper("credits:boost_reward_token")]
-    fn credit_boost_reward_token(&self) -> SingleValueMapper<TokenIdentifier>;
+    fn credits_reward_token(&self) -> SingleValueMapper<TokenIdentifier>;
+
+    #[storage_mapper("credits:bonus_factor")]
+    fn credits_bonus_factor(&self) -> SingleValueMapper<u8>;
+
+    #[storage_mapper("credits:bonus_factor_entity_creation")]
+    fn credits_bonus_factor_entity_creation(&self) -> SingleValueMapper<u8>;
 }

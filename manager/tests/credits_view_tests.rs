@@ -23,7 +23,7 @@ fn it_returns_available_credits() {
                 last_period_change: 0u64,
             };
 
-            sc.credit_entries(&managed_address!(&entity_address)).set(entry);
+            sc.credits_entries(&managed_address!(&entity_address)).set(entry);
         })
         .assert_ok();
 

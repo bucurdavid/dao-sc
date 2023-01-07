@@ -17,11 +17,11 @@ fn it_registers_external_boosts_from_the_trusted_host() {
 
             sc.register_external_boost_endpoint(managed_address!(&booster), managed_address!(&entity_address), managed_biguint!(25));
 
-            let actual = sc.credit_entries(&managed_address!(&entity_address)).get();
+            let actual = sc.credits_entries(&managed_address!(&entity_address)).get();
 
             assert_eq!(managed_biguint!(25), actual.total_amount);
             assert_eq!(managed_biguint!(25), actual.period_amount);
-            assert_eq!(managed_biguint!(25), sc.credit_total_deposits_amount().get());
+            assert_eq!(managed_biguint!(25), sc.credits_total_deposits_amount().get());
         })
         .assert_ok();
 }
@@ -39,11 +39,11 @@ fn it_registers_external_boosts_from_the_owner() {
 
             sc.register_external_boost_endpoint(managed_address!(&booster), managed_address!(&entity_address), managed_biguint!(25));
 
-            let actual = sc.credit_entries(&managed_address!(&entity_address)).get();
+            let actual = sc.credits_entries(&managed_address!(&entity_address)).get();
 
             assert_eq!(managed_biguint!(25), actual.total_amount);
             assert_eq!(managed_biguint!(25), actual.period_amount);
-            assert_eq!(managed_biguint!(25), sc.credit_total_deposits_amount().get());
+            assert_eq!(managed_biguint!(25), sc.credits_total_deposits_amount().get());
         })
         .assert_ok();
 }

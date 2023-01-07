@@ -22,7 +22,7 @@ fn it_recalculates_to_daily_base_cost_if_no_features_set() {
 
             sc.recalculate_daily_cost(&managed_address!(&entity_address));
 
-            let actual = sc.credit_entries(&managed_address!(&entity_address)).get();
+            let actual = sc.credits_entries(&managed_address!(&entity_address)).get();
 
             assert_eq!(managed_biguint!(20), actual.daily_cost);
         })
@@ -51,7 +51,7 @@ fn it_recalculates_daily_cost_with_features() {
 
             sc.recalculate_daily_cost(&managed_address!(&entity_address));
 
-            let actual = sc.credit_entries(&managed_address!(&entity_address)).get();
+            let actual = sc.credits_entries(&managed_address!(&entity_address)).get();
 
             assert_eq!(managed_biguint!(35), actual.daily_cost);
         })
