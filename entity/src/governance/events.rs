@@ -1,7 +1,6 @@
 multiversx_sc::imports!();
 
-use super::proposal::Proposal;
-use super::vote::VoteType;
+use super::proposal::{Proposal, VoteType};
 
 #[multiversx_sc::module]
 pub trait GovEventsModule {

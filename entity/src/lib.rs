@@ -5,15 +5,16 @@ multiversx_sc::imports!();
 pub mod config;
 pub mod governance;
 pub mod permission;
+pub mod plug;
 
 #[multiversx_sc::contract]
 pub trait Entity:
     config::ConfigModule
     + permission::PermissionModule
+    + plug::PlugModule
     + governance::GovernanceModule
     + governance::events::GovEventsModule
     + governance::proposal::ProposalModule
-    + governance::vote::VoteModule
     + governance::token::TokenModule
 {
     #[init]
