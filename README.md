@@ -32,7 +32,7 @@ You can find extensive Documentation about DAOs & their supporting tools in our 
 Before deploying the smart contract to the blockchain, be sure to:
 
 1. Remove the `exit` part within the `deploy` function in `interaction/manager.sh` to disable deploy protection.
-2. Configure all variables within `erdpy.data-storage.json` for the corresponding network.
+2. Configure all variables within `mxpy.data-storage.json` for the corresponding network.
 3. Connect & unlock your Ledger device with the Elrond app open, ready to sign the deploy transaction.
 
 ```bash
