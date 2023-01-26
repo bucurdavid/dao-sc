@@ -1,8 +1,8 @@
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
 use crate::config;
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait FeaturesModule: config::ConfigModule {
     fn set_features(&self, entity_address: &ManagedAddress, features: ManagedVec<ManagedBuffer>) {
         self.features(&entity_address).clear();

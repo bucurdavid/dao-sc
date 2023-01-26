@@ -1,8 +1,8 @@
-use elrond_wasm::api::{ED25519_SIGNATURE_BYTE_LEN, KECCAK256_RESULT_LEN};
+use multiversx_sc::api::{ED25519_SIGNATURE_BYTE_LEN, KECCAK256_RESULT_LEN};
 
 use crate::governance::proposal::Proposal;
 
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
 pub const VOTING_PERIOD_MINUTES_DEFAULT: usize = 4320; // 3 days
 pub const VOTING_PERIOD_MINUTES_MAX: usize = 20_160; // 14 days
@@ -13,7 +13,7 @@ pub const POLL_MAX_OPTIONS: u8 = 4;
 
 pub const GAS_LIMIT_SET_TOKEN_ROLES: u64 = 60_000_000;
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait ConfigModule {
     fn require_caller_self(&self) {
         let caller = self.blockchain().get_caller();

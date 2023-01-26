@@ -1,12 +1,12 @@
 #![no_std]
 
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
 pub mod config;
 pub mod governance;
 pub mod permission;
 
-#[elrond_wasm::contract]
+#[multiversx_sc::contract]
 pub trait Entity:
     config::ConfigModule
     + permission::PermissionModule
@@ -51,9 +51,9 @@ pub trait Entity:
 }
 
 mod dns_proxy {
-    elrond_wasm::imports!();
+    multiversx_sc::imports!();
 
-    #[elrond_wasm::proxy]
+    #[multiversx_sc::proxy]
     pub trait Dns {
         #[payable("EGLD")]
         #[endpoint]

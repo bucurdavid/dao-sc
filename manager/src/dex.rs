@@ -1,8 +1,8 @@
 use crate::config;
 
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait DexModule: config::ConfigModule {
     #[only_owner]
     #[endpoint(initDexModule)]
@@ -30,7 +30,7 @@ pub trait DexModule: config::ConfigModule {
         let swapped_wegld: dex_pair_proxy::SwapTokensFixedInputResultType<Self::Api> = self
             .dex_pair_contract_proxy(swap_contract)
             .swap_tokens_fixed_input(wegld_token_id, BigUint::from(1u32))
-            .add_esdt_token_transfer(payment_token, 0, payment_amount)
+            .with_esdt_transfer(EsdtTokenPayment::new(payment_token, 0, payment_amount))
             .execute_on_dest_context();
 
         swapped_wegld
@@ -44,7 +44,7 @@ pub trait DexModule: config::ConfigModule {
         let swapped_cost_payment: dex_pair_proxy::SwapTokensFixedInputResultType<Self::Api> = self
             .dex_pair_contract_proxy(cost_token_wegld_swap_contract)
             .swap_tokens_fixed_input(cost_token_id.clone(), BigUint::from(1u32))
-            .add_esdt_token_transfer(wegld_token_id, 0, amount)
+            .with_esdt_transfer(EsdtTokenPayment::new(wegld_token_id, 0, amount))
             .execute_on_dest_context();
 
         require!(swapped_cost_payment.token_identifier == cost_token_id, "swapped invalid cost token");
@@ -69,12 +69,12 @@ pub trait DexModule: config::ConfigModule {
 }
 
 mod dex_pair_proxy {
-    elrond_wasm::imports!();
-    elrond_wasm::derive_imports!();
+    multiversx_sc::imports!();
+    multiversx_sc::derive_imports!();
 
     pub type SwapTokensFixedInputResultType<M> = EsdtTokenPayment<M>;
 
-    #[elrond_wasm::proxy]
+    #[multiversx_sc::proxy]
     pub trait DexRouterContractProxy {
         #[payable("*")]
         #[endpoint(swapTokensFixedInput)]
@@ -83,9 +83,9 @@ mod dex_pair_proxy {
 }
 
 mod dex_wrap_proxy {
-    elrond_wasm::imports!();
+    multiversx_sc::imports!();
 
-    #[elrond_wasm::proxy]
+    #[multiversx_sc::proxy]
     pub trait DexWrapContractProxy {
         #[payable("EGLD")]
         #[endpoint(wrapEgld)]

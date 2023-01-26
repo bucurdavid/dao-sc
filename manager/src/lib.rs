@@ -1,6 +1,6 @@
 #![no_std]
 
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
 pub mod config;
 pub mod credits;
@@ -10,7 +10,7 @@ pub mod factory;
 pub mod features;
 pub mod organization;
 
-#[elrond_wasm::contract]
+#[multiversx_sc::contract]
 pub trait Manager:
     config::ConfigModule
     + features::FeaturesModule

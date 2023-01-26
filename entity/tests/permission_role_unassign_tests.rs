@@ -1,4 +1,4 @@
-use elrond_wasm_debug::*;
+use multiversx_sc_scenario::*;
 use entity::config::*;
 use entity::permission::*;
 use setup::*;

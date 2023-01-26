@@ -1,5 +1,5 @@
-elrond_wasm::imports!();
-elrond_wasm::derive_imports!();
+multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
 use crate::config;
 
@@ -40,7 +40,7 @@ impl PolicyMethod {
     }
 }
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait PermissionModule: config::ConfigModule {
     fn init_permission_module(&self, leader: ManagedAddress) {
         self.create_role(ManagedBuffer::from(ROLE_BUILTIN_LEADER));

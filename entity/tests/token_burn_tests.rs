@@ -1,5 +1,5 @@
-use elrond_wasm::types::*;
-use elrond_wasm_debug::*;
+use multiversx_sc::types::*;
+use multiversx_sc_scenario::*;
 use entity::governance::*;
 use setup::*;
 

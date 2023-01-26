@@ -1,4 +1,4 @@
-use elrond_wasm_debug::*;
+use multiversx_sc_scenario::*;
 use manager::config::*;
 use manager::credits::*;
 use setup::*;

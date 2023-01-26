@@ -1,9 +1,9 @@
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
 use super::proposal::Proposal;
 use super::vote::VoteType;
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait GovEventsModule {
     fn emit_propose_event(&self, proposal: &Proposal<Self::Api>, weight: BigUint) {
         self.propose_event(
