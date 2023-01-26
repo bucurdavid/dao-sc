@@ -1,6 +1,6 @@
 # Fellowship DAOs Smart Contracts
 
-Smart contract used for managing and running DAOs through [Superciety](https://superciety.com) on MultiversX Blockchain.
+Smart contract used for managing and running DAOs through [PeerMe](https://peerme.io) on MultiversX Blockchain.
 
 Specifically, two smart contracts:
 
@@ -14,12 +14,12 @@ Find the mentioned smart contracts on the Explorer:
 
 ## Documentation
 
-You can find extensive Documentation about DAOs & their supporting tools in our [Knowledge Base](https://know.superciety.com):
+You can find extensive Documentation about DAOs & their supporting tools in our [Knowledge Base](https://know.peerme.io):
 
-- To learn more about DAOs in general, read our [Overview](https://know.superciety.com/daos/overview.html) page.
-- To create your own DAO, follow the simple steps on the [Setup](https://know.superciety.com/daos/setup.html) page.
-- To better understand roles & permissions, check out the [Roles & Permissions](https://know.superciety.com/daos/permissions.html) page.
-- To learn about the technical concepts, visit the [Technical](https://know.superciety.com/daos/technical.html) page.
+- To learn more about DAOs in general, read our [Overview](https://know.peerme.io/daos/overview.html) page.
+- To create your own DAO, follow the simple steps on the [Setup](https://know.peerme.io/daos/setup.html) page.
+- To better understand roles & permissions, check out the [Roles & Permissions](https://know.peerme.io/daos/permissions.html) page.
+- To learn about the technical concepts, visit the [Technical](https://know.peerme.io/daos/technical.html) page.
 
 ## Development
 
