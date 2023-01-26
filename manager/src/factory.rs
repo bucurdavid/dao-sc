@@ -1,8 +1,8 @@
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
 use crate::config;
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait FactoryModule: config::ConfigModule {
     fn create_entity(&self) -> ManagedAddress {
         require!(!self.trusted_host_address().is_empty(), "trusted host address needs to be configured");

@@ -1,6 +1,6 @@
 {
   "devnet": {
-    "proxy": "https://devnet-gateway.elrond.com",
+    "proxy": "https://devnet-gateway.multiversx.com",
     "chain-id": "D",
     "cost-token-id": "DSUPER-9af8df",
     "cost-entity-creation-amount": 1000000000000000000,
@@ -19,7 +19,7 @@
     "manager--deploy-transaction": "a42c47ced58fbf19f5680a19f20e1d3e5ea664b80fc4506c88b3ab25177a5e5e"
   },
   "testnet": {
-    "proxy": "https://testnet-gateway.elrond.com",
+    "proxy": "https://testnet-gateway.multiversx.com",
     "chain-id": "T",
     "cost-token-id": "XSUPER-c19331",
     "cost-entity-creation-amount": 1000000000000000000,
@@ -38,7 +38,7 @@
     "manager--deploy-transaction": "e6d898664516a42a4ec06d7121c8999bfa6e33c881c4aca29396f9d9966825f9"
   },
   "mainnet": {
-    "proxy": "https://gateway.elrond.com",
+    "proxy": "https://gateway.multiversx.com",
     "chain-id": "1",
     "cost-token-id": "SUPER-507aa6",
     "cost-entity-creation-amount": 500000000000000000000,

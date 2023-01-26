@@ -4,8 +4,8 @@ use crate::events;
 use crate::features;
 use crate::organization;
 
-elrond_wasm::imports!();
-elrond_wasm::derive_imports!();
+multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
 #[derive(TopEncode, TopDecode, TypeAbi)]
 pub struct CreditEntry<M: ManagedTypeApi> {
@@ -15,7 +15,7 @@ pub struct CreditEntry<M: ManagedTypeApi> {
     pub last_period_change: u64,
 }
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::DexModule + organization::OrganizationModule + events::EventsModule {
     #[only_owner]
     #[endpoint(initCreditsModule)]

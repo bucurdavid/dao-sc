@@ -1,6 +1,6 @@
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait ConfigModule {
     fn require_entity_exists(&self, entity_address: &ManagedAddress) {
         require!(self.entities().contains(&entity_address), "entity does not exist");

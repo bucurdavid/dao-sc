@@ -1,8 +1,8 @@
 use crate::config;
 
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait OrganizationModule: config::ConfigModule {
     #[only_owner]
     #[endpoint(initOrgModule)]
@@ -27,7 +27,7 @@ pub trait OrganizationModule: config::ConfigModule {
 
         self.org_contract_proxy(self.org_contract_address().get())
             .deposit_endpoint()
-            .add_esdt_token_transfer(payment.token_identifier, payment.token_nonce, payment.amount)
+            .with_esdt_transfer(payment)
             .execute_on_dest_context::<()>();
     }
 
@@ -39,9 +39,9 @@ pub trait OrganizationModule: config::ConfigModule {
 }
 
 mod organization_proxy {
-    elrond_wasm::imports!();
+    multiversx_sc::imports!();
 
-    #[elrond_wasm::proxy]
+    #[multiversx_sc::proxy]
     pub trait OrganizationContractProxy {
         #[payable("*")]
         #[endpoint(deposit)]

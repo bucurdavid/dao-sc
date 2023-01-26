@@ -1,4 +1,4 @@
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
 use self::vote::VoteType;
 use crate::config::{self, GAS_LIMIT_SET_TOKEN_ROLES, MIN_PROPOSAL_VOTE_WEIGHT_DEFAULT, POLL_MAX_OPTIONS, QUORUM_DEFAULT, VOTING_PERIOD_MINUTES_DEFAULT};
@@ -12,7 +12,7 @@ pub mod proposal;
 pub mod token;
 pub mod vote;
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait GovernanceModule:
     config::ConfigModule + permission::PermissionModule + events::GovEventsModule + proposal::ProposalModule + vote::VoteModule + token::TokenModule
 {

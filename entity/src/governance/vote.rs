@@ -1,5 +1,5 @@
-elrond_wasm::imports!();
-elrond_wasm::derive_imports!();
+multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
 use super::events;
 use super::proposal;
@@ -14,7 +14,7 @@ pub enum VoteType {
     Against = 2,
 }
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait VoteModule: config::ConfigModule + permission::PermissionModule + proposal::ProposalModule + events::GovEventsModule {
     fn vote(&self, proposal_id: u64, vote_type: VoteType, weight: BigUint, option_id: u8) {
         self.require_payments_with_gov_token();

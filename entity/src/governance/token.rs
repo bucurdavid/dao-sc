@@ -1,10 +1,10 @@
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
 use crate::config;
 
 const DEFAULT_DECIMALS: usize = 18usize;
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait TokenModule: config::ConfigModule {
     fn issue_gov_token(&self, token_name: ManagedBuffer, token_ticker: ManagedBuffer, supply: BigUint) -> AsyncCall {
         require!(supply > 0, "amount must be greater than zero");

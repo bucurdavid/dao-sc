@@ -1,7 +1,7 @@
-elrond_wasm::imports!();
-elrond_wasm::derive_imports!();
+multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
-use elrond_wasm::api::KECCAK256_RESULT_LEN;
+use multiversx_sc::api::KECCAK256_RESULT_LEN;
 
 use crate::config;
 use crate::permission;
@@ -42,7 +42,7 @@ pub enum ProposalStatus {
     Executed,
 }
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
     fn create_proposal(
         &self,
@@ -175,15 +175,14 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
         let gov_token_id = self.gov_token_id().get();
 
         for action in actions.iter() {
-            let mut call = self
-                .send()
-                .contract_call::<()>(action.destination, action.endpoint)
-                .with_arguments_raw(ManagedArgBuffer::from(action.arguments))
-                .with_gas_limit(action.gas_limit);
+            let mut call = self.send().contract_call::<()>(action.destination, action.endpoint).with_gas_limit(action.gas_limit);
+
+            for arg in &action.arguments {
+                call.push_raw_argument(arg);
+            }
 
             if action.value > 0 {
-                call = call.with_egld_transfer(action.value);
-                call.transfer_execute();
+                call.with_egld_transfer(action.value).transfer_execute();
                 break;
             }
 
@@ -191,11 +190,9 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule {
                 if payment.token_identifier == gov_token_id {
                     self.require_gov_tokens_available(&payment.amount, payment.token_nonce);
                 }
-
-                call = call.add_esdt_token_transfer(payment.token_identifier, payment.token_nonce, payment.amount);
             }
 
-            call.transfer_execute()
+            call.with_multi_token_transfer(action.payments).transfer_execute();
         }
     }
 
