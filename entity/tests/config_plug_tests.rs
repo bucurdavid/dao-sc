@@ -50,3 +50,16 @@ fn it_fails_to_set_a_plug_twice() {
         })
         .assert_user_error("already plugged");
 }
+
+#[test]
+fn it_fails_if_caller_not_self() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+    let plug_address = setup.contract.address_ref();
+
+    setup
+        .blockchain
+        .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
+            sc.set_plug_endpoint(managed_address!(plug_address), managed_biguint!(1000), managed_biguint!(50));
+        })
+        .assert_user_error("action not allowed by user");
+}
