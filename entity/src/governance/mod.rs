@@ -176,7 +176,9 @@ pub trait GovernanceModule:
         proposal.id
     }
 
-    /// TODO
+    /// Create a proposal via an asynchronous callback.
+    /// The callback result must return the original caller's vote weight.
+    /// Used majorly via the plugging feature.
     #[callback]
     fn propose_async_callback(
         &self,
@@ -260,7 +262,9 @@ pub trait GovernanceModule:
         self.commit_vote_payments(proposal_id);
     }
 
-    /// TODO
+    /// Vote for or against a proposal via an asynchronous callback.
+    /// The callback result must return the original caller's vote weight.
+    /// Used majorly via the plugging feature.
     #[callback]
     fn vote_async_callback(
         &self,
