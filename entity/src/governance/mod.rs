@@ -73,7 +73,6 @@ pub trait GovernanceModule:
     #[endpoint(changeQuorum)]
     fn change_quorum_endpoint(&self, value: BigUint) {
         self.require_caller_self();
-        self.require_gov_token_set();
         self.try_change_quorum(value);
     }
 
@@ -82,7 +81,6 @@ pub trait GovernanceModule:
     #[endpoint(changeMinVoteWeight)]
     fn change_min_vote_weight_endpoint(&self, value: BigUint) {
         self.require_caller_self();
-        self.require_gov_token_set();
         self.try_change_min_vote_weight(value);
     }
 
@@ -91,7 +89,6 @@ pub trait GovernanceModule:
     #[endpoint(changeMinProposeWeight)]
     fn change_min_propose_weight_endpoint(&self, value: BigUint) {
         self.require_caller_self();
-        self.require_gov_token_set();
         self.try_change_min_propose_weight(value);
     }
 
