@@ -194,7 +194,7 @@ pub trait GovernanceModule:
         return match result {
             ManagedAsyncCallResult::Ok(vote_weight) => {
                 let proposal = self.create_proposal(
-                    original_caller,
+                    original_caller.clone(),
                     trusted_host_id,
                     content_hash,
                     content_sig,
@@ -234,7 +234,7 @@ pub trait GovernanceModule:
 
         let vote_weight = self.get_weight_from_vote_payments();
 
-        self.vote(proposal_id, VoteType::For, vote_weight, option_id);
+        self.vote(caller, proposal_id, VoteType::For, vote_weight, option_id);
         self.commit_vote_payments(proposal_id);
     }
 
@@ -258,7 +258,7 @@ pub trait GovernanceModule:
 
         let vote_weight = self.get_weight_from_vote_payments();
 
-        self.vote(proposal_id, VoteType::Against, vote_weight, option_id);
+        self.vote(caller, proposal_id, VoteType::Against, vote_weight, option_id);
         self.commit_vote_payments(proposal_id);
     }
 
@@ -274,11 +274,11 @@ pub trait GovernanceModule:
     ) {
         match result {
             ManagedAsyncCallResult::Ok(vote_weight) => {
+                self.vote(original_caller.clone(), proposal_id, vote_type, vote_weight, option_id);
+
                 if self.is_plugged() {
                     self.record_plug_vote(original_caller, proposal_id);
                 }
-
-                self.vote(proposal_id, vote_type, vote_weight, option_id);
             }
             ManagedAsyncCallResult::Err(_) => {}
         };

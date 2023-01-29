@@ -112,7 +112,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
         self.next_proposal_id().set(proposal_id + 1);
         self.cast_poll_vote(proposal.id.clone(), option_id, vote_weight.clone());
         self.known_trusted_host_proposal_ids().insert(trusted_host_id);
-        self.emit_propose_event(&proposal, vote_weight);
+        self.emit_propose_event(proposer, &proposal, vote_weight, option_id);
 
         proposal
     }
@@ -225,7 +225,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
         }
     }
 
-    fn vote(&self, proposal_id: u64, vote_type: VoteType, weight: BigUint, option_id: u8) {
+    fn vote(&self, voter: ManagedAddress, proposal_id: u64, vote_type: VoteType, weight: BigUint, option_id: u8) {
         self.require_payments_with_gov_token();
         require!(weight > 0, "vote weight must be greater than 0");
 
@@ -242,7 +242,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
 
         self.proposals(proposal_id).set(&proposal);
         self.cast_poll_vote(proposal_id, option_id, weight.clone());
-        self.emit_vote_event(&proposal, vote_type, weight);
+        self.emit_vote_event(voter, &proposal, vote_type, weight, option_id);
     }
 
     fn sign(&self, proposal_id: u64, option_id: u8) {
@@ -253,7 +253,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
 
         self.sign_for_all_roles(&signer, &proposal);
         self.cast_poll_vote(proposal.id, option_id, BigUint::from(1u8));
-        self.emit_sign_event(&proposal);
+        self.emit_sign_event(signer, &proposal, option_id);
     }
 
     fn sign_for_all_roles(&self, signer: &ManagedAddress, proposal: &Proposal<Self::Api>) {
