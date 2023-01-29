@@ -485,9 +485,10 @@ pub trait GovernanceModule:
     }
 
     fn get_weight_from_vote_payments(&self) -> BigUint {
-        let payments = self.call_value().all_esdt_transfers();
-
-        payments.into_iter().fold(BigUint::zero(), |carry, payment| carry + &payment.amount)
+        self.call_value()
+            .all_esdt_transfers()
+            .into_iter()
+            .fold(BigUint::zero(), |carry, payment| carry + &payment.amount)
     }
 
     /// Processes received vote payment tokens.
