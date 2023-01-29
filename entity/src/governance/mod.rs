@@ -108,6 +108,7 @@ pub trait GovernanceModule:
     #[endpoint(setPlug)]
     fn set_plug_endpoint(&self, address: ManagedAddress, quorum: BigUint, min_propose_weight: BigUint) {
         self.require_caller_self();
+        require!(self.gov_token_id().is_empty(), "already has vote token");
         require!(!self.is_plugged(), "already plugged");
 
         self.plug_sc_address().set_if_empty(&address);
