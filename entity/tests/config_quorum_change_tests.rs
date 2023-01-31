@@ -1,6 +1,6 @@
-use multiversx_sc_scenario::*;
 use entity::config::*;
 use entity::governance::*;
+use multiversx_sc_scenario::*;
 use setup::*;
 
 mod setup;
@@ -31,16 +31,4 @@ fn it_fails_if_caller_not_self() {
             sc.change_quorum_endpoint(managed_biguint!(1000));
         })
         .assert_user_error("action not allowed by user");
-}
-
-#[test]
-fn it_fails_if_gov_token_is_not_set() {
-    let mut setup = EntitySetup::new(entity::contract_obj);
-
-    setup
-        .blockchain
-        .execute_tx(setup.contract.address_ref(), &setup.contract, &rust_biguint!(0), |sc| {
-            sc.change_quorum_endpoint(managed_biguint!(1000));
-        })
-        .assert_user_error("gov token must be set");
 }

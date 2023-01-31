@@ -13,6 +13,8 @@ pub const POLL_MAX_OPTIONS: u8 = 4;
 
 pub const GAS_LIMIT_SET_TOKEN_ROLES: u64 = 60_000_000;
 
+pub type UserId = usize;
+
 #[multiversx_sc::module]
 pub trait ConfigModule {
     fn require_caller_self(&self) {

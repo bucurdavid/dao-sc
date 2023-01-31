@@ -1,20 +1,19 @@
 multiversx_sc::imports!();
 
-use self::vote::VoteType;
 use crate::config::{self, GAS_LIMIT_SET_TOKEN_ROLES, MIN_PROPOSAL_VOTE_WEIGHT_DEFAULT, POLL_MAX_OPTIONS, QUORUM_DEFAULT, VOTING_PERIOD_MINUTES_DEFAULT};
 use crate::permission::{self, ROLE_BUILTIN_LEADER};
+use crate::plug;
 use errors::ALREADY_VOTED_WITH_TOKEN;
-use proposal::{Action, ProposalStatus};
+use proposal::{Action, ProposalStatus, VoteType};
 
 pub mod errors;
 pub mod events;
 pub mod proposal;
 pub mod token;
-pub mod vote;
 
 #[multiversx_sc::module]
 pub trait GovernanceModule:
-    config::ConfigModule + permission::PermissionModule + events::GovEventsModule + proposal::ProposalModule + vote::VoteModule + token::TokenModule
+    config::ConfigModule + plug::PlugModule + permission::PermissionModule + events::GovEventsModule + proposal::ProposalModule + token::TokenModule
 {
     fn init_governance_module(&self) {
         self.next_proposal_id().set_if_empty(1);
@@ -53,6 +52,7 @@ pub trait GovernanceModule:
     #[endpoint(initGovToken)]
     fn init_gov_token_endpoint(&self, token_id: TokenIdentifier, supply: BigUint, lock_vote_tokens: bool) {
         require!(self.gov_token_id().is_empty(), "gov token is already set");
+        require!(!self.is_plugged(), "already plugged");
         self.require_caller_has_leader_role();
 
         self.configure_governance_token(token_id, supply, lock_vote_tokens);
@@ -64,6 +64,7 @@ pub trait GovernanceModule:
     #[endpoint(changeGovToken)]
     fn change_gov_token_endpoint(&self, token_id: TokenIdentifier, supply: BigUint, lock_vote_tokens: bool) {
         self.require_caller_self();
+        require!(!self.is_plugged(), "already plugged");
         self.configure_governance_token(token_id, supply, lock_vote_tokens);
     }
 
@@ -72,7 +73,6 @@ pub trait GovernanceModule:
     #[endpoint(changeQuorum)]
     fn change_quorum_endpoint(&self, value: BigUint) {
         self.require_caller_self();
-        self.require_gov_token_set();
         self.try_change_quorum(value);
     }
 
@@ -81,7 +81,6 @@ pub trait GovernanceModule:
     #[endpoint(changeMinVoteWeight)]
     fn change_min_vote_weight_endpoint(&self, value: BigUint) {
         self.require_caller_self();
-        self.require_gov_token_set();
         self.try_change_min_vote_weight(value);
     }
 
@@ -90,7 +89,6 @@ pub trait GovernanceModule:
     #[endpoint(changeMinProposeWeight)]
     fn change_min_propose_weight_endpoint(&self, value: BigUint) {
         self.require_caller_self();
-        self.require_gov_token_set();
         self.try_change_min_propose_weight(value);
     }
 
@@ -102,6 +100,20 @@ pub trait GovernanceModule:
     fn change_voting_period_in_minutes_endpoint(&self, value: usize) {
         self.require_caller_self();
         self.try_change_voting_period_in_minutes(value);
+    }
+
+    /// Set the address of the plug smart contract.
+    /// Can only be called by the contract itself.
+    /// Can only be called once.
+    #[endpoint(setPlug)]
+    fn set_plug_endpoint(&self, address: ManagedAddress, quorum: BigUint, min_propose_weight: BigUint) {
+        self.require_caller_self();
+        require!(self.gov_token_id().is_empty(), "already has vote token");
+        require!(!self.is_plugged(), "already plugged");
+
+        self.plug_sc_address().set_if_empty(&address);
+        self.try_change_quorum(quorum);
+        self.try_change_min_propose_weight(min_propose_weight);
     }
 
     /// Create a proposal with optional actions
@@ -128,37 +140,78 @@ pub trait GovernanceModule:
         option_id: u8,
         permissions: MultiValueManagedVec<ManagedBuffer>,
     ) -> u64 {
-        let proposer = self.blockchain().get_caller();
-        let permissions = permissions.into_vec();
+        let caller = self.blockchain().get_caller();
+
+        if self.is_plugged() {
+            self.call_plug_vote_weight_async()
+                .with_callback(self.callbacks().propose_async_callback(
+                    caller,
+                    trusted_host_id,
+                    content_hash,
+                    content_sig,
+                    actions_hash,
+                    option_id,
+                    permissions.into_vec(),
+                ))
+                .call_and_exit();
+        }
 
         self.require_payments_with_gov_token();
-        self.require_proposed_via_trusted_host(&trusted_host_id, &content_hash, content_sig, &actions_hash, &permissions);
-        require!(!self.known_trusted_host_proposal_ids().contains(&trusted_host_id), "proposal already registered");
 
-        let (allowed, policies) = self.can_propose(&proposer, &actions_hash, &permissions);
-        require!(allowed, "action not allowed for user");
-
-        let proposer_id = self.users().get_user_id(&proposer);
-        let proposer_roles = self.user_roles(proposer_id);
         let vote_weight = self.get_weight_from_vote_payments();
 
-        if proposer_roles.is_empty() || self.has_token_weighted_policy(&policies) {
-            require!(vote_weight >= self.min_propose_weight().get(), "insufficient vote weight");
-        }
+        let proposal = self.create_proposal(
+            caller,
+            trusted_host_id,
+            content_hash,
+            content_sig,
+            actions_hash,
+            option_id,
+            vote_weight,
+            permissions.into_vec(),
+        );
 
-        let proposal = self.create_proposal(content_hash, actions_hash, vote_weight.clone(), permissions, &policies);
-        let proposal_id = proposal.id;
+        self.commit_vote_payments(proposal.id.clone());
 
-        if !proposer_roles.is_empty() {
-            self.sign_for_all_roles(&proposer, &proposal);
-        }
+        proposal.id
+    }
 
-        self.commit_vote_payments(proposal_id);
-        self.cast_poll_vote(proposal.id, option_id, vote_weight.clone());
-        self.known_trusted_host_proposal_ids().insert(trusted_host_id);
-        self.emit_propose_event(&proposal, vote_weight);
+    /// Create a proposal via an asynchronous callback.
+    /// The callback result must return the original caller's vote weight.
+    /// Used majorly via the plugging feature.
+    #[callback]
+    fn propose_async_callback(
+        &self,
+        original_caller: ManagedAddress,
+        trusted_host_id: ManagedBuffer,
+        content_hash: ManagedBuffer,
+        content_sig: ManagedBuffer,
+        actions_hash: ManagedBuffer,
+        option_id: u8,
+        permissions: ManagedVec<ManagedBuffer>,
+        #[call_result] result: ManagedAsyncCallResult<BigUint>,
+    ) -> u64 {
+        return match result {
+            ManagedAsyncCallResult::Ok(vote_weight) => {
+                let proposal = self.create_proposal(
+                    original_caller.clone(),
+                    trusted_host_id,
+                    content_hash,
+                    content_sig,
+                    actions_hash,
+                    option_id,
+                    vote_weight,
+                    permissions,
+                );
 
-        proposal_id
+                if self.is_plugged() {
+                    self.record_plug_vote(original_caller, proposal.id.clone());
+                }
+
+                return proposal.id;
+            }
+            ManagedAsyncCallResult::Err(_) => 0,
+        };
     }
 
     /// Vote for of a proposal, optionally with a poll option.
@@ -170,9 +223,18 @@ pub trait GovernanceModule:
     #[payable("*")]
     #[endpoint(voteFor)]
     fn vote_for_endpoint(&self, proposal_id: u64, opt_option_id: OptionalValue<u8>) {
-        let vote_weight = self.get_weight_from_vote_payments();
+        let caller = self.blockchain().get_caller();
         let option_id = opt_option_id.into_option().unwrap_or_default();
-        self.vote(proposal_id, VoteType::For, vote_weight, option_id);
+
+        if self.is_plugged() {
+            self.call_plug_vote_weight_async()
+                .with_callback(self.callbacks().vote_async_callback(caller, proposal_id, VoteType::For, option_id))
+                .call_and_exit();
+        }
+
+        let vote_weight = self.get_weight_from_vote_payments();
+
+        self.vote(caller, proposal_id, VoteType::For, vote_weight, option_id);
         self.commit_vote_payments(proposal_id);
     }
 
@@ -185,10 +247,43 @@ pub trait GovernanceModule:
     #[payable("*")]
     #[endpoint(voteAgainst)]
     fn vote_against_endpoint(&self, proposal_id: u64, opt_option_id: OptionalValue<u8>) {
-        let vote_weight = self.get_weight_from_vote_payments();
+        let caller = self.blockchain().get_caller();
         let option_id = opt_option_id.into_option().unwrap_or_default();
-        self.vote(proposal_id, VoteType::Against, vote_weight, option_id);
+
+        if self.is_plugged() {
+            self.call_plug_vote_weight_async()
+                .with_callback(self.callbacks().vote_async_callback(caller, proposal_id, VoteType::Against, option_id))
+                .call_and_exit();
+        }
+
+        let vote_weight = self.get_weight_from_vote_payments();
+
+        self.vote(caller, proposal_id, VoteType::Against, vote_weight, option_id);
         self.commit_vote_payments(proposal_id);
+    }
+
+    /// Vote for or against a proposal via an asynchronous callback.
+    /// The callback result must return the original caller's vote weight.
+    /// Used majorly via the plugging feature.
+    #[callback]
+    fn vote_async_callback(
+        &self,
+        original_caller: ManagedAddress,
+        proposal_id: u64,
+        vote_type: VoteType,
+        option_id: u8,
+        #[call_result] result: ManagedAsyncCallResult<BigUint>,
+    ) {
+        match result {
+            ManagedAsyncCallResult::Ok(vote_weight) => {
+                self.vote(original_caller.clone(), proposal_id, vote_type, vote_weight, option_id);
+
+                if self.is_plugged() {
+                    self.record_plug_vote(original_caller, proposal_id);
+                }
+            }
+            ManagedAsyncCallResult::Err(_) => {}
+        };
     }
 
     /// Sign a proposal, optionally with a poll option.
@@ -250,6 +345,7 @@ pub trait GovernanceModule:
     #[endpoint(issueGovToken)]
     fn issue_gov_token_endpoint(&self, token_name: ManagedBuffer, token_ticker: ManagedBuffer, supply: BigUint) {
         require!(self.gov_token_id().is_empty(), "governance token already set");
+        require!(!self.is_plugged(), "already plugged");
 
         let caller = self.blockchain().get_caller();
         let user_id = self.users().get_user_id(&caller);
