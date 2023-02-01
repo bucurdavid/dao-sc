@@ -28,6 +28,12 @@ pub trait Manager:
         self.cost_creation_amount().set(&cost_entity_creation);
     }
 
+    #[only_owner]
+    #[endpoint(forwardToken)]
+    fn forward_token_endpoint(&self, token: TokenIdentifier, amount: BigUint, address: ManagedAddress) {
+        self.send().direct_esdt(&address, &token, 0, &amount);
+    }
+
     #[payable("*")]
     #[endpoint(executeTicket)]
     fn execute_ticket_endpoint(&self, ticket_type: ManagedBuffer, ticket_id: ManagedBuffer) {
