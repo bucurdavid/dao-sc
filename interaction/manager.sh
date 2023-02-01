@@ -283,3 +283,17 @@ getFeatures() {
         --arguments "str:$1" \
         --proxy=$PROXY || return
 }
+
+# params:
+#   $1 = token
+#   $2 = amount
+#   $3 = address
+forwardToken() {
+    mxpy --verbose contract call $MANAGER_ADDRESS \
+        --function="forwardToken" \
+        --arguments "str:$1" $2 $3 \
+        --recall-nonce --gas-limit=10000000 \
+        --proxy=$PROXY --chain=$CHAIN_ID \
+        --ledger \
+        --send || return
+}
