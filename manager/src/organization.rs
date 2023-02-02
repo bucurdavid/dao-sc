@@ -26,7 +26,7 @@ pub trait OrganizationModule: config::ConfigModule {
         }
 
         self.org_contract_proxy(self.org_contract_address().get())
-            .deposit_endpoint()
+            .distribute_endpoint()
             .with_esdt_transfer(payment)
             .execute_on_dest_context::<()>();
     }
@@ -44,7 +44,7 @@ mod organization_proxy {
     #[multiversx_sc::proxy]
     pub trait OrganizationContractProxy {
         #[payable("*")]
-        #[endpoint(deposit)]
-        fn deposit_endpoint(&self);
+        #[endpoint(distribute)]
+        fn distribute_endpoint(&self);
     }
 }
