@@ -1,4 +1,4 @@
-# Fellowship DAOs Smart Contracts
+# PeerMe DAO Smart Contracts
 
 Smart contract used for managing and running DAOs through [PeerMe](https://peerme.io) on MultiversX Blockchain.
 
