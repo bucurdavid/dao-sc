@@ -108,10 +108,9 @@ pub trait GovernanceModule:
     #[endpoint(setPlug)]
     fn set_plug_endpoint(&self, address: ManagedAddress, quorum: BigUint, min_propose_weight: BigUint) {
         self.require_caller_self();
-        require!(self.gov_token_id().is_empty(), "already has vote token");
         require!(!self.is_plugged(), "already plugged");
 
-        self.plug_sc_address().set_if_empty(&address);
+        self.plug_sc_address().set(&address);
         self.try_change_quorum(quorum);
         self.try_change_min_propose_weight(min_propose_weight);
     }
@@ -141,8 +140,9 @@ pub trait GovernanceModule:
         permissions: MultiValueManagedVec<ManagedBuffer>,
     ) -> u64 {
         let caller = self.blockchain().get_caller();
+        let payment_weight = self.get_weight_from_vote_payments();
 
-        if self.is_plugged() {
+        if self.is_plugged() && payment_weight == 0 {
             self.call_plug_vote_weight_async()
                 .with_callback(self.callbacks().propose_async_callback(
                     caller,
@@ -158,8 +158,6 @@ pub trait GovernanceModule:
 
         self.require_payments_with_gov_token();
 
-        let vote_weight = self.get_weight_from_vote_payments();
-
         let proposal = self.create_proposal(
             caller,
             trusted_host_id,
@@ -167,7 +165,7 @@ pub trait GovernanceModule:
             content_sig,
             actions_hash,
             option_id,
-            vote_weight,
+            payment_weight,
             permissions.into_vec(),
         );
 
@@ -191,7 +189,7 @@ pub trait GovernanceModule:
         permissions: ManagedVec<ManagedBuffer>,
         #[call_result] result: ManagedAsyncCallResult<BigUint>,
     ) -> u64 {
-        return match result {
+        let proposal_id = match result {
             ManagedAsyncCallResult::Ok(vote_weight) => {
                 let proposal = self.create_proposal(
                     original_caller.clone(),
@@ -212,10 +210,14 @@ pub trait GovernanceModule:
             }
             ManagedAsyncCallResult::Err(_) => 0,
         };
+
+        require!(proposal_id > 0, "failed to retrieve caller vote weight");
+
+        proposal_id
     }
 
     /// Vote for of a proposal, optionally with a poll option.
-    /// Payment:
+    /// Payment (optional):
     ///     - token id must be equal to configured governance token id
     ///     - amount must be greater than the min_vote_weight
     ///     - ESDTs will be deposited and locked until the voting period has ended
@@ -225,21 +227,20 @@ pub trait GovernanceModule:
     fn vote_for_endpoint(&self, proposal_id: u64, opt_option_id: OptionalValue<u8>) {
         let caller = self.blockchain().get_caller();
         let option_id = opt_option_id.into_option().unwrap_or_default();
+        let payment_weight = self.get_weight_from_vote_payments();
 
-        if self.is_plugged() {
+        if self.is_plugged() && payment_weight == 0 {
             self.call_plug_vote_weight_async()
                 .with_callback(self.callbacks().vote_async_callback(caller, proposal_id, VoteType::For, option_id))
                 .call_and_exit();
         }
 
-        let vote_weight = self.get_weight_from_vote_payments();
-
-        self.vote(caller, proposal_id, VoteType::For, vote_weight, option_id);
+        self.vote(caller, proposal_id, VoteType::For, payment_weight, option_id);
         self.commit_vote_payments(proposal_id);
     }
 
     /// Vote against a proposal.
-    /// Payment:
+    /// Payment (optional):
     ///     - token id must be equal to configured governance token id
     ///     - amount must be greater than the min_vote_weight
     ///     - ESDTs will be deposited and locked until the voting period has ended
@@ -249,16 +250,15 @@ pub trait GovernanceModule:
     fn vote_against_endpoint(&self, proposal_id: u64, opt_option_id: OptionalValue<u8>) {
         let caller = self.blockchain().get_caller();
         let option_id = opt_option_id.into_option().unwrap_or_default();
+        let payment_weight = self.get_weight_from_vote_payments();
 
-        if self.is_plugged() {
+        if self.is_plugged() && payment_weight == 0 {
             self.call_plug_vote_weight_async()
                 .with_callback(self.callbacks().vote_async_callback(caller, proposal_id, VoteType::Against, option_id))
                 .call_and_exit();
         }
 
-        let vote_weight = self.get_weight_from_vote_payments();
-
-        self.vote(caller, proposal_id, VoteType::Against, vote_weight, option_id);
+        self.vote(caller, proposal_id, VoteType::Against, payment_weight, option_id);
         self.commit_vote_payments(proposal_id);
     }
 
@@ -282,7 +282,9 @@ pub trait GovernanceModule:
                     self.record_plug_vote(original_caller, proposal_id);
                 }
             }
-            ManagedAsyncCallResult::Err(_) => {}
+            ManagedAsyncCallResult::Err(_) => {
+                sc_panic!("failed to retrieve caller vote weight");
+            }
         };
     }
 

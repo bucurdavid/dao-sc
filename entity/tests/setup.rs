@@ -1,10 +1,11 @@
 multiversx_sc::imports!();
 
+use entity::config::*;
+use entity::governance::*;
+use entity::plug::*;
+use entity::*;
 use multiversx_sc_scenario::whitebox::*;
 use multiversx_sc_scenario::*;
-use entity::config::*;
-use entity::governance::GovernanceModule;
-use entity::*;
 
 pub const ENTITY_GOV_TOKEN_ID: &[u8] = b"SUPER-abcdef";
 pub const ENTITY_GOV_TOKEN_SUPPLY: u64 = 1_000;
@@ -13,6 +14,7 @@ pub const MIN_WEIGHT_FOR_PROPOSAL: u64 = 2;
 pub const POLL_DEFAULT_ID: u8 = 0;
 pub const QURUM: u64 = 50;
 pub const WASM_PATH: &'static str = "output/entity.wasm";
+pub const PLUG_EXAMPLE_WASM_PATH: &'static str = "tests/external/plug-example.wasm";
 
 #[allow(dead_code)]
 pub struct EntitySetup<ObjBuilder>
@@ -84,6 +86,20 @@ where
             })
             .assert_ok();
     }
+
+    pub fn configure_plug(&mut self, quorum: u64, min_propose_weight: u64) {
+        let plug_contract = self
+            .blockchain
+            .create_sc_account(&rust_biguint!(0), Some(&self.owner_address), fakes::contract_obj, PLUG_EXAMPLE_WASM_PATH);
+
+        self.blockchain
+            .execute_tx(&self.owner_address, &self.contract, &rust_biguint!(0), |sc| {
+                sc.plug_sc_address().set(managed_address!(&plug_contract.address_ref()));
+                sc.try_change_quorum(managed_biguint!(quorum));
+                sc.try_change_min_propose_weight(managed_biguint!(min_propose_weight));
+            })
+            .assert_ok();
+    }
 }
 
 #[test]
@@ -98,4 +114,24 @@ fn it_initializes_the_contract() {
             //
         })
         .assert_ok();
+}
+
+mod fakes {
+    multiversx_sc::imports!();
+
+    #[multiversx_sc::contract]
+    pub trait FakePlug {
+        #[init]
+        fn init(&self) {}
+
+        #[view(getDaoVoteWeight)]
+        fn get_dao_vote_weight_view(&self, _address: ManagedAddress) -> BigUint {
+            BigUint::from(100u64)
+        }
+
+        #[view(getDaoMembers)]
+        fn get_dao_members_view(&self) -> MultiValueEncoded<MultiValue2<ManagedAddress, BigUint>> {
+            MultiValueEncoded::new()
+        }
+    }
 }
