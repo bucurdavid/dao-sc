@@ -226,7 +226,6 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
     }
 
     fn vote(&self, voter: ManagedAddress, proposal_id: u64, vote_type: VoteType, weight: BigUint, option_id: u8) {
-        self.require_payments_with_gov_token();
         require!(weight > 0, "vote weight must be greater than 0");
         require!(!self.proposals(proposal_id).is_empty(), "proposal does not exist");
 

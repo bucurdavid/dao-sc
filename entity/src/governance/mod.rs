@@ -139,6 +139,7 @@ pub trait GovernanceModule:
         option_id: u8,
         permissions: MultiValueManagedVec<ManagedBuffer>,
     ) -> u64 {
+        self.require_payments_with_gov_token();
         let caller = self.blockchain().get_caller();
         let payment_weight = self.get_weight_from_vote_payments();
 
@@ -155,8 +156,6 @@ pub trait GovernanceModule:
                 ))
                 .call_and_exit();
         }
-
-        self.require_payments_with_gov_token();
 
         let proposal = self.create_proposal(
             caller,
@@ -227,6 +226,7 @@ pub trait GovernanceModule:
     #[payable("*")]
     #[endpoint(voteFor)]
     fn vote_for_endpoint(&self, proposal_id: u64, opt_option_id: OptionalValue<u8>) {
+        self.require_payments_with_gov_token();
         let caller = self.blockchain().get_caller();
         let option_id = opt_option_id.into_option().unwrap_or_default();
         let payment_weight = self.get_weight_from_vote_payments();
@@ -251,6 +251,7 @@ pub trait GovernanceModule:
     #[payable("*")]
     #[endpoint(voteAgainst)]
     fn vote_against_endpoint(&self, proposal_id: u64, opt_option_id: OptionalValue<u8>) {
+        self.require_payments_with_gov_token();
         let caller = self.blockchain().get_caller();
         let option_id = opt_option_id.into_option().unwrap_or_default();
         let payment_weight = self.get_weight_from_vote_payments();
