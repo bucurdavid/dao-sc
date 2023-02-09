@@ -32,15 +32,7 @@ fn it_combines_vote_weights_from_plug_and_esdts() {
         })
         .assert_ok();
 
-    // vote for - using plug
-    setup
-        .blockchain
-        .execute_tx(&voter_address, &setup.contract, &rust_biguint!(0), |sc| {
-            sc.vote_for_endpoint(proposal_id, OptionalValue::None);
-        })
-        .assert_ok();
-
-    // vote for - using esdt
+    // vote for - using plug and esdts from payment
     setup
         .blockchain
         .execute_esdt_transfer(&voter_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(50), |sc| {

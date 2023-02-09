@@ -191,6 +191,8 @@ pub trait GovernanceModule:
     ) -> u64 {
         let proposal_id = match result {
             ManagedAsyncCallResult::Ok(vote_weight) => {
+                require!(vote_weight > 0, "can not propose with 0 weight");
+
                 let proposal = self.create_proposal(
                     original_caller.clone(),
                     trusted_host_id,
@@ -229,14 +231,15 @@ pub trait GovernanceModule:
         let option_id = opt_option_id.into_option().unwrap_or_default();
         let payment_weight = self.get_weight_from_vote_payments();
 
-        if self.is_plugged() && payment_weight == 0 {
+        self.commit_vote_payments(proposal_id);
+
+        if self.is_plugged() {
             self.call_plug_vote_weight_async()
-                .with_callback(self.callbacks().vote_async_callback(caller, proposal_id, VoteType::For, option_id))
+                .with_callback(self.callbacks().vote_async_callback(caller, payment_weight, proposal_id, VoteType::For, option_id))
                 .call_and_exit();
         }
 
         self.vote(caller, proposal_id, VoteType::For, payment_weight, option_id);
-        self.commit_vote_payments(proposal_id);
     }
 
     /// Vote against a proposal.
@@ -252,14 +255,18 @@ pub trait GovernanceModule:
         let option_id = opt_option_id.into_option().unwrap_or_default();
         let payment_weight = self.get_weight_from_vote_payments();
 
-        if self.is_plugged() && payment_weight == 0 {
+        self.commit_vote_payments(proposal_id);
+
+        if self.is_plugged() {
             self.call_plug_vote_weight_async()
-                .with_callback(self.callbacks().vote_async_callback(caller, proposal_id, VoteType::Against, option_id))
+                .with_callback(
+                    self.callbacks()
+                        .vote_async_callback(caller, payment_weight, proposal_id, VoteType::Against, option_id),
+                )
                 .call_and_exit();
         }
 
         self.vote(caller, proposal_id, VoteType::Against, payment_weight, option_id);
-        self.commit_vote_payments(proposal_id);
     }
 
     /// Vote for or against a proposal via an asynchronous callback.
@@ -269,6 +276,7 @@ pub trait GovernanceModule:
     fn vote_async_callback(
         &self,
         original_caller: ManagedAddress,
+        original_payment_weight: BigUint,
         proposal_id: u64,
         vote_type: VoteType,
         option_id: u8,
@@ -276,7 +284,13 @@ pub trait GovernanceModule:
     ) {
         match result {
             ManagedAsyncCallResult::Ok(vote_weight) => {
-                self.vote(original_caller.clone(), proposal_id, vote_type, vote_weight, option_id);
+                let total_weight = &original_payment_weight + &vote_weight;
+
+                if total_weight == 0 {
+                    return;
+                }
+
+                self.vote(original_caller.clone(), proposal_id, vote_type, total_weight, option_id);
 
                 if self.is_plugged() {
                     self.record_plug_vote(original_caller, proposal_id);
