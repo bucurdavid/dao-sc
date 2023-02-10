@@ -10,7 +10,7 @@ use multiversx_sc_scenario::*;
 pub const ENTITY_GOV_TOKEN_ID: &[u8] = b"SUPER-abcdef";
 pub const ENTITY_GOV_TOKEN_SUPPLY: u64 = 1_000;
 pub const ENTITY_FAKE_TOKEN_ID: &[u8] = b"FAKE-abcdef";
-pub const MIN_WEIGHT_FOR_PROPOSAL: u64 = 2;
+pub const MIN_PROPOSE_WEIGHT: u64 = 2;
 pub const POLL_DEFAULT_ID: u8 = 0;
 pub const QURUM: u64 = 50;
 pub const WASM_PATH: &'static str = "output/entity.wasm";
@@ -65,11 +65,11 @@ where
     pub fn configure_gov_token(&mut self, lock_vote_tokens: bool) {
         self.blockchain
             .execute_tx(&self.owner_address, &self.contract, &rust_biguint!(0), |sc| {
-                sc.configure_governance_token(managed_token_id!(ENTITY_GOV_TOKEN_ID), managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL), lock_vote_tokens);
+                sc.configure_governance_token(managed_token_id!(ENTITY_GOV_TOKEN_ID), managed_biguint!(MIN_PROPOSE_WEIGHT), lock_vote_tokens);
 
                 // override defaults
                 sc.quorum().set(managed_biguint!(QURUM));
-                sc.min_propose_weight().set(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL));
+                sc.min_propose_weight().set(managed_biguint!(MIN_PROPOSE_WEIGHT));
 
                 // assert
                 assert_eq!(lock_vote_tokens, sc.lock_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID)).get());

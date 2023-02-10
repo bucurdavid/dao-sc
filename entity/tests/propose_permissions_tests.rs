@@ -1,9 +1,9 @@
-use multiversx_sc::types::*;
-use multiversx_sc_scenario::*;
 use entity::config::*;
 use entity::governance::proposal::*;
 use entity::governance::*;
 use entity::permission::*;
+use multiversx_sc::types::*;
+use multiversx_sc_scenario::*;
 use setup::*;
 
 mod setup;
@@ -75,36 +75,29 @@ fn it_sets_the_longest_policy_voting_period_for_the_proposal() {
 
     setup
         .blockchain
-        .execute_esdt_transfer(
-            &proposer_address,
-            &setup.contract,
-            ENTITY_GOV_TOKEN_ID,
-            0,
-            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
-            |sc| {
-                let mut actions = Vec::<Action<DebugApi>>::new();
-                actions.push(Action::<DebugApi> {
-                    destination: managed_address!(&sc_address),
-                    endpoint: managed_buffer!(b"testendpoint"),
-                    arguments: ManagedVec::new(),
-                    gas_limit: 5_000_000u64,
-                    value: managed_biguint!(0),
-                    payments: ManagedVec::new(),
-                });
+        .execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_PROPOSE_WEIGHT), |sc| {
+            let mut actions = Vec::<Action<DebugApi>>::new();
+            actions.push(Action::<DebugApi> {
+                destination: managed_address!(&sc_address),
+                endpoint: managed_buffer!(b"testendpoint"),
+                arguments: ManagedVec::new(),
+                gas_limit: 5_000_000u64,
+                value: managed_biguint!(0),
+                payments: ManagedVec::new(),
+            });
 
-                let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
-                let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"testperm1"), managed_buffer!(b"testperm2"), managed_buffer!(b"testperm3")]);
+            let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
+            let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"testperm1"), managed_buffer!(b"testperm2"), managed_buffer!(b"testperm3")]);
 
-                sc.propose_endpoint(
-                    managed_buffer!(b"id"),
-                    managed_buffer!(b"content hash"),
-                    managed_buffer!(b"content signature"),
-                    actions_hash,
-                    POLL_DEFAULT_ID,
-                    actions_permissions,
-                );
-            },
-        )
+            sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b"content hash"),
+                managed_buffer!(b"content signature"),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                actions_permissions,
+            );
+        })
         .assert_ok();
 
     setup
@@ -128,38 +121,31 @@ fn it_allows_anyone_to_propose_if_leaderless() {
 
     setup
         .blockchain
-        .execute_esdt_transfer(
-            &proposer_address,
-            &setup.contract,
-            ENTITY_GOV_TOKEN_ID,
-            0,
-            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
-            |sc| {
-                // remove leader role
-                sc.roles().swap_remove(&managed_buffer!(ROLE_BUILTIN_LEADER));
+        .execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_PROPOSE_WEIGHT), |sc| {
+            // remove leader role
+            sc.roles().swap_remove(&managed_buffer!(ROLE_BUILTIN_LEADER));
 
-                let mut actions = Vec::<Action<DebugApi>>::new();
-                actions.push(Action::<DebugApi> {
-                    destination: managed_address!(&sc_address),
-                    endpoint: managed_buffer!(b"testendpoint"),
-                    arguments: ManagedVec::new(),
-                    gas_limit: 5_000_000u64,
-                    value: managed_biguint!(0),
-                    payments: ManagedVec::new(),
-                });
+            let mut actions = Vec::<Action<DebugApi>>::new();
+            actions.push(Action::<DebugApi> {
+                destination: managed_address!(&sc_address),
+                endpoint: managed_buffer!(b"testendpoint"),
+                arguments: ManagedVec::new(),
+                gas_limit: 5_000_000u64,
+                value: managed_biguint!(0),
+                payments: ManagedVec::new(),
+            });
 
-                let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
-                let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"testperm1"), managed_buffer!(b"testperm2"), managed_buffer!(b"testperm3")]);
+            let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
+            let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"testperm1"), managed_buffer!(b"testperm2"), managed_buffer!(b"testperm3")]);
 
-                sc.propose_endpoint(
-                    managed_buffer!(b"id"),
-                    managed_buffer!(b"content hash"),
-                    managed_buffer!(b"content signature"),
-                    actions_hash,
-                    POLL_DEFAULT_ID,
-                    actions_permissions,
-                );
-            },
-        )
+            sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b"content hash"),
+                managed_buffer!(b"content signature"),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                actions_permissions,
+            );
+        })
         .assert_ok();
 }

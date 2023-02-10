@@ -1,8 +1,8 @@
+use entity::config::*;
+use entity::governance::*;
 use multiversx_sc::codec::multi_types::*;
 use multiversx_sc::types::*;
 use multiversx_sc_scenario::*;
-use entity::config::*;
-use entity::governance::*;
 use setup::*;
 
 mod setup;
@@ -85,7 +85,7 @@ fn it_clears_the_voters_withdrawable_storage_for_the_proposal() {
             &setup.contract,
             ENTITY_GOV_TOKEN_ID,
             vote_sft_nonce,
-            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
+            &rust_biguint!(MIN_PROPOSE_WEIGHT),
             |sc| {
                 proposal_id = sc.propose_endpoint(
                     managed_buffer!(b"id"),
@@ -137,7 +137,7 @@ fn it_reduces_the_guarded_vote_token_amount() {
             &setup.contract,
             ENTITY_GOV_TOKEN_ID,
             vote_sft_nonce,
-            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
+            &rust_biguint!(MIN_PROPOSE_WEIGHT),
             |sc| {
                 proposal_id = sc.propose_endpoint(
                     managed_buffer!(b"id"),
@@ -191,7 +191,7 @@ fn it_does_not_withdraw_tokens_from_proposals_that_are_still_active() {
             &setup.contract,
             ENTITY_GOV_TOKEN_ID,
             vote_sft_nonce,
-            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
+            &rust_biguint!(MIN_PROPOSE_WEIGHT),
             |sc| {
                 proposal_id = sc.propose_endpoint(
                     managed_buffer!(b"id"),
@@ -217,7 +217,7 @@ fn it_does_not_withdraw_tokens_from_proposals_that_are_still_active() {
         .execute_query(&setup.contract, |sc| {
             let withdrawable_mapper = sc.withdrawable_votes(proposal_id, &managed_address!(&user_address)).get(1);
             assert_eq!(managed_token_id!(ENTITY_GOV_TOKEN_ID), withdrawable_mapper.token_identifier);
-            assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL), withdrawable_mapper.amount);
+            assert_eq!(managed_biguint!(MIN_PROPOSE_WEIGHT), withdrawable_mapper.amount);
 
             assert!(sc.withdrawable_proposal_ids(&managed_address!(&user_address)).contains(&proposal_id));
         })

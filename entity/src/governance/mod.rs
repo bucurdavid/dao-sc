@@ -123,7 +123,7 @@ pub trait GovernanceModule:
     ///     - actions_hash: the hash of serialized actions to verify on execution. leave empty if no actions attached
     ///     - option_id: unique id of poll option. 0 = None
     ///     - permissions (optional): a list of permissions (their unique names) to be verified on proposal execution
-    /// Payment:
+    /// Payment (optional):
     ///     - token id must be equal to configured governance token id
     ///     - amount must be greater than the min_propose_weight
     ///     - amount will be used to vote in favor (FOR) the proposal
@@ -141,12 +141,13 @@ pub trait GovernanceModule:
     ) -> u64 {
         self.require_payments_with_gov_token();
         let caller = self.blockchain().get_caller();
-        let payment_weight = self.get_weight_from_vote_payments();
+        let payments = self.call_value().all_esdt_transfers();
 
-        if self.is_plugged() && payment_weight == 0 {
+        if self.is_plugged() {
             self.call_plug_vote_weight_async()
                 .with_callback(self.callbacks().propose_async_callback(
                     caller,
+                    payments,
                     trusted_host_id,
                     content_hash,
                     content_sig,
@@ -157,8 +158,10 @@ pub trait GovernanceModule:
                 .call_and_exit();
         }
 
+        let payment_weight = self.get_vote_weight_from_payments(&payments);
+
         let proposal = self.create_proposal(
-            caller,
+            caller.clone(),
             trusted_host_id,
             content_hash,
             content_sig,
@@ -168,7 +171,7 @@ pub trait GovernanceModule:
             permissions.into_vec(),
         );
 
-        self.commit_vote_payments(proposal.id.clone());
+        self.commit_vote_payments(&caller, proposal.id.clone(), &payments);
 
         proposal.id
     }
@@ -180,6 +183,7 @@ pub trait GovernanceModule:
     fn propose_async_callback(
         &self,
         original_caller: ManagedAddress,
+        original_payments: ManagedVec<EsdtTokenPayment<Self::Api>>,
         trusted_host_id: ManagedBuffer,
         content_hash: ManagedBuffer,
         content_sig: ManagedBuffer,
@@ -189,8 +193,11 @@ pub trait GovernanceModule:
         #[call_result] result: ManagedAsyncCallResult<BigUint>,
     ) -> u64 {
         let proposal_id = match result {
-            ManagedAsyncCallResult::Ok(vote_weight) => {
-                require!(vote_weight > 0, "can not propose with 0 weight");
+            ManagedAsyncCallResult::Ok(propose_weight) => {
+                let payment_weight = self.get_vote_weight_from_payments(&original_payments);
+                let total_weight = &payment_weight + &propose_weight;
+
+                require!(total_weight > 0, "can not propose with 0 weight");
 
                 let proposal = self.create_proposal(
                     original_caller.clone(),
@@ -199,12 +206,14 @@ pub trait GovernanceModule:
                     content_sig,
                     actions_hash,
                     option_id,
-                    vote_weight,
+                    total_weight,
                     permissions,
                 );
 
+                self.commit_vote_payments(&original_caller, proposal.id, &original_payments);
+
                 if self.is_plugged() {
-                    self.record_plug_vote(original_caller, proposal.id.clone());
+                    self.record_plug_vote(original_caller, proposal.id);
                 }
 
                 return proposal.id;
@@ -229,9 +238,10 @@ pub trait GovernanceModule:
         self.require_payments_with_gov_token();
         let caller = self.blockchain().get_caller();
         let option_id = opt_option_id.into_option().unwrap_or_default();
-        let payment_weight = self.get_weight_from_vote_payments();
+        let payments = self.call_value().all_esdt_transfers();
+        let payment_weight = self.get_vote_weight_from_payments(&payments);
 
-        self.commit_vote_payments(proposal_id);
+        self.commit_vote_payments(&caller, proposal_id, &payments);
 
         if self.is_plugged() {
             self.call_plug_vote_weight_async()
@@ -254,9 +264,10 @@ pub trait GovernanceModule:
         self.require_payments_with_gov_token();
         let caller = self.blockchain().get_caller();
         let option_id = opt_option_id.into_option().unwrap_or_default();
-        let payment_weight = self.get_weight_from_vote_payments();
+        let payments = self.call_value().all_esdt_transfers();
+        let payment_weight = self.get_vote_weight_from_payments(&payments);
 
-        self.commit_vote_payments(proposal_id);
+        self.commit_vote_payments(&caller, proposal_id, &payments);
 
         if self.is_plugged() {
             self.call_plug_vote_weight_async()
@@ -287,9 +298,7 @@ pub trait GovernanceModule:
             ManagedAsyncCallResult::Ok(vote_weight) => {
                 let total_weight = &original_payment_weight + &vote_weight;
 
-                if total_weight == 0 {
-                    return;
-                }
+                require!(total_weight > 0, "can not vote with 0 weight");
 
                 self.vote(original_caller.clone(), proposal_id, vote_type, total_weight, option_id);
 
@@ -501,11 +510,8 @@ pub trait GovernanceModule:
         results
     }
 
-    fn get_weight_from_vote_payments(&self) -> BigUint {
-        self.call_value()
-            .all_esdt_transfers()
-            .into_iter()
-            .fold(BigUint::zero(), |carry, payment| carry + &payment.amount)
+    fn get_vote_weight_from_payments(&self, payments: &ManagedVec<EsdtTokenPayment<Self::Api>>) -> BigUint {
+        payments.into_iter().fold(BigUint::zero(), |carry, payment| carry + &payment.amount)
     }
 
     /// Processes received vote payment tokens.
@@ -513,9 +519,11 @@ pub trait GovernanceModule:
     /// - ESDTs will >always< be deposited/locked in the contract.
     /// - NFTs, SFTs & MetaESDTs are only locked if locked_vote_tokens is set to true (default).
     /// Fails if the NFT's nonce has been used to vote previously.
-    fn commit_vote_payments(&self, proposal_id: u64) {
-        let payments = self.call_value().all_esdt_transfers();
-        let caller = self.blockchain().get_caller();
+    fn commit_vote_payments(&self, caller: &ManagedAddress, proposal_id: u64, payments: &ManagedVec<EsdtTokenPayment<Self::Api>>) {
+        if payments.is_empty() {
+            return;
+        }
+
         let mut returnables = ManagedVec::new();
 
         for payment in payments.into_iter() {

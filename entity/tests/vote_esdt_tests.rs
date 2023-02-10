@@ -1,8 +1,8 @@
+use entity::config::*;
+use entity::governance::*;
 use multiversx_sc::codec::multi_types::*;
 use multiversx_sc::types::*;
 use multiversx_sc_scenario::*;
-use entity::config::*;
-use entity::governance::*;
 use setup::*;
 
 mod setup;
@@ -22,7 +22,7 @@ fn it_votes_for_a_proposal() {
             &setup.contract,
             ENTITY_GOV_TOKEN_ID,
             0,
-            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
+            &rust_biguint!(MIN_PROPOSE_WEIGHT),
             |sc| {
                 proposal_id = sc.propose_endpoint(
                     managed_buffer!(b"id"),
@@ -44,10 +44,10 @@ fn it_votes_for_a_proposal() {
 
             let proposal = sc.proposals(proposal_id).get();
 
-            assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 25), proposal.votes_for);
+            assert_eq!(managed_biguint!(MIN_PROPOSE_WEIGHT + 25), proposal.votes_for);
             assert_eq!(managed_biguint!(0), proposal.votes_against);
             assert_eq!(
-                managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 25),
+                managed_biguint!(MIN_PROPOSE_WEIGHT + 25),
                 sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), 0).get()
             );
             assert!(sc.withdrawable_proposal_ids(&managed_address!(&voter_address)).contains(&proposal.id));
@@ -66,10 +66,10 @@ fn it_votes_for_a_proposal() {
 
             let proposal = sc.proposals(proposal_id).get();
 
-            assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 50), proposal.votes_for);
+            assert_eq!(managed_biguint!(MIN_PROPOSE_WEIGHT + 50), proposal.votes_for);
             assert_eq!(managed_biguint!(0), proposal.votes_against);
             assert_eq!(
-                managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 50),
+                managed_biguint!(MIN_PROPOSE_WEIGHT + 50),
                 sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), 0).get()
             );
 
@@ -96,7 +96,7 @@ fn it_votes_for_a_proposal_with_poll() {
             &setup.contract,
             ENTITY_GOV_TOKEN_ID,
             0,
-            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
+            &rust_biguint!(MIN_PROPOSE_WEIGHT),
             |sc| {
                 proposal_id = sc.propose_endpoint(
                     managed_buffer!(b"id"),
@@ -115,7 +115,7 @@ fn it_votes_for_a_proposal_with_poll() {
         .execute_esdt_transfer(&voter_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(25), |sc| {
             sc.vote_for_endpoint(proposal_id, OptionalValue::Some(poll_option_id));
 
-            assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 25), sc.proposal_poll(proposal_id, poll_option_id).get());
+            assert_eq!(managed_biguint!(MIN_PROPOSE_WEIGHT + 25), sc.proposal_poll(proposal_id, poll_option_id).get());
         })
         .assert_ok();
 }
@@ -135,7 +135,7 @@ fn it_votes_against_a_proposal() {
             &setup.contract,
             ENTITY_GOV_TOKEN_ID,
             0,
-            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
+            &rust_biguint!(MIN_PROPOSE_WEIGHT),
             |sc| {
                 proposal_id = sc.propose_endpoint(
                     managed_buffer!(b"id"),
@@ -156,10 +156,10 @@ fn it_votes_against_a_proposal() {
 
             let proposal = sc.proposals(proposal_id).get();
 
-            assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL), proposal.votes_for);
+            assert_eq!(managed_biguint!(MIN_PROPOSE_WEIGHT), proposal.votes_for);
             assert_eq!(managed_biguint!(25), proposal.votes_against);
             assert_eq!(
-                managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 25),
+                managed_biguint!(MIN_PROPOSE_WEIGHT + 25),
                 sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), 0).get()
             );
             assert!(sc.withdrawable_proposal_ids(&managed_address!(&voter_address)).contains(&proposal.id));
@@ -178,10 +178,10 @@ fn it_votes_against_a_proposal() {
 
             let proposal = sc.proposals(proposal_id).get();
 
-            assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL), proposal.votes_for);
+            assert_eq!(managed_biguint!(MIN_PROPOSE_WEIGHT), proposal.votes_for);
             assert_eq!(managed_biguint!(50), proposal.votes_against);
             assert_eq!(
-                managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 50),
+                managed_biguint!(MIN_PROPOSE_WEIGHT + 50),
                 sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), 0).get()
             );
 
@@ -206,7 +206,7 @@ fn it_fails_if_proposal_voting_period_has_ended() {
             &setup.contract,
             ENTITY_GOV_TOKEN_ID,
             0,
-            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
+            &rust_biguint!(MIN_PROPOSE_WEIGHT),
             |sc| {
                 proposal_id = sc.propose_endpoint(
                     managed_buffer!(b"id"),
@@ -244,7 +244,7 @@ fn it_fails_if_less_than_configured_min_vote_weight() {
             &setup.contract,
             ENTITY_GOV_TOKEN_ID,
             0,
-            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
+            &rust_biguint!(MIN_PROPOSE_WEIGHT),
             |sc| {
                 proposal_id = sc.propose_endpoint(
                     managed_buffer!(b"id"),
