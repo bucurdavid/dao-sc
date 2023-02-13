@@ -296,7 +296,11 @@ pub trait GovernanceModule:
     ) {
         match result {
             ManagedAsyncCallResult::Ok(vote_weight) => {
-                let total_weight = &original_payment_weight + &vote_weight;
+                let total_weight = if self.has_user_plug_voted(proposal_id, &original_caller) {
+                    original_payment_weight
+                } else {
+                    &original_payment_weight + &vote_weight
+                };
 
                 require!(total_weight > 0, "can not vote with 0 weight");
 
