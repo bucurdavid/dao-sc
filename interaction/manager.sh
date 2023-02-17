@@ -22,12 +22,12 @@ deploy() {
     echo "accidental deploy protection is activated."
     exit 1;
 
-    mxpy --verbose contract build entity || return
-    mxpy --verbose contract build manager || return
+    mxpy contract build entity || return
+    mxpy contract build manager || return
 
     cargo test || return
 
-    mxpy --verbose contract deploy --project entity \
+    mxpy contract deploy --project entity \
         --arguments $TRUSTED_HOST_ADDRESS \
         --recall-nonce --gas-limit=200000000 \
         --outfile="deploy-$NETWORK_NAME-entity.interaction.json" \
@@ -43,7 +43,7 @@ deploy() {
 
     sleep 6
 
-    mxpy --verbose contract deploy --project manager \
+    mxpy contract deploy --project manager \
         --arguments $ENTITY_ADDRESS $TRUSTED_HOST_ADDRESS "str:$COST_TOKEN_ID" $COST_ENTITY_CREATION_AMOUNT \
         --recall-nonce --gas-limit=80000000 \
         --outfile="deploy-$NETWORK_NAME-manager.interaction.json" \
@@ -77,12 +77,12 @@ deploy() {
 }
 
 upgrade() {
-    mxpy --verbose contract clean manager || return
-    mxpy --verbose contract build manager || return
+    mxpy contract clean manager || return
+    mxpy contract build manager || return
 
     cargo test || return
 
-    mxpy --verbose contract upgrade $MANAGER_ADDRESS --project manager \
+    mxpy contract upgrade $MANAGER_ADDRESS --project manager \
         --arguments $ENTITY_ADDRESS $TRUSTED_HOST_ADDRESS "str:$COST_TOKEN_ID" $COST_ENTITY_CREATION_AMOUNT \
         --metadata-payable \
         --metadata-payable-by-sc \
@@ -93,12 +93,12 @@ upgrade() {
 }
 
 upgradeEntityTemplate() {
-    mxpy --verbose contract clean entity || return
-    mxpy --verbose contract build entity || return
+    mxpy contract clean entity || return
+    mxpy contract build entity || return
 
     cargo test || return
 
-    mxpy --verbose contract upgrade $ENTITY_ADDRESS --project entity \
+    mxpy contract upgrade $ENTITY_ADDRESS --project entity \
         --arguments $TRUSTED_HOST_ADDRESS \
         --recall-nonce --gas-limit=200000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
@@ -109,7 +109,7 @@ upgradeEntityTemplate() {
 # paras:
 #   $1 = entity address
 upgradeEntity() {
-    mxpy --verbose contract call $MANAGER_ADDRESS \
+    mxpy contract call $MANAGER_ADDRESS \
         --function="upgradeEntity" \
         --arguments $1 \
         --recall-nonce --gas-limit=100000000 \
@@ -119,7 +119,7 @@ upgradeEntity() {
 }
 
 initCreditsModule() {
-    mxpy --verbose contract call $MANAGER_ADDRESS \
+    mxpy contract call $MANAGER_ADDRESS \
         --function="initCreditsModule" \
         --arguments "str:$CREDITS_REWARD_TOKEN_ID" $CREDITS_BONUS_FACTOR $CREDITS_BONUS_FACTOR_ENTITY_CREATION \
         --recall-nonce --gas-limit=5000000 \
@@ -129,7 +129,7 @@ initCreditsModule() {
 }
 
 initDexModule() {
-    mxpy --verbose contract call $MANAGER_ADDRESS \
+    mxpy contract call $MANAGER_ADDRESS \
         --function="initDexModule" \
         --arguments "str:$DEX_WEGLD_TOKEN_ID" $DEX_COST_TOKEN_WEGLD_SWAP_CONTRACT $DEX_WRAP_EGLD_SWAP_CONTRACT \
         --recall-nonce --gas-limit=5000000 \
@@ -139,7 +139,7 @@ initDexModule() {
 }
 
 initOrgModule() {
-    mxpy --verbose contract call $MANAGER_ADDRESS \
+    mxpy contract call $MANAGER_ADDRESS \
         --function="initOrgModule" \
         --arguments $ORGANIZATION_CONTRACT \
         --recall-nonce --gas-limit=5000000 \
@@ -149,7 +149,7 @@ initOrgModule() {
 }
 
 forwardCostTokensToOrg() {
-    mxpy --verbose contract call $MANAGER_ADDRESS \
+    mxpy contract call $MANAGER_ADDRESS \
         --function="forwardCostTokensToOrg" \
         --recall-nonce --gas-limit=5000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
@@ -158,7 +158,7 @@ forwardCostTokensToOrg() {
 }
 
 setEntityCreationCost() {
-    mxpy --verbose contract call $MANAGER_ADDRESS \
+    mxpy contract call $MANAGER_ADDRESS \
         --function="setEntityCreationCost" \
         --arguments $COST_ENTITY_CREATION_AMOUNT \
         --recall-nonce --gas-limit=5000000 \
@@ -168,7 +168,7 @@ setEntityCreationCost() {
 }
 
 setDailyBaseCost() {
-    mxpy --verbose contract call $MANAGER_ADDRESS \
+    mxpy contract call $MANAGER_ADDRESS \
         --function="setDailyBaseCost" \
         --arguments $COST_DAILY_BASE_AMOUNT \
         --recall-nonce --gas-limit=5000000 \
@@ -181,7 +181,7 @@ setDailyBaseCost() {
 #   $1 = feature name
 #   $2 = amount
 setDailyFeatureCost() {
-    mxpy --verbose contract call $MANAGER_ADDRESS \
+    mxpy contract call $MANAGER_ADDRESS \
         --function="setDailyFeatureCost" \
         --arguments "str:$1" $2 \
         --recall-nonce --gas-limit=5000000 \
@@ -289,7 +289,7 @@ getFeatures() {
 #   $2 = amount
 #   $3 = address
 forwardToken() {
-    mxpy --verbose contract call $MANAGER_ADDRESS \
+    mxpy contract call $MANAGER_ADDRESS \
         --function="forwardToken" \
         --arguments "str:$1" $2 $3 \
         --recall-nonce --gas-limit=10000000 \
