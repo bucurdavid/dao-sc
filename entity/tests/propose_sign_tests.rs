@@ -1,9 +1,9 @@
-use multiversx_sc::types::*;
-use multiversx_sc_scenario::*;
 use entity::config::*;
 use entity::governance::proposal::*;
 use entity::governance::*;
 use entity::permission::*;
+use multiversx_sc::types::*;
+use multiversx_sc_scenario::*;
 use setup::*;
 
 mod setup;
@@ -42,36 +42,29 @@ fn it_signs_a_proposal_on_proposing_if_proposal_requires_signing() {
 
     setup
         .blockchain
-        .execute_esdt_transfer(
-            &proposer_address,
-            &setup.contract,
-            ENTITY_GOV_TOKEN_ID,
-            0,
-            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
-            |sc| {
-                let mut actions = Vec::<Action<DebugApi>>::new();
-                actions.push(Action::<DebugApi> {
-                    destination: managed_address!(&sc_address),
-                    endpoint: managed_buffer!(b"testendpoint"),
-                    arguments: ManagedVec::new(),
-                    gas_limit: 5_000_000u64,
-                    value: managed_biguint!(0),
-                    payments: ManagedVec::new(),
-                });
+        .execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_PROPOSE_WEIGHT), |sc| {
+            let mut actions = Vec::<Action<DebugApi>>::new();
+            actions.push(Action::<DebugApi> {
+                destination: managed_address!(&sc_address),
+                endpoint: managed_buffer!(b"testendpoint"),
+                arguments: ManagedVec::new(),
+                gas_limit: 5_000_000u64,
+                value: managed_biguint!(0),
+                payments: ManagedVec::new(),
+            });
 
-                let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
-                let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"testperm")]);
+            let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
+            let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"testperm")]);
 
-                proposal_id = sc.propose_endpoint(
-                    managed_buffer!(b"id"),
-                    ManagedBuffer::new(),
-                    ManagedBuffer::new(),
-                    actions_hash,
-                    POLL_DEFAULT_ID,
-                    actions_permissions,
-                );
-            },
-        )
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
+                actions_hash,
+                POLL_DEFAULT_ID,
+                actions_permissions,
+            );
+        })
         .assert_ok();
 
     setup
@@ -183,23 +176,16 @@ fn it_does_not_self_sign_a_proposal_if_proposer_does_not_have_any_roles() {
 
     setup
         .blockchain
-        .execute_esdt_transfer(
-            &proposer_address,
-            &setup.contract,
-            ENTITY_GOV_TOKEN_ID,
-            0,
-            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
-            |sc| {
-                proposal_id = sc.propose_endpoint(
-                    managed_buffer!(b"id"),
-                    ManagedBuffer::new(),
-                    ManagedBuffer::new(),
-                    ManagedBuffer::new(),
-                    POLL_DEFAULT_ID,
-                    MultiValueManagedVec::new(),
-                );
-            },
-        )
+        .execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_PROPOSE_WEIGHT), |sc| {
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
+                POLL_DEFAULT_ID,
+                MultiValueManagedVec::new(),
+            );
+        })
         .assert_ok();
 
     setup

@@ -1,9 +1,9 @@
-use multiversx_sc::types::*;
-use multiversx_sc_scenario::*;
 use entity::config::*;
 use entity::governance::proposal::*;
 use entity::governance::*;
 use entity::permission::*;
+use multiversx_sc::types::*;
+use multiversx_sc_scenario::*;
 use setup::*;
 
 mod setup;
@@ -192,7 +192,7 @@ fn it_returns_defeated_if_one_of_two_permission_policies_does_not_meet_quorum_af
     // proposing also signs proposal
     setup
         .blockchain
-        .execute_tx(&proposer_address, &setup.contract, &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL + 1), |sc| {
+        .execute_tx(&proposer_address, &setup.contract, &rust_biguint!(MIN_PROPOSE_WEIGHT + 1), |sc| {
             let mut actions = Vec::<Action<DebugApi>>::new();
             actions.push(Action::<DebugApi> {
                 destination: managed_address!(sc_address),

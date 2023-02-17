@@ -22,21 +22,6 @@ fn it_configures_a_plug() {
 }
 
 #[test]
-fn it_fails_to_set_a_plug_when_governance_token_already_set() {
-    let mut setup = EntitySetup::new(entity::contract_obj);
-    let plug_address = setup.contract.address_ref().clone();
-
-    setup.configure_gov_token(true);
-
-    setup
-        .blockchain
-        .execute_tx(setup.contract.address_ref(), &setup.contract, &rust_biguint!(0), |sc| {
-            sc.set_plug_endpoint(managed_address!(&plug_address), managed_biguint!(2000), managed_biguint!(100));
-        })
-        .assert_user_error("already has vote token");
-}
-
-#[test]
 fn it_fails_to_set_a_plug_twice() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let plug_address = setup.contract.address_ref();

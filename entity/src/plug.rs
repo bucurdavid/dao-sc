@@ -4,6 +4,11 @@ use crate::config::{self, UserId};
 
 #[multiversx_sc::module]
 pub trait PlugModule: config::ConfigModule {
+    #[view(hasUserPlugVoted)]
+    fn has_user_plug_voted_view(&self, proposal_id: u64, address: ManagedAddress) -> bool {
+        self.has_user_plug_voted(proposal_id, &address)
+    }
+
     fn is_plugged(&self) -> bool {
         !self.plug_sc_address().is_empty()
     }
@@ -18,12 +23,11 @@ pub trait PlugModule: config::ConfigModule {
 
     fn record_plug_vote(&self, voter: ManagedAddress, proposal_id: u64) {
         let user_id = self.users().get_user_id(&voter);
-        let recorded = self.plug_votes(proposal_id).insert(user_id);
-        require!(recorded, "user already voted");
+
+        self.plug_votes(proposal_id).insert(user_id);
     }
 
-    #[view(hasUserPlugVoted)]
-    fn has_user_plug_voted_view(&self, address: ManagedAddress, proposal_id: u64) -> bool {
+    fn has_user_plug_voted(&self, proposal_id: u64, address: &ManagedAddress) -> bool {
         let user_id = self.users().get_user_id(&address);
 
         self.plug_votes(proposal_id).contains(&user_id)

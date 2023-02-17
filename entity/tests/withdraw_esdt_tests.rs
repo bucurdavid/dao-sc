@@ -1,8 +1,8 @@
+use entity::config::*;
+use entity::governance::*;
 use multiversx_sc::codec::multi_types::*;
 use multiversx_sc::types::*;
 use multiversx_sc_scenario::*;
-use entity::config::*;
-use entity::governance::*;
 use setup::*;
 
 mod setup;
@@ -17,23 +17,16 @@ fn it_withdraws_tokens_used_for_voting() {
 
     setup
         .blockchain
-        .execute_esdt_transfer(
-            &user_address,
-            &setup.contract,
-            ENTITY_GOV_TOKEN_ID,
-            0,
-            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
-            |sc| {
-                proposal_id = sc.propose_endpoint(
-                    managed_buffer!(b"id"),
-                    managed_buffer!(b"content hash"),
-                    managed_buffer!(b"content signature"),
-                    ManagedBuffer::new(),
-                    POLL_DEFAULT_ID,
-                    MultiValueManagedVec::new(),
-                );
-            },
-        )
+        .execute_esdt_transfer(&user_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_PROPOSE_WEIGHT), |sc| {
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b"content hash"),
+                managed_buffer!(b"content signature"),
+                ManagedBuffer::new(),
+                POLL_DEFAULT_ID,
+                MultiValueManagedVec::new(),
+            );
+        })
         .assert_ok();
 
     setup
@@ -74,23 +67,16 @@ fn it_clears_the_voters_withdrawable_storage_for_the_proposal() {
 
     setup
         .blockchain
-        .execute_esdt_transfer(
-            &voter_address,
-            &setup.contract,
-            ENTITY_GOV_TOKEN_ID,
-            0,
-            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
-            |sc| {
-                proposal_id = sc.propose_endpoint(
-                    managed_buffer!(b"id"),
-                    managed_buffer!(b"content hash"),
-                    managed_buffer!(b"content signature"),
-                    ManagedBuffer::new(),
-                    POLL_DEFAULT_ID,
-                    MultiValueManagedVec::new(),
-                );
-            },
-        )
+        .execute_esdt_transfer(&voter_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_PROPOSE_WEIGHT), |sc| {
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b"content hash"),
+                managed_buffer!(b"content signature"),
+                ManagedBuffer::new(),
+                POLL_DEFAULT_ID,
+                MultiValueManagedVec::new(),
+            );
+        })
         .assert_ok();
 
     setup.blockchain.set_block_timestamp(VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60 + 1);
@@ -121,28 +107,21 @@ fn it_reduces_the_guarded_vote_token_amount() {
 
     setup
         .blockchain
-        .execute_esdt_transfer(
-            &voter_address,
-            &setup.contract,
-            ENTITY_GOV_TOKEN_ID,
-            0,
-            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
-            |sc| {
-                proposal_id = sc.propose_endpoint(
-                    managed_buffer!(b"id"),
-                    managed_buffer!(b"content hash"),
-                    managed_buffer!(b"content signature"),
-                    ManagedBuffer::new(),
-                    POLL_DEFAULT_ID,
-                    MultiValueManagedVec::new(),
-                );
+        .execute_esdt_transfer(&voter_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_PROPOSE_WEIGHT), |sc| {
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b"content hash"),
+                managed_buffer!(b"content signature"),
+                ManagedBuffer::new(),
+                POLL_DEFAULT_ID,
+                MultiValueManagedVec::new(),
+            );
 
-                assert_eq!(
-                    managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
-                    sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), 0).get()
-                );
-            },
-        )
+            assert_eq!(
+                managed_biguint!(MIN_PROPOSE_WEIGHT),
+                sc.guarded_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID), 0).get()
+            );
+        })
         .assert_ok();
 
     setup.blockchain.set_block_timestamp(VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60 + 1);
@@ -167,23 +146,16 @@ fn it_does_not_withdraw_tokens_from_proposals_that_are_still_active() {
 
     setup
         .blockchain
-        .execute_esdt_transfer(
-            &user_address,
-            &setup.contract,
-            ENTITY_GOV_TOKEN_ID,
-            0,
-            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
-            |sc| {
-                proposal_id = sc.propose_endpoint(
-                    managed_buffer!(b"id"),
-                    managed_buffer!(b"content hash"),
-                    managed_buffer!(b"content signature"),
-                    ManagedBuffer::new(),
-                    POLL_DEFAULT_ID,
-                    MultiValueManagedVec::new(),
-                );
-            },
-        )
+        .execute_esdt_transfer(&user_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_PROPOSE_WEIGHT), |sc| {
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                managed_buffer!(b"content hash"),
+                managed_buffer!(b"content signature"),
+                ManagedBuffer::new(),
+                POLL_DEFAULT_ID,
+                MultiValueManagedVec::new(),
+            );
+        })
         .assert_ok();
 
     setup
@@ -200,7 +172,7 @@ fn it_does_not_withdraw_tokens_from_proposals_that_are_still_active() {
 
             let withdrawable_mapper = sc.withdrawable_votes(proposal_id, &managed_address!(&user_address)).get(1);
             assert_eq!(managed_token_id!(ENTITY_GOV_TOKEN_ID), withdrawable_mapper.token_identifier);
-            assert_eq!(managed_biguint!(MIN_WEIGHT_FOR_PROPOSAL), withdrawable_mapper.amount);
+            assert_eq!(managed_biguint!(MIN_PROPOSE_WEIGHT), withdrawable_mapper.amount);
         })
         .assert_ok();
 }
@@ -215,107 +187,72 @@ fn it_withdraws_tokens_from_multiple_proposals() {
 
     setup
         .blockchain
-        .execute_esdt_transfer(
-            &user_address,
-            &setup.contract,
-            ENTITY_GOV_TOKEN_ID,
-            0,
-            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
-            |sc| {
-                proposal_id = sc.propose_endpoint(
-                    managed_buffer!(b"id1"),
-                    managed_buffer!(b"content hash"),
-                    managed_buffer!(b"content signature"),
-                    ManagedBuffer::new(),
-                    POLL_DEFAULT_ID,
-                    MultiValueManagedVec::new(),
-                );
-            },
-        )
+        .execute_esdt_transfer(&user_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_PROPOSE_WEIGHT), |sc| {
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id1"),
+                managed_buffer!(b"content hash"),
+                managed_buffer!(b"content signature"),
+                ManagedBuffer::new(),
+                POLL_DEFAULT_ID,
+                MultiValueManagedVec::new(),
+            );
+        })
         .assert_ok();
 
     setup
         .blockchain
-        .execute_esdt_transfer(
-            &user_address,
-            &setup.contract,
-            ENTITY_GOV_TOKEN_ID,
-            0,
-            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
-            |sc| {
-                proposal_id = sc.propose_endpoint(
-                    managed_buffer!(b"id2"),
-                    managed_buffer!(b"content hash"),
-                    managed_buffer!(b"content signature"),
-                    ManagedBuffer::new(),
-                    POLL_DEFAULT_ID,
-                    MultiValueManagedVec::new(),
-                );
-            },
-        )
+        .execute_esdt_transfer(&user_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_PROPOSE_WEIGHT), |sc| {
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id2"),
+                managed_buffer!(b"content hash"),
+                managed_buffer!(b"content signature"),
+                ManagedBuffer::new(),
+                POLL_DEFAULT_ID,
+                MultiValueManagedVec::new(),
+            );
+        })
         .assert_ok();
 
     setup
         .blockchain
-        .execute_esdt_transfer(
-            &user_address,
-            &setup.contract,
-            ENTITY_GOV_TOKEN_ID,
-            0,
-            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
-            |sc| {
-                proposal_id = sc.propose_endpoint(
-                    managed_buffer!(b"id3"),
-                    managed_buffer!(b"content hash"),
-                    managed_buffer!(b"content signature"),
-                    ManagedBuffer::new(),
-                    POLL_DEFAULT_ID,
-                    MultiValueManagedVec::new(),
-                );
-            },
-        )
+        .execute_esdt_transfer(&user_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_PROPOSE_WEIGHT), |sc| {
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id3"),
+                managed_buffer!(b"content hash"),
+                managed_buffer!(b"content signature"),
+                ManagedBuffer::new(),
+                POLL_DEFAULT_ID,
+                MultiValueManagedVec::new(),
+            );
+        })
         .assert_ok();
 
     setup
         .blockchain
-        .execute_esdt_transfer(
-            &user_address,
-            &setup.contract,
-            ENTITY_GOV_TOKEN_ID,
-            0,
-            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
-            |sc| {
-                proposal_id = sc.propose_endpoint(
-                    managed_buffer!(b"id4"),
-                    managed_buffer!(b"content hash"),
-                    managed_buffer!(b"content signature"),
-                    ManagedBuffer::new(),
-                    POLL_DEFAULT_ID,
-                    MultiValueManagedVec::new(),
-                );
-            },
-        )
+        .execute_esdt_transfer(&user_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_PROPOSE_WEIGHT), |sc| {
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id4"),
+                managed_buffer!(b"content hash"),
+                managed_buffer!(b"content signature"),
+                ManagedBuffer::new(),
+                POLL_DEFAULT_ID,
+                MultiValueManagedVec::new(),
+            );
+        })
         .assert_ok();
 
     setup
         .blockchain
-        .execute_esdt_transfer(
-            &user_address,
-            &setup.contract,
-            ENTITY_GOV_TOKEN_ID,
-            0,
-            &rust_biguint!(MIN_WEIGHT_FOR_PROPOSAL),
-            |sc| {
-                proposal_id = sc.propose_endpoint(
-                    managed_buffer!(b"id5"),
-                    managed_buffer!(b"content hash"),
-                    managed_buffer!(b"content signature"),
-                    ManagedBuffer::new(),
-                    POLL_DEFAULT_ID,
-                    MultiValueManagedVec::new(),
-                );
-            },
-        )
+        .execute_esdt_transfer(&user_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_PROPOSE_WEIGHT), |sc| {
+            proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id5"),
+                managed_buffer!(b"content hash"),
+                managed_buffer!(b"content signature"),
+                ManagedBuffer::new(),
+                POLL_DEFAULT_ID,
+                MultiValueManagedVec::new(),
+            );
+        })
         .assert_ok();
 
     setup.blockchain.set_block_timestamp(VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60 + 1);
