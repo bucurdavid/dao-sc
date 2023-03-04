@@ -1,6 +1,6 @@
-use multiversx_sc_scenario::*;
 use entity::config::*;
 use entity::permission::*;
+use multiversx_sc_scenario::*;
 use setup::*;
 
 mod setup;
@@ -71,4 +71,48 @@ fn it_must_call_itself() {
             sc.unassign_role_endpoint(managed_buffer!(b"testrole"), managed_address!(user_address));
         })
         .assert_user_error("action not allowed by user");
+}
+
+#[test]
+fn it_fails_to_unassign_last_leader_when_not_gov_token_is_set() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+    let owner_address = setup.owner_address.clone();
+
+    setup
+        .blockchain
+        .execute_tx(&setup.contract.address_ref(), &setup.contract, &rust_biguint!(0), |sc| {
+            sc.unassign_role_endpoint(managed_buffer!(ROLE_BUILTIN_LEADER), managed_address!(&owner_address));
+        })
+        .assert_user_error("can not remove last leader: gov token or plug required");
+
+    setup.configure_gov_token(false);
+
+    setup
+        .blockchain
+        .execute_tx(&setup.contract.address_ref(), &setup.contract, &rust_biguint!(0), |sc| {
+            sc.unassign_role_endpoint(managed_buffer!(ROLE_BUILTIN_LEADER), managed_address!(&owner_address));
+        })
+        .assert_ok();
+}
+
+#[test]
+fn it_fails_to_unassign_last_leader_when_not_plugged() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+    let owner_address = setup.owner_address.clone();
+
+    setup
+        .blockchain
+        .execute_tx(&setup.contract.address_ref(), &setup.contract, &rust_biguint!(0), |sc| {
+            sc.unassign_role_endpoint(managed_buffer!(ROLE_BUILTIN_LEADER), managed_address!(&owner_address));
+        })
+        .assert_user_error("can not remove last leader: gov token or plug required");
+
+    setup.configure_plug(1, 1);
+
+    setup
+        .blockchain
+        .execute_tx(&setup.contract.address_ref(), &setup.contract, &rust_biguint!(0), |sc| {
+            sc.unassign_role_endpoint(managed_buffer!(ROLE_BUILTIN_LEADER), managed_address!(&owner_address));
+        })
+        .assert_ok();
 }
