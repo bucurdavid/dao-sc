@@ -125,12 +125,12 @@ mod fakes {
         fn init(&self) {}
 
         #[view(getDaoVoteWeight)]
-        fn get_dao_vote_weight_view(&self, _address: ManagedAddress) -> BigUint {
+        fn get_dao_vote_weight_view(&self, _address: ManagedAddress, _token: OptionalValue<TokenIdentifier>) -> BigUint {
             BigUint::from(100u64)
         }
 
         #[view(getDaoMembers)]
-        fn get_dao_members_view(&self) -> MultiValueEncoded<MultiValue2<ManagedAddress, BigUint>> {
+        fn get_dao_members_view(&self, _token: OptionalValue<TokenIdentifier>) -> MultiValueEncoded<MultiValue2<ManagedAddress, BigUint>> {
             MultiValueEncoded::new()
         }
     }
