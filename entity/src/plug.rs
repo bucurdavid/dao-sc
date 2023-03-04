@@ -17,8 +17,13 @@ pub trait PlugModule: config::ConfigModule {
         require!(self.is_plugged(), "not plugged");
 
         let caller = self.blockchain().get_caller();
+        let token = if self.gov_token_id().is_empty() {
+            OptionalValue::None
+        } else {
+            OptionalValue::Some(self.gov_token_id().get())
+        };
 
-        self.plug_proxy(self.plug_sc_address().get()).get_dao_vote_weight_view(caller).async_call()
+        self.plug_proxy(self.plug_sc_address().get()).get_dao_vote_weight_view(caller, token).async_call()
     }
 
     fn record_plug_vote(&self, voter: ManagedAddress, proposal_id: u64) {
@@ -50,6 +55,6 @@ mod plug_proxy {
     #[multiversx_sc::proxy]
     pub trait EntityPlugContractProxy {
         #[view(getDaoVoteWeight)]
-        fn get_dao_vote_weight_view(&self, address: ManagedAddress) -> BigUint;
+        fn get_dao_vote_weight_view(&self, address: ManagedAddress, token: OptionalValue<TokenIdentifier>) -> BigUint;
     }
 }
