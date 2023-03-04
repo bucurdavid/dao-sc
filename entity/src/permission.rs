@@ -1,7 +1,7 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-use crate::config;
+use crate::{config, plug};
 
 pub const ROLE_BUILTIN_LEADER: &[u8] = b"leader";
 
@@ -41,7 +41,7 @@ impl PolicyMethod {
 }
 
 #[multiversx_sc::module]
-pub trait PermissionModule: config::ConfigModule {
+pub trait PermissionModule: config::ConfigModule + plug::PlugModule {
     fn init_permission_module(&self, leader: ManagedAddress) {
         self.create_role(ManagedBuffer::from(ROLE_BUILTIN_LEADER));
         self.assign_role(leader, ManagedBuffer::from(ROLE_BUILTIN_LEADER));
@@ -248,6 +248,12 @@ pub trait PermissionModule: config::ConfigModule {
 
     fn unassign_role(&self, address: ManagedAddress, role_name: ManagedBuffer) {
         require!(self.roles().contains(&role_name), "role does not exist");
+
+        let is_last_leader = role_name == ManagedBuffer::from(ROLE_BUILTIN_LEADER) && self.roles_member_amount(&role_name).get() == 1;
+
+        if is_last_leader && !self.is_plugged() && self.gov_token_id().is_empty() {
+            sc_panic!("can not remove last leader: gov token or plug required");
+        }
 
         let user_id = self.users().get_or_create_user(&address);
 

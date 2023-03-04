@@ -8,6 +8,7 @@ use crate::config;
 use crate::permission;
 use crate::permission::PermissionDetails;
 use crate::permission::{Policy, PolicyMethod, ROLE_BUILTIN_LEADER};
+use crate::plug;
 use core::convert::TryFrom;
 
 #[derive(TopEncode, TopDecode, TypeAbi)]
@@ -50,7 +51,7 @@ pub enum VoteType {
 }
 
 #[multiversx_sc::module]
-pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + events::GovEventsModule {
+pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + events::GovEventsModule + plug::PlugModule {
     fn create_proposal(
         &self,
         proposer: ManagedAddress,
