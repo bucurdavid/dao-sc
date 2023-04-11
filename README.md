@@ -1,5 +1,8 @@
 # PeerMe DAO Smart Contracts
 
+[![](https://img.shields.io/twitter/follow/PeerMeHQ?color=%23555555&label=Follow%20PeerMe&logo=twitter&style=for-the-badge)](https://twitter.com/PeerMeHQ)
+[![](https://dcbadge.vercel.app/api/server/sDeejyk3VR)](https://discord.gg/sDeejyk3VR)
+
 Smart contract used for managing and running DAOs through [PeerMe](https://peerme.io) on MultiversX Blockchain.
 
 Specifically, two smart contracts:
