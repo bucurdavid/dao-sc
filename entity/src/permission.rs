@@ -161,26 +161,12 @@ pub trait PermissionModule: config::ConfigModule + plug::PlugModule {
     fn get_permissions_view(
         &self,
     ) -> MultiValueEncoded<
-        MultiValue8<
-            ManagedBuffer,
-            BigUint,
-            ManagedAddress,
-            ManagedBuffer,
-            usize,
-            MultiValueManagedVec<ManagedBuffer>,
-            usize,
-            MultiValueManagedVec<EsdtTokenPaymentMultiValue>,
-        >,
+        MultiValue8<ManagedBuffer, BigUint, ManagedAddress, ManagedBuffer, usize, MultiValueEncoded<ManagedBuffer>, usize, MultiValueEncoded<EsdtTokenPaymentMultiValue>>,
     > {
         let mut permissions = MultiValueEncoded::new();
 
         for permission_name in self.permissions().iter() {
             let perm = self.permission_details(&permission_name).get();
-            let mut payments_multi = MultiValueManagedVec::new();
-
-            for payment in perm.payments.into_iter() {
-                payments_multi.push(payment.into_multi_value());
-            }
 
             permissions.push(
                 (
@@ -189,9 +175,9 @@ pub trait PermissionModule: config::ConfigModule + plug::PlugModule {
                     perm.destination,
                     perm.endpoint,
                     perm.arguments.len(),
-                    MultiValueManagedVec::from(perm.arguments),
+                    MultiValueEncoded::from(perm.arguments),
                     perm.payments.len(),
-                    payments_multi,
+                    MultiValueEncoded::from(perm.payments.into_multi_value()),
                 )
                     .into(),
             );
