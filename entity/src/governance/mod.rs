@@ -230,8 +230,8 @@ pub trait GovernanceModule:
     /// Payment (optional):
     ///     - token id must be equal to configured governance token id
     ///     - amount must be greater than the min_vote_weight
-    ///     - ESDTs will be deposited and locked until the voting period has ended
-    ///     - NFTs/SFTs will be recorded as a vote and immediately returned
+    ///     - ESDTs and SFTs will be deposited and locked until the voting period has ended
+    ///     - NFTs will be recorded as a vote and immediately returned
     #[payable("*")]
     #[endpoint(voteFor)]
     fn vote_for_endpoint(&self, proposal_id: u64, opt_option_id: OptionalValue<u8>) {
@@ -256,8 +256,8 @@ pub trait GovernanceModule:
     /// Payment (optional):
     ///     - token id must be equal to configured governance token id
     ///     - amount must be greater than the min_vote_weight
-    ///     - ESDTs will be deposited and locked until the voting period has ended
-    ///     - NFTs/SFTs will be recorded as a vote and immediately returned
+    ///     - ESDTs and SFTs will be deposited and locked until the voting period has ended
+    ///     - NFTs will be recorded as a vote and immediately returned
     #[payable("*")]
     #[endpoint(voteAgainst)]
     fn vote_against_endpoint(&self, proposal_id: u64, opt_option_id: OptionalValue<u8>) {
