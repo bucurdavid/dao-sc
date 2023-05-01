@@ -142,7 +142,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
             return ProposalStatus::Active;
         }
 
-        if (is_leaderless || !has_actions) && has_gov_token {
+        if (is_leaderless || !has_actions) && (has_gov_token || self.is_plugged()) {
             return match self.has_sufficient_votes(&proposal, &self.quorum().get()) {
                 true => ProposalStatus::Succeeded,
                 false => ProposalStatus::Defeated,

@@ -27,13 +27,17 @@ pub trait PlugModule: config::ConfigModule {
     }
 
     fn record_plug_vote(&self, voter: ManagedAddress, proposal_id: u64) {
-        let user_id = self.users().get_user_id(&voter);
+        let user_id = self.users().get_or_create_user(&voter);
 
         self.plug_votes(proposal_id).insert(user_id);
     }
 
     fn has_user_plug_voted(&self, proposal_id: u64, address: &ManagedAddress) -> bool {
         let user_id = self.users().get_user_id(&address);
+
+        if user_id == 0 {
+            return false;
+        }
 
         self.plug_votes(proposal_id).contains(&user_id)
     }
