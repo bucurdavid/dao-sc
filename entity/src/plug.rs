@@ -10,7 +10,7 @@ pub trait PlugModule: config::ConfigModule {
     }
 
     fn is_plugged(&self) -> bool {
-        !self.plug_sc_address().is_empty()
+        !self.plug_contract().is_empty()
     }
 
     fn call_plug_vote_weight_async(&self) -> AsyncCall {
@@ -23,7 +23,7 @@ pub trait PlugModule: config::ConfigModule {
             OptionalValue::Some(self.gov_token_id().get())
         };
 
-        self.plug_proxy(self.plug_sc_address().get()).get_dao_vote_weight_view(caller, token).async_call()
+        self.plug_proxy(self.plug_contract().get()).get_dao_vote_weight_view(caller, token).async_call()
     }
 
     fn record_plug_vote(&self, voter: ManagedAddress, proposal_id: u64) {
@@ -42,11 +42,21 @@ pub trait PlugModule: config::ConfigModule {
         self.plug_votes(proposal_id).contains(&user_id)
     }
 
-    #[view(getPlugScAddress)]
-    #[storage_mapper("plug_sc_addr")]
-    fn plug_sc_address(&self) -> SingleValueMapper<ManagedAddress>;
+    #[view(getPlug)]
+    fn get_plug_view(&self) -> MultiValue2<ManagedAddress, u8> {
+        let plug_contract = self.plug_contract().get();
+        let weight_decimals = self.plug_weight_decimals().get();
 
-    #[storage_mapper("plug_votes")]
+        (plug_contract, weight_decimals).into()
+    }
+
+    #[storage_mapper("plug:contract")]
+    fn plug_contract(&self) -> SingleValueMapper<ManagedAddress>;
+
+    #[storage_mapper("plug:weight_decimals")]
+    fn plug_weight_decimals(&self) -> SingleValueMapper<u8>;
+
+    #[storage_mapper("plug:votes")]
     fn plug_votes(&self, proposal_id: u64) -> UnorderedSetMapper<UserId>;
 
     #[proxy]

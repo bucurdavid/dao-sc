@@ -1,6 +1,8 @@
 multiversx_sc::imports!();
 
-use crate::config::{self, GAS_LIMIT_SET_TOKEN_ROLES, MIN_PROPOSAL_VOTE_WEIGHT_DEFAULT, POLL_MAX_OPTIONS, QUORUM_DEFAULT, VOTING_PERIOD_MINUTES_DEFAULT};
+use crate::config::{
+    self, GAS_LIMIT_SET_TOKEN_ROLES, MIN_PROPOSAL_VOTE_WEIGHT_DEFAULT, POLL_MAX_OPTIONS, QUORUM_DEFAULT, TOKEN_MAX_DECIMALS, VOTING_PERIOD_MINUTES_DEFAULT,
+};
 use crate::permission::{self, ROLE_BUILTIN_LEADER};
 use crate::plug;
 use errors::ALREADY_VOTED_WITH_TOKEN;
@@ -106,11 +108,13 @@ pub trait GovernanceModule:
     /// Can only be called by the contract itself.
     /// Can only be called once.
     #[endpoint(setPlug)]
-    fn set_plug_endpoint(&self, address: ManagedAddress, quorum: BigUint, min_propose_weight: BigUint) {
+    fn set_plug_endpoint(&self, address: ManagedAddress, quorum: BigUint, min_propose_weight: BigUint, weight_decimals: u8) {
         self.require_caller_self();
         require!(!self.is_plugged(), "already plugged");
+        require!(weight_decimals <= TOKEN_MAX_DECIMALS, "invalid weight decimals");
 
-        self.plug_sc_address().set(&address);
+        self.plug_contract().set(&address);
+        self.plug_weight_decimals().set(weight_decimals);
         self.try_change_quorum(quorum);
         self.try_change_min_propose_weight(min_propose_weight);
     }
