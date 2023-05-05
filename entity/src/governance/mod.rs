@@ -416,7 +416,6 @@ pub trait GovernanceModule:
         match result {
             ManagedAsyncCallResult::Ok(_) => {
                 let payment = self.call_value().single_esdt();
-                self.send().direct_esdt(&initial_caller, &payment.token_identifier, 0, &payment.amount);
                 self.configure_governance_token(payment.token_identifier, payment.amount, true);
             }
             ManagedAsyncCallResult::Err(_) => self.send_received_egld(&initial_caller),
