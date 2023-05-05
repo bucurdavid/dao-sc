@@ -49,7 +49,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         getRoles
         getRoleMemberAmount
         hasUserPlugVoted
-        getPlugScAddress
+        getPlug
         initGovToken
         changeGovToken
         changeQuorum

@@ -94,7 +94,7 @@ where
 
         self.blockchain
             .execute_tx(&self.owner_address, &self.contract, &rust_biguint!(0), |sc| {
-                sc.plug_sc_address().set(managed_address!(&plug_contract.address_ref()));
+                sc.plug_contract().set(managed_address!(&plug_contract.address_ref()));
                 sc.try_change_quorum(managed_biguint!(quorum));
                 sc.try_change_min_propose_weight(managed_biguint!(min_propose_weight));
             })
