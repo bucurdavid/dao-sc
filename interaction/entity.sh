@@ -16,7 +16,7 @@ propose() {
         --arguments "str:$GOV_TOKEN_ID" $3 "str:propose" "str:$1" "str:$2" \
         --recall-nonce --gas-limit=80000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -28,7 +28,7 @@ sign() {
         --arguments $1 \
         --recall-nonce --gas-limit=10000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -40,7 +40,7 @@ execute() {
         --arguments $1 \
         --recall-nonce --gas-limit=600000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -52,7 +52,7 @@ changeGovToken() {
         --arguments "str:$1" \
         --recall-nonce --gas-limit=10000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -64,7 +64,7 @@ changeQuorum() {
         --arguments $1 \
         --recall-nonce --gas-limit=10000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -76,7 +76,7 @@ changeMinProposalVoteWeight() {
         --arguments $1 \
         --recall-nonce --gas-limit=10000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -88,7 +88,7 @@ changeVotingPeriodMinutes() {
         --arguments $1 \
         --recall-nonce --gas-limit=10000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -118,7 +118,7 @@ createRole() {
         --arguments "str:$1" \
         --recall-nonce --gas-limit=20000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -147,7 +147,7 @@ createPermission() {
         --arguments "str:$1" $2 "str:$3" \
         --recall-nonce --gas-limit=20000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -175,7 +175,7 @@ assignRole() {
         --arguments $1 "str:$2" \
         --recall-nonce --gas-limit=20000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -190,7 +190,7 @@ createPolicyWeighted() {
         --arguments "str:$1" "str:$2" $3 $4 \
         --recall-nonce --gas-limit=20000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -203,7 +203,7 @@ createPolicyForOne() {
         --arguments "str:$1" "str:$2" \
         --recall-nonce --gas-limit=20000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -216,7 +216,7 @@ createPolicyForAll() {
         --arguments "str:$1" "str:$2" \
         --recall-nonce --gas-limit=20000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -230,7 +230,7 @@ createPolicyQuorum() {
         --arguments "str:$1" "str:$2" $3 \
         --recall-nonce --gas-limit=20000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 

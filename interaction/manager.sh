@@ -32,7 +32,7 @@ deploy() {
         --recall-nonce --gas-limit=200000000 \
         --outfile="deploy-$NETWORK_NAME-entity.interaction.json" \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 
     ENTITY_ADDRESS=$(mxpy data parse --file="deploy-$NETWORK_NAME-entity.interaction.json" --expression="data['contractAddress']")
@@ -50,7 +50,7 @@ deploy() {
         --proxy=$PROXY --chain=$CHAIN_ID \
         --metadata-payable \
         --metadata-payable-by-sc \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 
     MANAGER_ADDRESS=$(mxpy data parse --file="deploy-$NETWORK_NAME-manager.interaction.json" --expression="data['contractAddress']")
@@ -88,7 +88,7 @@ upgrade() {
         --metadata-payable-by-sc \
         --recall-nonce --gas-limit=100000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -102,7 +102,7 @@ upgradeEntityTemplate() {
         --arguments $TRUSTED_HOST_ADDRESS \
         --recall-nonce --gas-limit=200000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -114,7 +114,7 @@ upgradeEntity() {
         --arguments $1 \
         --recall-nonce --gas-limit=100000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -124,7 +124,7 @@ initCreditsModule() {
         --arguments "str:$CREDITS_REWARD_TOKEN_ID" $CREDITS_BONUS_FACTOR $CREDITS_BONUS_FACTOR_ENTITY_CREATION \
         --recall-nonce --gas-limit=5000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -134,7 +134,7 @@ initDexModule() {
         --arguments "str:$DEX_WEGLD_TOKEN_ID" $DEX_COST_TOKEN_WEGLD_SWAP_CONTRACT $DEX_WRAP_EGLD_SWAP_CONTRACT \
         --recall-nonce --gas-limit=5000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -144,7 +144,7 @@ initOrgModule() {
         --arguments $ORGANIZATION_CONTRACT \
         --recall-nonce --gas-limit=5000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -153,7 +153,7 @@ forwardCostTokensToOrg() {
         --function="forwardCostTokensToOrg" \
         --recall-nonce --gas-limit=5000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -163,7 +163,7 @@ setEntityCreationCost() {
         --arguments $COST_ENTITY_CREATION_AMOUNT \
         --recall-nonce --gas-limit=5000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -173,7 +173,7 @@ setDailyBaseCost() {
         --arguments $COST_DAILY_BASE_AMOUNT \
         --recall-nonce --gas-limit=5000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -186,7 +186,7 @@ setDailyFeatureCost() {
         --arguments "str:$1" $2 \
         --recall-nonce --gas-limit=5000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -196,7 +196,7 @@ createEntity() {
         --arguments "str:$COST_TOKEN_ID" $COST_ENTITY_CREATION_AMOUNT "str:createEntity" \
         --recall-nonce --gas-limit=80000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -209,7 +209,7 @@ boost() {
         --arguments "str:$COST_TOKEN_ID" $2 "str:boost" $1 \
         --recall-nonce --gas-limit=80000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -224,7 +224,7 @@ boostWithSwap() {
         --arguments "str:$1" $2 "str:boostWithSwap" $3 $4 \
         --recall-nonce --gas-limit=80000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -238,7 +238,7 @@ boostWithSwapEgld() {
         --value=$1 \
         --recall-nonce --gas-limit=80000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
 
@@ -294,6 +294,6 @@ forwardToken() {
         --arguments "str:$1" $2 $3 \
         --recall-nonce --gas-limit=10000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
-        --ledger \
+        "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
         --send || return
 }
