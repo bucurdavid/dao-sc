@@ -339,6 +339,7 @@ pub trait GovernanceModule:
         let actions_hash = self.calculate_actions_hash(&actions);
         let mut proposal = self.proposals(proposal_id).get();
         require!(proposal.actions_hash == actions_hash, "actions have been corrupted");
+        require!(!proposal.was_executed, "proposal has already been executed");
 
         let has_approval = self.get_proposal_status(&proposal) == ProposalStatus::Succeeded;
         let (allowed, permissions) = self.get_user_permissions_for_actions(&proposal.proposer, &actions, has_approval);
