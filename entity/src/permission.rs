@@ -268,6 +268,33 @@ pub trait PermissionModule: config::ConfigModule + plug::PlugModule {
         });
     }
 
+    fn get_user_policies_for_permissions(&self, address: &ManagedAddress, permissions: &ManagedVec<ManagedBuffer>) -> (bool, ManagedVec<Policy<Self::Api>>) {
+        let proposer_id = self.users().get_user_id(address);
+
+        if proposer_id == 0 {
+            return (false, ManagedVec::new());
+        }
+
+        let proposer_roles = self.user_roles(proposer_id);
+        let mut policies = ManagedVec::new();
+        let mut allowed = false;
+
+        for role in proposer_roles.iter() {
+            if role == ManagedBuffer::from(ROLE_BUILTIN_LEADER) {
+                allowed = true;
+            }
+
+            for permission in permissions.into_iter() {
+                if let Some(policy) = self.policies(&role).get(&permission) {
+                    policies.push(policy);
+                    allowed = true;
+                }
+            }
+        }
+
+        (allowed, policies)
+    }
+
     fn create_policy(&self, role_name: ManagedBuffer, permission_name: ManagedBuffer, method: PolicyMethod, quorum: BigUint, voting_period_minutes: usize) {
         require!(self.roles().contains(&role_name), "role does not exist");
         require!(self.permissions().contains(&permission_name), "permission does not exist");

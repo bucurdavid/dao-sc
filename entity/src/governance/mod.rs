@@ -342,14 +342,31 @@ pub trait GovernanceModule:
         require!(proposal.actions_hash == actions_hash, "actions have been corrupted");
         require!(self.get_proposal_status(&proposal) == ProposalStatus::Succeeded, "proposal is not executable");
 
-        let actual_permissions = self.get_actual_permissions(&proposal, &actions);
-        require!(proposal.permissions == actual_permissions, "untruthful permissions announced");
+        let (allowed, permissions) = self.get_user_permissions_for_actions(&proposal.proposer, &actions);
+        require!(allowed, "no permission for action");
+        require!(proposal.permissions == permissions, "untruthful permissions announced");
 
         proposal.was_executed = true;
         self.proposals(proposal_id).set(&proposal);
 
         self.execute_actions(&actions);
         self.emit_execute_event(&proposal);
+    }
+
+    /// Direct execute actions without a proposal.
+    /// Requires the caller to have the required permissions.
+    #[endpoint(directExecute)]
+    fn direct_execute_endpoint(&self, actions: MultiValueManagedVec<Action<Self::Api>>) {
+        require!(!actions.is_empty(), "no actions to execute");
+
+        let caller = self.blockchain().get_caller();
+        let actions = actions.into_vec();
+
+        let (allowed, _) = self.get_user_permissions_for_actions(&caller, &actions);
+        require!(allowed, "no permission for action");
+
+        self.execute_actions(&actions);
+        self.emit_direct_execute_event();
     }
 
     /// Withdraw ESDT governance tokens once the proposals voting period has ended.
