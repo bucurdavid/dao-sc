@@ -69,7 +69,7 @@ fn it_matches_a_permission_based_on_value_only() {
 
             let proposal = sc.proposals(proposal_id).get();
 
-            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions));
+            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions), true);
 
             assert!(allowed);
             assert_eq!(1, permissions.len());
@@ -136,7 +136,7 @@ fn it_matches_a_permission_based_on_destination_only() {
 
             let proposal = sc.proposals(proposal_id).get();
 
-            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions));
+            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions), true);
 
             assert!(allowed);
             assert_eq!(1, permissions.len());
@@ -203,7 +203,7 @@ fn it_matches_a_permission_based_on_endpoint_only() {
 
             let proposal = sc.proposals(proposal_id).get();
 
-            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions));
+            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions), true);
 
             assert!(allowed);
             assert_eq!(1, permissions.len());
@@ -270,7 +270,7 @@ fn it_matches_a_permission_based_on_arguments_only() {
 
             let proposal = sc.proposals(proposal_id).get();
 
-            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions));
+            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions), true);
 
             assert!(allowed);
             assert_eq!(1, permissions.len());
@@ -340,7 +340,7 @@ fn it_matches_a_permission_based_on_payments_only() {
 
             let proposal = sc.proposals(proposal_id).get();
 
-            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions));
+            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions), true);
 
             assert!(allowed);
             assert_eq!(1, permissions.len());
@@ -413,7 +413,7 @@ fn it_matches_a_permission_based_on_destination_and_endpoint() {
 
             let proposal = sc.proposals(proposal_id).get();
 
-            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions));
+            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions), true);
 
             assert!(allowed);
             assert_eq!(1, permissions.len());
@@ -483,7 +483,7 @@ fn it_matches_a_permission_based_on_destination_and_endpoint_and_one_argument() 
 
             let proposal = sc.proposals(proposal_id).get();
 
-            let (actual, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions));
+            let (actual, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions), true);
 
             assert!(actual);
             assert_eq!(1, permissions.len());
@@ -549,7 +549,7 @@ fn it_does_not_match_zero_value_when_permission_value_is_zero() {
 
             let proposal = sc.proposals(proposal_id).get();
 
-            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions));
+            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions), true);
 
             assert!(!allowed);
             assert_eq!(0, permissions.len());
@@ -617,7 +617,7 @@ fn it_does_not_match_one_of_many_payments_that_exceeds_permission_max_amount() {
 
             let proposal = sc.proposals(proposal_id).get();
 
-            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions));
+            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions), true);
 
             assert!(!allowed);
             assert_eq!(0, permissions.len());
@@ -685,7 +685,7 @@ fn it_does_not_match_a_payment_when_there_is_no_permission_for_it() {
 
             let proposal = sc.proposals(proposal_id).get();
 
-            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions));
+            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions), true);
 
             assert!(!allowed);
             assert_eq!(0, permissions.len());

@@ -1,4 +1,3 @@
-use entity::config::*;
 use entity::governance::proposal::*;
 use entity::governance::*;
 use entity::permission::*;
@@ -9,7 +8,36 @@ use setup::*;
 mod setup;
 
 #[test]
-fn it_direct_executes_an_action() {
+fn it_directly_executes_an_action_as_a_single_leader() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+    let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
+
+    setup.configure_gov_token(true);
+
+    setup.blockchain.set_egld_balance(setup.contract.address_ref(), &rust_biguint!(1));
+
+    setup
+        .blockchain
+        .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
+            let mut actions = Vec::<Action<DebugApi>>::new();
+            actions.push(Action::<DebugApi> {
+                destination: managed_address!(&action_receiver),
+                endpoint: ManagedBuffer::new(),
+                arguments: ManagedVec::new(),
+                gas_limit: 5_000_000u64,
+                value: managed_biguint!(1),
+                payments: ManagedVec::new(),
+            });
+
+            sc.direct_execute_endpoint(MultiValueManagedVec::from(actions));
+        })
+        .assert_ok();
+
+    setup.blockchain.check_egld_balance(&action_receiver, &rust_biguint!(1));
+}
+
+#[test]
+fn it_directly_executes_an_action_unilaterally() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
@@ -41,8 +69,6 @@ fn it_direct_executes_an_action() {
         })
         .assert_ok();
 
-    setup.blockchain.set_block_timestamp(VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60 + 1);
-
     setup
         .blockchain
         .execute_tx(&proposer_address, &setup.contract, &rust_biguint!(0), |sc| {
@@ -61,6 +87,43 @@ fn it_direct_executes_an_action() {
         .assert_ok();
 
     setup.blockchain.check_egld_balance(&action_receiver, &rust_biguint!(1));
+}
+
+#[test]
+fn it_fails_when_multiple_leaders_exist() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+    let other_leader = setup.user_address.clone();
+    let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
+
+    setup.configure_gov_token(true);
+
+    setup.blockchain.set_egld_balance(setup.contract.address_ref(), &rust_biguint!(1));
+
+    setup
+        .blockchain
+        .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
+            sc.assign_role(managed_address!(&other_leader), managed_buffer!(ROLE_BUILTIN_LEADER));
+        })
+        .assert_ok();
+
+    setup
+        .blockchain
+        .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
+            let mut actions = Vec::<Action<DebugApi>>::new();
+            actions.push(Action::<DebugApi> {
+                destination: managed_address!(&action_receiver),
+                endpoint: ManagedBuffer::new(),
+                arguments: ManagedVec::new(),
+                gas_limit: 5_000_000u64,
+                value: managed_biguint!(1),
+                payments: ManagedVec::new(),
+            });
+
+            sc.direct_execute_endpoint(MultiValueManagedVec::from(actions));
+        })
+        .assert_user_error("no permission for action");
+
+    setup.blockchain.check_egld_balance(&action_receiver, &rust_biguint!(0));
 }
 
 #[test]
@@ -95,8 +158,6 @@ fn it_fails_when_caller_has_no_permissions() {
             );
         })
         .assert_ok();
-
-    setup.blockchain.set_block_timestamp(VOTING_PERIOD_MINUTES_DEFAULT as u64 * 60 + 1);
 
     setup
         .blockchain

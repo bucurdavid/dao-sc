@@ -1,11 +1,11 @@
-use multiversx_sc::codec::multi_types::*;
-use multiversx_sc::types::*;
-use multiversx_sc_scenario::*;
 use entity::config::*;
 use entity::governance::errors::*;
 use entity::governance::proposal::*;
 use entity::governance::*;
 use entity::permission::*;
+use multiversx_sc::codec::multi_types::*;
+use multiversx_sc::types::*;
+use multiversx_sc_scenario::*;
 use setup::*;
 
 mod setup;
@@ -179,7 +179,7 @@ fn it_fails_if_attempted_to_execute_again() {
             sc.execute_endpoint(proposal_id, MultiValueManagedVec::from(actions));
             // and again
         })
-        .assert_user_error("proposal is not executable");
+        .assert_user_error("no permission for action");
 }
 
 #[test]
@@ -269,7 +269,7 @@ fn it_fails_if_the_proposal_is_still_active() {
             sc.execute_endpoint(proposal_id, MultiValueManagedVec::from(actions));
             // and again
         })
-        .assert_user_error("proposal is not executable");
+        .assert_user_error("no permission for action");
 }
 
 #[test]

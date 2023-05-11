@@ -338,11 +338,10 @@ pub trait GovernanceModule:
         let actions = actions.into_vec();
         let actions_hash = self.calculate_actions_hash(&actions);
         let mut proposal = self.proposals(proposal_id).get();
-
         require!(proposal.actions_hash == actions_hash, "actions have been corrupted");
-        require!(self.get_proposal_status(&proposal) == ProposalStatus::Succeeded, "proposal is not executable");
 
-        let (allowed, permissions) = self.get_user_permissions_for_actions(&proposal.proposer, &actions);
+        let has_approval = self.get_proposal_status(&proposal) == ProposalStatus::Succeeded;
+        let (allowed, permissions) = self.get_user_permissions_for_actions(&proposal.proposer, &actions, has_approval);
         require!(allowed, "no permission for action");
         require!(proposal.permissions == permissions, "untruthful permissions announced");
 
@@ -362,7 +361,11 @@ pub trait GovernanceModule:
         let caller = self.blockchain().get_caller();
         let actions = actions.into_vec();
 
-        let (allowed, _) = self.get_user_permissions_for_actions(&caller, &actions);
+        // proposal flow is skipped on direct executions,
+        // so only unilaterally excutable actions are allowed.
+        let has_approval = false;
+
+        let (allowed, _) = self.get_user_permissions_for_actions(&caller, &actions, has_approval);
         require!(allowed, "no permission for action");
 
         self.execute_actions(&actions);
