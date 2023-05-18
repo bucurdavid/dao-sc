@@ -338,18 +338,39 @@ pub trait GovernanceModule:
         let actions = actions.into_vec();
         let actions_hash = self.calculate_actions_hash(&actions);
         let mut proposal = self.proposals(proposal_id).get();
-
         require!(proposal.actions_hash == actions_hash, "actions have been corrupted");
-        require!(self.get_proposal_status(&proposal) == ProposalStatus::Succeeded, "proposal is not executable");
+        require!(!proposal.was_executed, "proposal has already been executed");
 
-        let actual_permissions = self.get_actual_permissions(&proposal, &actions);
-        require!(proposal.permissions == actual_permissions, "untruthful permissions announced");
+        let has_approval = self.get_proposal_status(&proposal) == ProposalStatus::Succeeded;
+        let (allowed, permissions) = self.get_user_permissions_for_actions(&proposal.proposer, &actions, has_approval);
+        require!(allowed, "no permission for action");
+        require!(proposal.permissions == permissions, "untruthful permissions announced");
 
         proposal.was_executed = true;
         self.proposals(proposal_id).set(&proposal);
 
         self.execute_actions(&actions);
         self.emit_execute_event(&proposal);
+    }
+
+    /// Direct execute actions without a proposal.
+    /// Requires the caller to have the required permissions.
+    #[endpoint(directExecute)]
+    fn direct_execute_endpoint(&self, actions: MultiValueManagedVec<Action<Self::Api>>) {
+        require!(!actions.is_empty(), "no actions to execute");
+
+        let caller = self.blockchain().get_caller();
+        let actions = actions.into_vec();
+
+        // proposal flow is skipped on direct executions,
+        // so only unilaterally excutable actions are allowed.
+        let has_approval = false;
+
+        let (allowed, _) = self.get_user_permissions_for_actions(&caller, &actions, has_approval);
+        require!(allowed, "no permission for action");
+
+        self.execute_actions(&actions);
+        self.emit_direct_execute_event();
     }
 
     /// Withdraw ESDT governance tokens once the proposals voting period has ended.

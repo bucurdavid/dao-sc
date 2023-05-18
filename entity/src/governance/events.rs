@@ -27,6 +27,10 @@ pub trait GovEventsModule {
         self.execute_event(self.blockchain().get_caller(), proposal.id);
     }
 
+    fn emit_direct_execute_event(&self) {
+        self.direct_execute_event(self.blockchain().get_caller());
+    }
+
     fn emit_withdraw_event(&self, proposal: &Proposal<Self::Api>) {
         self.withdraw_event(self.blockchain().get_caller(), proposal.id);
     }
@@ -45,6 +49,9 @@ pub trait GovEventsModule {
 
     #[event("execute")]
     fn execute_event(&self, #[indexed] caller: ManagedAddress, #[indexed] proposal: u64);
+
+    #[event("direct_execute")]
+    fn direct_execute_event(&self, #[indexed] caller: ManagedAddress);
 
     #[event("withdraw")]
     fn withdraw_event(&self, #[indexed] caller: ManagedAddress, #[indexed] proposal: u64);

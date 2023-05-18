@@ -319,35 +319,16 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
     }
 
     fn can_propose(&self, proposer: &ManagedAddress, actions_hash: &ManagedBuffer, permissions: &ManagedVec<ManagedBuffer>) -> (bool, ManagedVec<Policy<Self::Api>>) {
-        let proposer_id = self.users().get_user_id(proposer);
-        let proposer_roles = self.user_roles(proposer_id);
-        let mut policies = ManagedVec::new();
-
         // no actions -> always allowed
         if actions_hash.is_empty() && permissions.is_empty() {
-            return (true, policies);
+            return (true, ManagedVec::new());
         }
 
         if self.is_leaderless() {
-            return (true, policies);
+            return (true, ManagedVec::new());
         }
 
-        let mut allowed = false;
-
-        for role in proposer_roles.iter() {
-            if role == ManagedBuffer::from(ROLE_BUILTIN_LEADER) {
-                allowed = true;
-            }
-
-            for permission in permissions.into_iter() {
-                if let Some(policy) = self.policies(&role).get(&permission) {
-                    policies.push(policy);
-                    allowed = true;
-                }
-            }
-        }
-
-        (allowed, policies)
+        self.get_user_policies_for_permissions(proposer, permissions)
     }
 
     fn calculate_actions_hash(&self, actions: &ManagedVec<Action<Self::Api>>) -> ManagedBuffer<Self::Api> {
@@ -368,38 +349,46 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
         self.crypto().keccak256(&serialized).as_managed_buffer().clone()
     }
 
-    fn get_actual_permissions(&self, proposal: &Proposal<Self::Api>, actions: &ManagedVec<Action<Self::Api>>) -> ManagedVec<ManagedBuffer> {
-        let proposer_id = self.users().get_user_id(&proposal.proposer);
+    fn get_user_permissions_for_actions(
+        &self,
+        address: &ManagedAddress,
+        actions: &ManagedVec<Action<Self::Api>>,
+        has_approval: bool,
+    ) -> (bool, ManagedVec<ManagedBuffer>) {
+        let proposer_id = self.users().get_user_id(&address);
         let proposer_roles = self.user_roles(proposer_id);
-        let mut actual_permissions = ManagedVec::new();
+        let leader_role = ManagedBuffer::from(ROLE_BUILTIN_LEADER);
+        let leader_count = self.roles_member_amount(&leader_role).get();
+        let mut applied_permissions = ManagedVec::new();
 
         for action in actions.into_iter() {
             let mut has_permission_for_action = false;
 
             for role in proposer_roles.iter() {
-                for permission in self.policies(&role).keys() {
-                    if actual_permissions.contains(&permission) {
+                for (permission, policy) in self.policies(&role).iter() {
+                    if applied_permissions.contains(&permission) {
                         continue;
                     }
 
                     let permission_details = self.permission_details(&permission).get();
 
                     if self.does_permission_apply_to_action(&permission_details, &action) {
-                        actual_permissions.push(permission);
-                        has_permission_for_action = true;
+                        applied_permissions.push(permission);
+                        has_permission_for_action = has_approval || policy.method == PolicyMethod::One;
                     }
                 }
 
-                // leader does not need permission for all actions defined
-                if role == ManagedBuffer::from(ROLE_BUILTIN_LEADER) {
-                    has_permission_for_action = true;
+                if role == leader_role {
+                    has_permission_for_action = has_approval || leader_count == 1;
                 }
             }
 
-            require!(has_permission_for_action, "no permission for action");
+            if !has_permission_for_action {
+                return (false, applied_permissions);
+            }
         }
 
-        actual_permissions
+        (true, applied_permissions)
     }
 
     fn does_permission_apply_to_action(&self, permission_details: &PermissionDetails<Self::Api>, action: &Action<Self::Api>) -> bool {

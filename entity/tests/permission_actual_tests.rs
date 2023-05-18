@@ -1,11 +1,11 @@
 use std::vec;
 
-use multiversx_sc::types::*;
-use multiversx_sc_scenario::*;
 use entity::config::*;
 use entity::governance::proposal::*;
 use entity::governance::*;
 use entity::permission::*;
+use multiversx_sc::types::*;
+use multiversx_sc_scenario::*;
 use setup::*;
 
 mod setup;
@@ -69,9 +69,10 @@ fn it_matches_a_permission_based_on_value_only() {
 
             let proposal = sc.proposals(proposal_id).get();
 
-            let actual = sc.get_actual_permissions(&proposal, &ManagedVec::from(actions));
+            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions), true);
 
-            assert_eq!(1, actual.len());
+            assert!(allowed);
+            assert_eq!(1, permissions.len());
         })
         .assert_ok();
 }
@@ -135,9 +136,10 @@ fn it_matches_a_permission_based_on_destination_only() {
 
             let proposal = sc.proposals(proposal_id).get();
 
-            let actual = sc.get_actual_permissions(&proposal, &ManagedVec::from(actions));
+            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions), true);
 
-            assert_eq!(1, actual.len());
+            assert!(allowed);
+            assert_eq!(1, permissions.len());
         })
         .assert_ok();
 }
@@ -201,9 +203,10 @@ fn it_matches_a_permission_based_on_endpoint_only() {
 
             let proposal = sc.proposals(proposal_id).get();
 
-            let actual = sc.get_actual_permissions(&proposal, &ManagedVec::from(actions));
+            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions), true);
 
-            assert_eq!(1, actual.len());
+            assert!(allowed);
+            assert_eq!(1, permissions.len());
         })
         .assert_ok();
 }
@@ -267,9 +270,10 @@ fn it_matches_a_permission_based_on_arguments_only() {
 
             let proposal = sc.proposals(proposal_id).get();
 
-            let actual = sc.get_actual_permissions(&proposal, &ManagedVec::from(actions));
+            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions), true);
 
-            assert_eq!(1, actual.len());
+            assert!(allowed);
+            assert_eq!(1, permissions.len());
         })
         .assert_ok();
 }
@@ -336,9 +340,10 @@ fn it_matches_a_permission_based_on_payments_only() {
 
             let proposal = sc.proposals(proposal_id).get();
 
-            let actual = sc.get_actual_permissions(&proposal, &ManagedVec::from(actions));
+            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions), true);
 
-            assert_eq!(1, actual.len());
+            assert!(allowed);
+            assert_eq!(1, permissions.len());
         })
         .assert_ok();
 }
@@ -408,9 +413,10 @@ fn it_matches_a_permission_based_on_destination_and_endpoint() {
 
             let proposal = sc.proposals(proposal_id).get();
 
-            let actual = sc.get_actual_permissions(&proposal, &ManagedVec::from(actions));
+            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions), true);
 
-            assert_eq!(1, actual.len());
+            assert!(allowed);
+            assert_eq!(1, permissions.len());
         })
         .assert_ok();
 }
@@ -477,9 +483,10 @@ fn it_matches_a_permission_based_on_destination_and_endpoint_and_one_argument() 
 
             let proposal = sc.proposals(proposal_id).get();
 
-            let actual = sc.get_actual_permissions(&proposal, &ManagedVec::from(actions));
+            let (actual, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions), true);
 
-            assert_eq!(1, actual.len());
+            assert!(actual);
+            assert_eq!(1, permissions.len());
         })
         .assert_ok();
 }
@@ -542,9 +549,12 @@ fn it_does_not_match_zero_value_when_permission_value_is_zero() {
 
             let proposal = sc.proposals(proposal_id).get();
 
-            let _ = sc.get_actual_permissions(&proposal, &ManagedVec::from(actions));
+            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions), true);
+
+            assert!(!allowed);
+            assert_eq!(0, permissions.len());
         })
-        .assert_user_error("no permission for action");
+        .assert_ok();
 }
 
 #[test]
@@ -607,9 +617,12 @@ fn it_does_not_match_one_of_many_payments_that_exceeds_permission_max_amount() {
 
             let proposal = sc.proposals(proposal_id).get();
 
-            let _ = sc.get_actual_permissions(&proposal, &ManagedVec::from(actions));
+            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions), true);
+
+            assert!(!allowed);
+            assert_eq!(0, permissions.len());
         })
-        .assert_user_error("no permission for action");
+        .assert_ok();
 }
 
 #[test]
@@ -672,7 +685,10 @@ fn it_does_not_match_a_payment_when_there_is_no_permission_for_it() {
 
             let proposal = sc.proposals(proposal_id).get();
 
-            let _ = sc.get_actual_permissions(&proposal, &ManagedVec::from(actions));
+            let (allowed, permissions) = sc.get_user_permissions_for_actions(&proposal.proposer, &ManagedVec::from(actions), true);
+
+            assert!(!allowed);
+            assert_eq!(0, permissions.len());
         })
-        .assert_user_error("no permission for action");
+        .assert_ok();
 }
