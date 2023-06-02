@@ -1,46 +1,55 @@
-use multiversx_sc_scenario::*;
 use entity::config::*;
 use entity::governance::*;
+use entity::permission::*;
+use multiversx_sc_scenario::*;
 use setup::*;
 
 mod setup;
 
 #[test]
-fn it_changes_the_governance_token() {
+fn it_removes_the_governance_token() {
     let mut setup = EntitySetup::new(entity::contract_obj);
+
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
         .execute_tx(setup.contract.address_ref(), &setup.contract, &rust_biguint!(0), |sc| {
-            sc.change_gov_token_endpoint(managed_token_id!(b"GOV-123456"), managed_biguint!(1_000), true);
+            sc.remove_gov_token_endpoint();
 
-            assert_eq!(sc.gov_token_id().get(), managed_token_id!(b"GOV-123456"));
+            assert!(sc.gov_token_id().is_empty());
+            assert!(sc.lock_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID)).is_empty());
         })
         .assert_ok();
 }
 
 #[test]
-fn it_changes_the_governance_token_even_when_supply_lower_than_one_hundred() {
+fn it_fails_when_entity_is_leaderless() {
     let mut setup = EntitySetup::new(entity::contract_obj);
+
+    setup.configure_gov_token(true);
 
     setup
         .blockchain
         .execute_tx(setup.contract.address_ref(), &setup.contract, &rust_biguint!(0), |sc| {
-            sc.change_gov_token_endpoint(managed_token_id!(b"GOV-123456"), managed_biguint!(5), true);
+            // remove leader role
+            sc.roles().swap_remove(&managed_buffer!(ROLE_BUILTIN_LEADER));
 
-            assert_eq!(sc.gov_token_id().get(), managed_token_id!(b"GOV-123456"));
+            sc.remove_gov_token_endpoint();
         })
-        .assert_ok();
+        .assert_user_error("not allowed when leaderless");
 }
 
 #[test]
 fn it_fails_when_caller_not_self() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
+    setup.configure_gov_token(true);
+
     setup
         .blockchain
         .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
-            sc.change_gov_token_endpoint(managed_token_id!(b"GOV-123456"), managed_biguint!(1_000), true);
+            sc.remove_gov_token_endpoint();
         })
         .assert_user_error("action not allowed by user");
 }
