@@ -69,6 +69,18 @@ pub trait GovernanceModule:
         self.configure_governance_token(token_id, supply, lock_vote_tokens);
     }
 
+    /// Remove the governance token.
+    /// Entity must not be leaderless.
+    /// Can only be called by the contract itself.
+    #[endpoint(removeGovToken)]
+    fn remove_gov_token_endpoint(&self) {
+        self.require_caller_self();
+        require!(!self.is_leaderless(), "not allowed when leaderless");
+
+        let removed_gov_token = self.gov_token_id().take();
+        self.lock_vote_tokens(&removed_gov_token).clear();
+    }
+
     /// Change the governance default quorum.
     /// Can only be called by the contract itself.
     #[endpoint(changeQuorum)]
