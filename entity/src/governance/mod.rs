@@ -110,7 +110,6 @@ pub trait GovernanceModule:
     #[endpoint(setPlug)]
     fn set_plug_endpoint(&self, address: ManagedAddress, quorum: BigUint, min_propose_weight: BigUint, weight_decimals: u8) {
         self.require_caller_self();
-        require!(!self.is_plugged(), "already plugged");
         require!(weight_decimals <= TOKEN_MAX_DECIMALS, "invalid weight decimals");
 
         self.plug_contract().set(&address);
