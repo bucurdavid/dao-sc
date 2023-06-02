@@ -6,7 +6,7 @@ use setup::*;
 mod setup;
 
 #[test]
-fn it_changes_the_governance_token_if_contract_calls_itself() {
+fn it_changes_the_governance_token() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup
@@ -20,7 +20,7 @@ fn it_changes_the_governance_token_if_contract_calls_itself() {
 }
 
 #[test]
-fn it_changes_the_governance_token_even_if_supply_lower_than_one_hundred() {
+fn it_changes_the_governance_token_even_when_supply_lower_than_one_hundred() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup
@@ -34,7 +34,7 @@ fn it_changes_the_governance_token_even_if_supply_lower_than_one_hundred() {
 }
 
 #[test]
-fn it_fails_if_caller_not_self() {
+fn it_fails_when_caller_not_self() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup

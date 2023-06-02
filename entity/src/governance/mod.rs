@@ -66,7 +66,6 @@ pub trait GovernanceModule:
     #[endpoint(changeGovToken)]
     fn change_gov_token_endpoint(&self, token_id: TokenIdentifier, supply: BigUint, lock_vote_tokens: bool) {
         self.require_caller_self();
-        require!(!self.is_plugged(), "already plugged");
         self.configure_governance_token(token_id, supply, lock_vote_tokens);
     }
 
