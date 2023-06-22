@@ -104,12 +104,6 @@ getVersion() {
         --proxy=$PROXY || return
 }
 
-getTokenId() {
-    mxpy contract query $ADDRESS \
-        --function="getTokenId" \
-        --proxy=$PROXY || return
-}
-
 # params:
 #   $1 = role name
 createRole() {
