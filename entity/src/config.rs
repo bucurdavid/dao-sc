@@ -9,7 +9,7 @@ pub const VOTING_PERIOD_MINUTES_MAX: usize = 20_160; // 14 days
 pub const MIN_PROPOSAL_VOTE_WEIGHT_DEFAULT: u64 = 1;
 pub const QUORUM_DEFAULT: u64 = 1;
 
-pub const POLL_MAX_OPTIONS: u8 = 4;
+pub const POLL_MAX_OPTIONS: u8 = 8;
 
 pub const GAS_LIMIT_SET_TOKEN_ROLES: u64 = 60_000_000;
 
