@@ -20,3 +20,17 @@ fn it_forwards_a_token() {
 
     setup.blockchain.check_esdt_balance(setup.contract.address_ref(), token_id, &rust_biguint!(500))
 }
+
+#[test]
+fn it_fails_when_caller_not_admin() {
+    let mut setup = setup::setup_manager(manager::contract_obj);
+    let receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
+    let token_id = b"TOKEN-123456";
+
+    setup
+        .blockchain
+        .execute_tx(&receiver, &setup.contract, &rust_biguint!(0), |sc| {
+            sc.forward_token_endpoint(managed_token_id!(token_id), managed_biguint!(500), managed_address!(&receiver));
+        })
+        .assert_user_error("caller must be admin");
+}

@@ -28,9 +28,21 @@ pub trait Manager:
         self.cost_creation_amount().set(&cost_entity_creation);
     }
 
-    #[only_owner]
+    #[endpoint(addAdmin)]
+    fn add_admin_endpoint(&self, address: ManagedAddress) {
+        self.require_caller_is_admin();
+        self.admins().insert(address);
+    }
+
+    #[endpoint(removeAdmin)]
+    fn remove_admin_endpoint(&self, address: ManagedAddress) {
+        self.require_caller_is_admin();
+        self.admins().swap_remove(&address);
+    }
+
     #[endpoint(forwardToken)]
     fn forward_token_endpoint(&self, token: TokenIdentifier, amount: BigUint, address: ManagedAddress) {
+        self.require_caller_is_admin();
         self.send().direct_esdt(&address, &token, 0, &amount);
     }
 
