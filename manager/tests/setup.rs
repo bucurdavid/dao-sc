@@ -1,10 +1,10 @@
 multiversx_sc::imports!();
 
-use multiversx_sc_scenario::whitebox::*;
-use multiversx_sc_scenario::*;
 use manager::config::*;
 use manager::credits::*;
 use manager::*;
+use multiversx_sc_scenario::whitebox::*;
+use multiversx_sc_scenario::*;
 
 pub const COST_TOKEN_ID: &[u8] = b"SUPER-abcdef";
 pub const BOOST_REWARD_TOKEN_ID: &[u8] = b"SUPERPOWER-abcdef";
@@ -50,7 +50,7 @@ where
                 managed_biguint!(COST_AMOUNT_ENTITY_CREATION),
             );
 
-            sc.init_credits_module(managed_token_id!(BOOST_REWARD_TOKEN_ID), 1, 1);
+            sc.init_credits_module(managed_token_id!(BOOST_REWARD_TOKEN_ID), 1);
         })
         .assert_ok();
 

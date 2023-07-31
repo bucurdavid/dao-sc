@@ -16,7 +16,6 @@ DEX_WRAP_EGLD_SWAP_CONTRACT=$(mxpy data load --partition $NETWORK_NAME --key=dex
 ORGANIZATION_CONTRACT=$(mxpy data load --partition $NETWORK_NAME --key=organization-contract)
 CREDITS_REWARD_TOKEN_ID=$(mxpy data load --partition $NETWORK_NAME --key=credits-reward-token-id)
 CREDITS_BONUS_FACTOR=$(mxpy data load --partition $NETWORK_NAME --key=credits-bonus-factor)
-CREDITS_BONUS_FACTOR_ENTITY_CREATION=$(mxpy data load --partition $NETWORK_NAME --key=credits-bonus-factor-entity-creation)
 
 deploy() {
     echo "accidental deploy protection is activated."
@@ -121,7 +120,7 @@ upgradeEntity() {
 initCreditsModule() {
     mxpy contract call $MANAGER_ADDRESS \
         --function="initCreditsModule" \
-        --arguments "str:$CREDITS_REWARD_TOKEN_ID" $CREDITS_BONUS_FACTOR $CREDITS_BONUS_FACTOR_ENTITY_CREATION \
+        --arguments "str:$CREDITS_REWARD_TOKEN_ID" $CREDITS_BONUS_FACTOR \
         --recall-nonce --gas-limit=5000000 \
         --proxy=$PROXY --chain=$CHAIN_ID \
         "${SNIPPETS_SECURE_SIGN_METHOD[@]}" \
