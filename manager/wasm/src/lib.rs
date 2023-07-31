@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                           25
+// Endpoints:                           29
 // Async Callback (empty):               1
-// Total number of exported functions:  27
+// Total number of exported functions:  31
 
 #![no_std]
 #![feature(alloc_error_handler, lang_items)]
@@ -18,6 +18,8 @@ multiversx_sc_wasm_adapter::panic_handler!();
 multiversx_sc_wasm_adapter::endpoints! {
     manager
     (
+        addAdmin
+        removeAdmin
         forwardToken
         executeTicket
         createEntity
@@ -26,6 +28,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         setEntityCreationCost
         setDailyBaseCost
         setDailyFeatureCost
+        getAdmins
         getEntities
         getEntityTemplateAddress
         getTrustedHostAddress
@@ -35,6 +38,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         getFeatureDailyCost
         getFeatures
         initCreditsModule
+        setCreditsBonusFactor
         boost
         boostWithSwap
         registerExternalBoost
