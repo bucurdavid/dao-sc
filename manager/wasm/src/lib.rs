@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                           24
+// Endpoints:                           25
 // Async Callback (empty):               1
-// Total number of exported functions:  26
+// Total number of exported functions:  27
 
 #![no_std]
 #![feature(alloc_error_handler, lang_items)]
@@ -39,6 +39,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         boostWithSwap
         registerExternalBoost
         getCredits
+        getCreditsInfo
         initDexModule
         initOrgModule
         forwardCostTokensToOrg

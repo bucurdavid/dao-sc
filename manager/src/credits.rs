@@ -86,6 +86,13 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
         (available, entry.daily_cost).into()
     }
 
+    #[view(getCreditsInfo)]
+    fn get_credits_info_view(&self) -> u8 {
+        let bonus_factor = self.credits_bonus_factor().get();
+
+        bonus_factor
+    }
+
     fn boost(&self, booster: ManagedAddress, entity: ManagedAddress, amount: BigUint, bonus_factor: Option<u8>) {
         let bonus_factor = bonus_factor.unwrap_or(1u8);
 
