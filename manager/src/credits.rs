@@ -25,6 +25,12 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
         self.credits_bonus_factor_entity_creation().set(bonus_factor_entity_creation);
     }
 
+    #[endpoint(setCreditsBonusFactor)]
+    fn set_credits_bonus_factor_endpoint(&self, bonus_factor: u8) {
+        self.require_caller_is_admin();
+        self.credits_bonus_factor().set(bonus_factor);
+    }
+
     #[payable("*")]
     #[endpoint(boost)]
     fn boost_endpoint(&self, entity_address: ManagedAddress) {
@@ -84,6 +90,13 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
         let available = self.calculate_available_credits(&entry);
 
         (available, entry.daily_cost).into()
+    }
+
+    #[view(getCreditsInfo)]
+    fn get_credits_info_view(&self) -> u8 {
+        let bonus_factor = self.credits_bonus_factor().get();
+
+        bonus_factor
     }
 
     fn boost(&self, booster: ManagedAddress, entity: ManagedAddress, amount: BigUint, bonus_factor: Option<u8>) {
