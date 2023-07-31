@@ -25,6 +25,12 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
         self.credits_bonus_factor_entity_creation().set(bonus_factor_entity_creation);
     }
 
+    #[endpoint(setCreditsBonusFactor)]
+    fn set_credits_bonus_factor_endpoint(&self, bonus_factor: u8) {
+        self.require_caller_is_admin();
+        self.credits_bonus_factor().set(bonus_factor);
+    }
+
     #[payable("*")]
     #[endpoint(boost)]
     fn boost_endpoint(&self, entity_address: ManagedAddress) {
