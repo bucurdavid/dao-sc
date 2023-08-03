@@ -33,3 +33,15 @@ fn it_fails_to_set_bonus_factor_when_not_admin() {
         })
         .assert_user_error("caller must be admin");
 }
+
+#[test]
+fn it_fails_to_set_bonus_factor_when_zero() {
+    let mut setup = setup::setup_manager(manager::contract_obj);
+
+    setup
+        .blockchain
+        .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
+            sc.set_credits_bonus_factor_endpoint(0);
+        })
+        .assert_user_error("bonus factor can not be zero");
+}

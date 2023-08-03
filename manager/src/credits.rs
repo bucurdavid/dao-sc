@@ -27,6 +27,8 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
     #[endpoint(setCreditsBonusFactor)]
     fn set_credits_bonus_factor_endpoint(&self, bonus_factor: u8) {
         self.require_caller_is_admin();
+        require!(bonus_factor > 0, "bonus factor can not be zero");
+
         self.credits_bonus_factor().set(bonus_factor);
     }
 
