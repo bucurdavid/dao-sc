@@ -21,6 +21,8 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
     #[endpoint(initCreditsModule)]
     fn init_credits_module(&self, boost_reward_token_id: TokenIdentifier, bonus_factor: u8) {
         self.credits_reward_token().set(boost_reward_token_id);
+
+        require!(bonus_factor > 0, "bonus factor can not be zero");
         self.credits_bonus_factor().set(bonus_factor);
     }
 
@@ -40,12 +42,7 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
         require!(payment.token_identifier == self.cost_token_id().get(), "invalid token");
         require!(payment.amount > 0, "amount can not be zero");
 
-        let bonus_factor = self.credits_bonus_factor().get();
-        require!(bonus_factor > 0, "bonus factor can not be zero");
-
-        let virtual_amount = &payment.amount * &BigUint::from(bonus_factor);
-
-        self.boost(caller, entity_address, virtual_amount);
+        self.boost(caller, entity_address, payment.amount.clone());
         self.forward_payment_to_org(payment);
     }
 
@@ -68,12 +65,7 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
 
         let cost_payment = self.swap_wegld_to_cost_tokens(wegld.amount);
 
-        let bonus_factor = self.credits_bonus_factor().get();
-        require!(bonus_factor > 0, "bonus factor can not be zero");
-
-        let virtual_amount = &cost_payment.amount * &BigUint::from(bonus_factor);
-
-        self.boost(caller, entity, virtual_amount);
+        self.boost(caller, entity, cost_payment.amount.clone());
         self.forward_payment_to_org(cost_payment);
     }
 
@@ -82,7 +74,6 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
         let caller = self.blockchain().get_caller();
         let is_trusted_host = caller == self.trusted_host_address().get();
         let is_owner = caller == self.blockchain().get_owner_address();
-
         require!(is_trusted_host || is_owner, "not allowed");
 
         self.boost(booster, entity, amount);
@@ -110,15 +101,17 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
     fn boost(&self, booster: ManagedAddress, entity: ManagedAddress, amount: BigUint) {
         self.require_entity_exists(&entity);
 
+        let bonus_factor = self.credits_bonus_factor().get();
+        let virtual_amount = &amount * &BigUint::from(bonus_factor);
         let mut entry = self.get_or_create_entry(&entity);
 
-        entry.total_amount += &amount;
-        entry.period_amount += &amount;
+        entry.total_amount += &virtual_amount;
+        entry.period_amount += &virtual_amount;
 
         self.credits_entries(&entity).set(entry);
-        self.credits_total_deposits_amount().update(|current| *current += &amount);
-        self.mint_and_send_reward_tokens(&booster, &amount);
-        self.boost_event(booster, entity, amount);
+        self.credits_total_deposits_amount().update(|current| *current += &virtual_amount);
+        self.mint_and_send_reward_tokens(&booster, &virtual_amount);
+        self.boost_event(booster, entity, amount, virtual_amount, bonus_factor);
     }
 
     fn recalculate_daily_cost(&self, entity_address: &ManagedAddress) {
