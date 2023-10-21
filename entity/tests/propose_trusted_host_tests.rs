@@ -1,7 +1,7 @@
-use multiversx_sc::types::*;
-use multiversx_sc_scenario::*;
 use entity::config::*;
 use entity::governance::*;
+use multiversx_sc::types::*;
+use multiversx_sc_scenario::*;
 use setup::*;
 
 mod setup;
@@ -26,5 +26,5 @@ fn it_fails_to_verify_trusted_host_when_no_signature_given() {
                 MultiValueManagedVec::new(),
             );
         })
-        .assert_user_error("not a trusted host");
+        .assert_error(10, "invalid signature");
 }

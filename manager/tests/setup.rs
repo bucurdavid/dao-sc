@@ -3,7 +3,8 @@ multiversx_sc::imports!();
 use manager::config::*;
 use manager::credits::*;
 use manager::*;
-use multiversx_sc_scenario::whitebox::*;
+use multiversx_sc_scenario::testing_framework::BlockchainStateWrapper;
+use multiversx_sc_scenario::testing_framework::ContractObjWrapper;
 use multiversx_sc_scenario::*;
 
 pub const COST_TOKEN_ID: &[u8] = b"SUPER-abcdef";

@@ -37,7 +37,7 @@ pub trait Entity:
     #[endpoint(registerDns)]
     fn register_dns(&self, dns_address: ManagedAddress, name: ManagedBuffer) {
         self.require_caller_self();
-        let payment = self.call_value().egld_value();
+        let payment = self.call_value().egld_value().clone_value();
 
         self.dns_proxy(dns_address).register(&name).with_egld_transfer(payment).async_call().call_and_exit()
     }

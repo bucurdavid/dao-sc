@@ -61,11 +61,9 @@ pub trait ConfigModule {
         let trusted_host = self.trusted_host_address().get();
         let signable_hashed = self.crypto().keccak256(signable);
 
-        let trusted =
-            self.crypto()
-                .verify_ed25519_legacy_managed::<KECCAK256_RESULT_LEN>(trusted_host.as_managed_byte_array(), signable_hashed.as_managed_buffer(), &signature);
-
-        require!(trusted, "not a trusted host");
+        // The error comes straight form the VM, the message is "invalid signature".
+        self.crypto()
+            .verify_ed25519(trusted_host.as_managed_buffer(), signable_hashed.as_managed_buffer(), &signature.as_managed_buffer());
     }
 
     fn try_change_governance_token(&self, token_id: &TokenIdentifier) {

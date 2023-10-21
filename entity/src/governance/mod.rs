@@ -155,7 +155,7 @@ pub trait GovernanceModule:
     ) -> u64 {
         self.require_payments_with_gov_token();
         let caller = self.blockchain().get_caller();
-        let payments = self.call_value().all_esdt_transfers();
+        let payments = self.call_value().all_esdt_transfers().clone_value();
 
         if self.is_plugged() {
             self.call_plug_vote_weight_async()

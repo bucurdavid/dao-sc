@@ -23,12 +23,12 @@ pub trait TokenModule: config::ConfigModule {
 
         self.send()
             .esdt_system_sc_proxy()
-            .issue_fungible(self.call_value().egld_value(), &token_name, &token_ticker, &supply, properties)
+            .issue_fungible(self.call_value().egld_value().clone_value(), &token_name, &token_ticker, &supply, properties)
             .async_call()
     }
 
     fn send_received_egld(&self, to: &ManagedAddress) {
-        let egld_received = self.call_value().egld_value();
+        let egld_received = self.call_value().egld_value().clone_value();
         if egld_received > 0 {
             self.send().direct_egld(&to, &egld_received);
         }
