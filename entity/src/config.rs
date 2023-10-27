@@ -1,4 +1,4 @@
-use multiversx_sc::api::{ED25519_SIGNATURE_BYTE_LEN, KECCAK256_RESULT_LEN};
+use multiversx_sc::api::ED25519_SIGNATURE_BYTE_LEN;
 
 use crate::governance::proposal::Proposal;
 
