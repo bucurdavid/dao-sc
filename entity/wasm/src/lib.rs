@@ -10,7 +10,10 @@
 // Total number of exported functions:  59
 
 #![no_std]
-#![feature(alloc_error_handler, lang_items)]
+
+// Configuration that works with rustc < 1.73.0.
+// TODO: Recommended rustc version: 1.73.0 or newer.
+#![feature(lang_items)]
 
 multiversx_sc_wasm_adapter::allocator!();
 multiversx_sc_wasm_adapter::panic_handler!();
@@ -18,63 +21,65 @@ multiversx_sc_wasm_adapter::panic_handler!();
 multiversx_sc_wasm_adapter::endpoints! {
     entity
     (
-        changeVoteTokenLock
-        registerDns
-        getVersion
-        getTrustedHostAddress
-        getGovTokenId
-        getGuardedVoteTokens
-        isLockingVoteTokens
-        getProposalIdCounter
-        getProposalNftVotes
-        getWithdrawableProposalIds
-        getWithdrawableVotes
-        getProposalAddressVotes
-        getQuorum
-        getMinVoteWeight
-        getMinProposeWeight
-        getVotingPeriodMinutes
-        createRole
-        removeRole
-        assignRole
-        unassignRole
-        createPermission
-        createPolicyWeighted
-        createPolicyForOne
-        createPolicyForAll
-        createPolicyQuorum
-        getUserRoles
-        getPermissions
-        getPolicies
-        getRoles
-        getRoleMemberAmount
-        hasUserPlugVoted
-        getPlug
-        initGovToken
-        changeGovToken
-        removeGovToken
-        changeQuorum
-        changeMinVoteWeight
-        changeMinProposeWeight
-        changeVotingPeriodMinutes
-        setPlug
-        propose
-        voteFor
-        voteAgainst
-        sign
-        execute
-        directExecute
-        withdraw
-        issueGovToken
-        setGovTokenLocalRoles
-        mint
-        burn
-        getProposal
-        getProposalStatus
-        getProposalVotes
-        getProposalSigners
-        getProposalSignatureRoleCounts
-        getProposalPollResults
-        callBack
+        init => init
+        changeVoteTokenLock => change_vote_token_lock_endpoint
+        registerDns => register_dns
+        getVersion => version_view
+        getTrustedHostAddress => trusted_host_address
+        getGovTokenId => gov_token_id
+        getGuardedVoteTokens => guarded_vote_tokens
+        isLockingVoteTokens => lock_vote_tokens
+        getProposalIdCounter => next_proposal_id
+        getProposalNftVotes => proposal_nft_votes
+        getWithdrawableProposalIds => withdrawable_proposal_ids
+        getWithdrawableVotes => withdrawable_votes
+        getProposalAddressVotes => votes
+        getQuorum => quorum
+        getMinVoteWeight => min_vote_weight
+        getMinProposeWeight => min_propose_weight
+        getVotingPeriodMinutes => voting_period_in_minutes
+        createRole => create_role_endpoint
+        removeRole => remove_role_endpoint
+        assignRole => assign_role_endpoint
+        unassignRole => unassign_role_endpoint
+        createPermission => create_permission_endpoint
+        createPolicyWeighted => create_policy_weighted_endpoint
+        createPolicyForOne => create_policy_one_endpoint
+        createPolicyForAll => create_policy_all_endpoint
+        createPolicyQuorum => create_policy_quorum_endpoint
+        getUserRoles => get_user_roles_view
+        getPermissions => get_permissions_view
+        getPolicies => get_policies_view
+        getRoles => roles
+        getRoleMemberAmount => roles_member_amount
+        hasUserPlugVoted => has_user_plug_voted_view
+        getPlug => get_plug_view
+        initGovToken => init_gov_token_endpoint
+        changeGovToken => change_gov_token_endpoint
+        removeGovToken => remove_gov_token_endpoint
+        changeQuorum => change_quorum_endpoint
+        changeMinVoteWeight => change_min_vote_weight_endpoint
+        changeMinProposeWeight => change_min_propose_weight_endpoint
+        changeVotingPeriodMinutes => change_voting_period_in_minutes_endpoint
+        setPlug => set_plug_endpoint
+        propose => propose_endpoint
+        voteFor => vote_for_endpoint
+        voteAgainst => vote_against_endpoint
+        sign => sign_endpoint
+        execute => execute_endpoint
+        directExecute => direct_execute_endpoint
+        withdraw => withdraw_endpoint
+        issueGovToken => issue_gov_token_endpoint
+        setGovTokenLocalRoles => set_gov_token_local_roles_endpoint
+        mint => mint_endpoint
+        burn => burn_endpoint
+        getProposal => get_proposal_view
+        getProposalStatus => get_proposal_status_view
+        getProposalVotes => get_proposal_votes_view
+        getProposalSigners => get_proposal_signers_view
+        getProposalSignatureRoleCounts => get_proposal_signature_role_counts_view
+        getProposalPollResults => get_proposal_poll_results_view
     )
 }
+
+multiversx_sc_wasm_adapter::async_callback! { entity }
