@@ -13,7 +13,7 @@ pub trait OrganizationModule: config::ConfigModule {
     #[only_owner]
     #[endpoint(forwardCostTokensToOrg)]
     fn forward_cost_tokens_to_org(&self) {
-        require!(!self.org_contract_address().is_empty(), "org address must be conigured");
+        require!(!self.org_contract_address().is_empty(), "org address must be configured");
         let cost_token_id = self.cost_token_id().get();
         let balance = self.blockchain().get_sc_balance(&EgldOrEsdtTokenIdentifier::esdt(cost_token_id.clone()), 0);
 
