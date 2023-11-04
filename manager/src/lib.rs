@@ -75,6 +75,7 @@ pub trait Manager:
 
     #[endpoint(upgradeEntity)]
     fn upgrade_entity_endpoint(&self, entity_address: ManagedAddress) {
+        self.require_entity_exists(&entity_address);
         self.recalculate_daily_cost(&entity_address);
         self.upgrade_entity(entity_address);
     }
