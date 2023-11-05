@@ -34,6 +34,24 @@ fn it_unassigns_a_role() {
 }
 
 #[test]
+fn it_removes_the_leader_role_when_last_leader_is_unassigned() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+    let owner_address = setup.owner_address.clone();
+
+    setup.configure_gov_token(true);
+
+    setup
+        .blockchain
+        .execute_tx(&owner_address, &setup.contract, &rust_biguint!(0), |sc| {
+            sc.unassign_role(managed_address!(&owner_address), managed_buffer!(ROLE_BUILTIN_LEADER));
+
+            assert!(sc.roles().is_empty());
+            assert_eq!(0, sc.roles_member_amount(&managed_buffer!(ROLE_BUILTIN_LEADER)).get());
+        })
+        .assert_ok();
+}
+
+#[test]
 fn it_only_decreases_role_member_count_once_per_unassigned_user() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let user_address = &setup.user_address;
