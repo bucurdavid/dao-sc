@@ -22,7 +22,7 @@ pub trait Manager:
 {
     #[init]
     fn init(&self, entity_template_address: ManagedAddress, trusted_host_address: ManagedAddress, cost_token: TokenIdentifier, cost_entity_creation: BigUint) {
-        self.entity_templ_address().set_if_empty(&entity_template_address);
+        self.entity_templ_address().set(&entity_template_address);
         self.trusted_host_address().set(&trusted_host_address);
         self.cost_token_id().set(&cost_token);
         self.cost_creation_amount().set(&cost_entity_creation);
