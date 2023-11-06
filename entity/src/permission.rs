@@ -235,10 +235,15 @@ pub trait PermissionModule: config::ConfigModule + plug::PlugModule {
     fn unassign_role(&self, address: ManagedAddress, role_name: ManagedBuffer) {
         require!(self.roles().contains(&role_name), "role does not exist");
 
-        let is_last_leader = role_name == ManagedBuffer::from(ROLE_BUILTIN_LEADER) && self.roles_member_amount(&role_name).get() == 1;
+        let leader_role_name = ManagedBuffer::from(ROLE_BUILTIN_LEADER);
+        let is_last_leader = role_name == leader_role_name && self.roles_member_amount(&role_name).get() == 1;
 
         if is_last_leader && !self.is_plugged() && self.gov_token_id().is_empty() {
             sc_panic!("can not remove last leader: gov token or plug required");
+        }
+
+        if is_last_leader {
+            self.remove_role(leader_role_name);
         }
 
         let user_id = self.users().get_or_create_user(&address);
