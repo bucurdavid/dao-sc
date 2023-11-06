@@ -361,7 +361,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
         let leader_count = self.roles_member_amount(&leader_role).get();
         let mut applied_permissions = ManagedVec::new();
 
-        for action in actions.into_iter() {
+        for action in actions.iter() {
             let mut has_permission_for_action = false;
 
             for role in proposer_roles.iter() {
@@ -378,11 +378,18 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
                     }
                 }
 
-                if role == leader_role {
-                    has_permission_for_action = has_approval || leader_count == 1;
+                // If proposer is a leader and there's only one leader, grant all permissions.
+                if role == leader_role && leader_count == 1 {
+                    has_permission_for_action = true;
                 }
             }
 
+            // If the DAO is leaderless or there's more than one leader and has_approval is true, grant permission.
+            if (leader_count == 0 || leader_count > 1) && has_approval {
+                has_permission_for_action = true;
+            }
+
+            // If after all checks, the action still does not have permission, return false.
             if !has_permission_for_action {
                 return (false, applied_permissions);
             }
