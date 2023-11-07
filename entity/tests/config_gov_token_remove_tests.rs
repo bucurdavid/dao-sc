@@ -28,13 +28,11 @@ fn it_fails_when_entity_is_leaderless() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup.configure_gov_token(true);
+    setup.configure_leaderless();
 
     setup
         .blockchain
         .execute_tx(setup.contract.address_ref(), &setup.contract, &rust_biguint!(0), |sc| {
-            // remove leader role
-            sc.roles().swap_remove(&managed_buffer!(ROLE_BUILTIN_LEADER));
-
             sc.remove_gov_token_endpoint();
         })
         .assert_user_error("not allowed when leaderless");

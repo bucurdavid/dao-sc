@@ -330,7 +330,10 @@ pub trait PermissionModule: config::ConfigModule + plug::PlugModule {
     }
 
     fn is_leaderless(&self) -> bool {
-        !self.roles().contains(&ManagedBuffer::from(ROLE_BUILTIN_LEADER))
+        let leader_role = ManagedBuffer::from(ROLE_BUILTIN_LEADER);
+        let is_leaderless = self.roles_member_amount(&leader_role).get() == 0;
+
+        is_leaderless
     }
 
     fn has_leader_role(&self, address: &ManagedAddress) -> bool {

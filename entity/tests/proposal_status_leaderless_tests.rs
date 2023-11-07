@@ -17,15 +17,13 @@ fn it_returns_active_when_just_created() {
     let mut proposal_id = 0;
 
     setup.configure_gov_token(true);
+    setup.configure_leaderless();
 
     setup.blockchain.set_block_timestamp(0);
 
     setup
         .blockchain
         .execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
-            // remove leader role
-            sc.roles().swap_remove(&managed_buffer!(ROLE_BUILTIN_LEADER));
-
             let mut actions = Vec::<Action<DebugApi>>::new();
             actions.push(Action::<DebugApi> {
                 destination: managed_address!(&sc_address),
@@ -67,13 +65,11 @@ fn it_returns_defeated_when_for_votes_quorum_not_met() {
     let mut proposal_id = 0;
 
     setup.configure_gov_token(true);
+    setup.configure_leaderless();
 
     setup
         .blockchain
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM - 10), |sc| {
-            // remove leader role
-            sc.roles().swap_remove(&managed_buffer!(ROLE_BUILTIN_LEADER));
-
             let mut actions = Vec::<Action<DebugApi>>::new();
             actions.push(Action::<DebugApi> {
                 destination: managed_address!(&sc_address),
@@ -122,13 +118,11 @@ fn it_returns_defeated_when_quorum_met_but_votes_against_is_more_than_for() {
     let mut proposal_id = 0;
 
     setup.configure_gov_token(true);
+    setup.configure_leaderless();
 
     setup
         .blockchain
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(10), |sc| {
-            // remove leader role
-            sc.roles().swap_remove(&managed_buffer!(ROLE_BUILTIN_LEADER));
-
             let mut actions = Vec::<Action<DebugApi>>::new();
             actions.push(Action::<DebugApi> {
                 destination: managed_address!(&sc_address),
@@ -184,13 +178,11 @@ fn it_returns_succeeded_when_for_votes_quorum_met_and_more_for_than_against_vote
     let mut proposal_id = 0;
 
     setup.configure_gov_token(true);
+    setup.configure_leaderless();
 
     setup
         .blockchain
         .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
-            // remove leader role
-            sc.roles().swap_remove(&managed_buffer!(ROLE_BUILTIN_LEADER));
-
             let mut actions = Vec::<Action<DebugApi>>::new();
             actions.push(Action::<DebugApi> {
                 destination: managed_address!(&sc_address),
