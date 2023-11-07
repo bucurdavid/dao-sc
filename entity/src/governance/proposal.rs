@@ -353,7 +353,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
         &self,
         address: &ManagedAddress,
         actions: &ManagedVec<Action<Self::Api>>,
-        has_approval: bool,
+        has_member_approval: bool,
     ) -> (bool, ManagedVec<ManagedBuffer>) {
         let proposer_id = self.users().get_user_id(&address);
         let proposer_roles = self.user_roles(proposer_id);
@@ -361,7 +361,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
         let leader_count = self.roles_member_amount(&leader_role).get();
         let mut applied_permissions = ManagedVec::new();
 
-        for action in actions.into_iter() {
+        for action in actions.iter() {
             let mut has_permission_for_action = false;
 
             for role in proposer_roles.iter() {
@@ -374,15 +374,22 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
 
                     if self.does_permission_apply_to_action(&permission_details, &action) {
                         applied_permissions.push(permission);
-                        has_permission_for_action = has_approval || policy.method == PolicyMethod::One;
+                        has_permission_for_action = has_member_approval || policy.method == PolicyMethod::One;
                     }
                 }
 
-                if role == leader_role {
-                    has_permission_for_action = has_approval || leader_count == 1;
+                // If proposer is a leader and there's only one leader, grant all permissions.
+                if role == leader_role && leader_count == 1 {
+                    has_permission_for_action = true;
                 }
             }
 
+            // If the DAO is leaderless or there's more than one leader and has_approval is true, grant permission.
+            if (leader_count == 0 || leader_count > 1) && has_member_approval {
+                has_permission_for_action = true;
+            }
+
+            // If after all checks, the action still does not have permission, return false.
             if !has_permission_for_action {
                 return (false, applied_permissions);
             }

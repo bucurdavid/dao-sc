@@ -351,8 +351,8 @@ pub trait GovernanceModule:
         require!(proposal.actions_hash == actions_hash, "actions have been corrupted");
         require!(!proposal.was_executed, "proposal has already been executed");
 
-        let has_approval = self.get_proposal_status(&proposal) == ProposalStatus::Succeeded;
-        let (allowed, permissions) = self.get_user_permissions_for_actions(&proposal.proposer, &actions, has_approval);
+        let has_member_approval = self.get_proposal_status(&proposal) == ProposalStatus::Succeeded;
+        let (allowed, permissions) = self.get_user_permissions_for_actions(&proposal.proposer, &actions, has_member_approval);
         require!(allowed, "no permission for action");
         require!(proposal.permissions == permissions, "untruthful permissions announced");
 
@@ -374,9 +374,9 @@ pub trait GovernanceModule:
 
         // proposal flow is skipped on direct executions,
         // so only unilaterally excutable actions are allowed.
-        let has_approval = false;
+        let has_member_approval = false;
 
-        let (allowed, _) = self.get_user_permissions_for_actions(&caller, &actions, has_approval);
+        let (allowed, _) = self.get_user_permissions_for_actions(&caller, &actions, has_member_approval);
         require!(allowed, "no permission for action");
 
         self.execute_actions(&actions);

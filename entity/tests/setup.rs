@@ -2,6 +2,8 @@ multiversx_sc::imports!();
 
 use entity::config::*;
 use entity::governance::*;
+use entity::permission::PermissionModule;
+use entity::permission::ROLE_BUILTIN_LEADER;
 use entity::plug::*;
 use entity::*;
 use multiversx_sc_scenario::testing_framework::BlockchainStateWrapper;
@@ -74,6 +76,16 @@ where
 
                 // assert
                 assert_eq!(lock_vote_tokens, sc.lock_vote_tokens(&managed_token_id!(ENTITY_GOV_TOKEN_ID)).get());
+            })
+            .assert_ok();
+    }
+
+    pub fn configure_leaderless(&mut self) {
+        let owner_address = self.owner_address.clone();
+
+        self.blockchain
+            .execute_tx(&self.owner_address, &self.contract, &rust_biguint!(0), |sc| {
+                sc.unassign_role(managed_address!(&owner_address), managed_buffer!(ROLE_BUILTIN_LEADER));
             })
             .assert_ok();
     }
