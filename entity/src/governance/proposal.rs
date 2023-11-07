@@ -353,7 +353,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
         &self,
         address: &ManagedAddress,
         actions: &ManagedVec<Action<Self::Api>>,
-        has_approval: bool,
+        has_member_approval: bool,
     ) -> (bool, ManagedVec<ManagedBuffer>) {
         let proposer_id = self.users().get_user_id(&address);
         let proposer_roles = self.user_roles(proposer_id);
@@ -374,7 +374,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
 
                     if self.does_permission_apply_to_action(&permission_details, &action) {
                         applied_permissions.push(permission);
-                        has_permission_for_action = has_approval || policy.method == PolicyMethod::One;
+                        has_permission_for_action = has_member_approval || policy.method == PolicyMethod::One;
                     }
                 }
 
@@ -385,7 +385,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
             }
 
             // If the DAO is leaderless or there's more than one leader and has_approval is true, grant permission.
-            if (leader_count == 0 || leader_count > 1) && has_approval {
+            if (leader_count == 0 || leader_count > 1) && has_member_approval {
                 has_permission_for_action = true;
             }
 
