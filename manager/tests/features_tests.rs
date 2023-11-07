@@ -1,8 +1,8 @@
-use multiversx_sc::types::*;
-use multiversx_sc_scenario::*;
 use manager::config::*;
 use manager::features::*;
 use manager::*;
+use multiversx_sc::types::*;
+use multiversx_sc_scenario::*;
 
 mod setup;
 
@@ -28,7 +28,7 @@ fn it_sets_features() {
 }
 
 #[test]
-fn it_fails_if_the_entity_does_not_exist() {
+fn it_fails_when_the_entity_does_not_exist() {
     let mut setup = setup::setup_manager(manager::contract_obj);
     let feature = b"myfeature";
 

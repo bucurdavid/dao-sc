@@ -1,15 +1,15 @@
-use multiversx_sc::types::*;
-use multiversx_sc_scenario::*;
 use entity::config::*;
 use entity::governance::proposal::*;
 use entity::governance::*;
 use entity::permission::*;
+use multiversx_sc::types::*;
+use multiversx_sc_scenario::*;
 use setup::*;
 
 mod setup;
 
 #[test]
-fn it_fails_if_a_required_argument_is_missing() {
+fn it_fails_when_a_required_argument_is_missing() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
@@ -86,7 +86,7 @@ fn it_fails_if_a_required_argument_is_missing() {
 }
 
 #[test]
-fn it_fails_if_payment_value_is_higher_than_defined_by_permission() {
+fn it_fails_when_payment_value_is_higher_than_defined_by_permission() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
@@ -166,7 +166,7 @@ fn it_fails_if_payment_value_is_higher_than_defined_by_permission() {
 }
 
 #[test]
-fn it_fails_if_token_payment_amount_is_higher_than_defined_by_permission() {
+fn it_fails_when_token_payment_amount_is_higher_than_defined_by_permission() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let proposer_address = setup.user_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));

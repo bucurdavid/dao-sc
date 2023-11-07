@@ -161,7 +161,7 @@ fn it_creates_a_proposal_with_actions() {
 }
 
 #[test]
-fn it_fails_if_bad_token() {
+fn it_fails_when_bad_token() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup.configure_gov_token(true);
@@ -189,7 +189,7 @@ fn it_fails_if_bad_token() {
 }
 
 #[test]
-fn it_fails_if_bad_vote_weight_amount() {
+fn it_fails_when_bad_vote_weight_amount() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup.configure_gov_token(true);
@@ -217,7 +217,7 @@ fn it_fails_if_bad_vote_weight_amount() {
 }
 
 #[test]
-fn it_fails_if_trusted_host_id_is_already_known() {
+fn it_fails_when_trusted_host_id_is_already_known() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup.configure_gov_token(true);

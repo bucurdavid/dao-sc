@@ -9,7 +9,7 @@ use setup::*;
 mod setup;
 
 #[test]
-fn it_signs_a_proposal_on_proposing_if_proposal_requires_signing() {
+fn it_signs_a_proposal_on_proposing_when_proposal_requires_signing() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let sc_address = setup.contract.address_ref().clone();
     let proposer_address = setup.user_address.clone();
@@ -78,7 +78,7 @@ fn it_signs_a_proposal_on_proposing_if_proposal_requires_signing() {
 }
 
 #[test]
-fn it_creates_a_proposal_without_esdt_payment_if_not_required() {
+fn it_creates_a_proposal_without_esdt_payment_when_not_required() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let sc_address = setup.contract.address_ref();
     let proposer_address = setup.user_address;
@@ -160,7 +160,7 @@ fn it_creates_a_proposal_without_esdt_payment_if_not_required() {
 }
 
 #[test]
-fn it_does_not_self_sign_a_proposal_if_proposer_does_not_have_any_roles() {
+fn it_does_not_self_sign_a_proposal_when_proposer_does_not_have_any_roles() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let proposer_address = setup.owner_address.clone();
     let mut proposal_id: u64 = 0;

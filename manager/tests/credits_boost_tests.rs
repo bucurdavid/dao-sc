@@ -1,6 +1,6 @@
-use multiversx_sc_scenario::*;
 use manager::config::*;
 use manager::credits::*;
+use multiversx_sc_scenario::*;
 use setup::*;
 
 mod setup;
@@ -42,7 +42,7 @@ fn it_increases_deposited_amounts_in_the_storage() {
 }
 
 #[test]
-fn it_fails_if_the_entity_does_not_exist() {
+fn it_fails_when_the_entity_does_not_exist() {
     let mut setup = setup::setup_manager(manager::contract_obj);
     let entity_address = setup.contract_entity_template.address_ref();
 

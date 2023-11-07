@@ -1,7 +1,7 @@
-use multiversx_sc::types::*;
-use multiversx_sc_scenario::*;
 use manager::config::*;
 use manager::*;
+use multiversx_sc::types::*;
+use multiversx_sc_scenario::*;
 use setup::*;
 mod setup;
 
@@ -29,7 +29,7 @@ fn it_creates_an_entity() {
 }
 
 #[test]
-fn it_fails_if_wrong_cost_token() {
+fn it_fails_when_wrong_cost_token() {
     let mut setup = setup::setup_manager(manager::contract_obj);
     let caller = setup.blockchain.create_user_account(&rust_biguint!(1));
     let wrong_cost_token: &[u8] = b"WRONG-abcdef";
@@ -45,7 +45,7 @@ fn it_fails_if_wrong_cost_token() {
 }
 
 #[test]
-fn it_fails_if_wrong_cost_amount() {
+fn it_fails_when_wrong_cost_amount() {
     let mut setup = setup::setup_manager(manager::contract_obj);
     let caller = setup.blockchain.create_user_account(&rust_biguint!(1));
     let wrong_cost_amount = COST_AMOUNT_ENTITY_CREATION - 1u64;

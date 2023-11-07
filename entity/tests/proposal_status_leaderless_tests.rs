@@ -61,7 +61,7 @@ fn it_returns_active_when_just_created() {
 }
 
 #[test]
-fn it_returns_defeated_if_for_votes_quorum_not_met() {
+fn it_returns_defeated_when_for_votes_quorum_not_met() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let sc_address = setup.contract.address_ref().clone();
     let mut proposal_id = 0;
@@ -116,7 +116,7 @@ fn it_returns_defeated_if_for_votes_quorum_not_met() {
 }
 
 #[test]
-fn it_returns_defeated_if_quorum_met_but_votes_against_is_more_than_for() {
+fn it_returns_defeated_when_quorum_met_but_votes_against_is_more_than_for() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let sc_address = setup.contract.address_ref().clone();
     let mut proposal_id = 0;
@@ -178,7 +178,7 @@ fn it_returns_defeated_if_quorum_met_but_votes_against_is_more_than_for() {
 }
 
 #[test]
-fn it_returns_succeeded_if_for_votes_quorum_met_and_more_for_than_against_votes() {
+fn it_returns_succeeded_when_for_votes_quorum_met_and_more_for_than_against_votes() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let sc_address = setup.contract.address_ref().clone();
     let mut proposal_id = 0;

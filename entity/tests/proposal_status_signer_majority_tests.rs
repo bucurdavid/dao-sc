@@ -1,16 +1,16 @@
-use multiversx_sc::codec::multi_types::*;
-use multiversx_sc::types::*;
-use multiversx_sc_scenario::*;
 use entity::config::*;
 use entity::governance::proposal::*;
 use entity::governance::*;
 use entity::permission::*;
+use multiversx_sc::codec::multi_types::*;
+use multiversx_sc::types::*;
+use multiversx_sc_scenario::*;
 use setup::*;
 
 mod setup;
 
 #[test]
-fn it_requires_signer_majority_if_proposer_has_role_and_with_actions_that_do_not_require_any_permissions() {
+fn it_requires_signer_majority_when_proposer_has_role_and_with_actions_that_do_not_require_any_permissions() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let proposer_address = setup.owner_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
@@ -84,7 +84,7 @@ fn it_requires_signer_majority_if_proposer_has_role_and_with_actions_that_do_not
 }
 
 #[test]
-fn it_fails_if_signer_majority_not_met_if_proposer_has_role_and_with_actions_that_do_not_require_any_permissions() {
+fn it_fails_when_signer_majority_not_met_when_proposer_has_role_and_with_actions_that_do_not_require_any_permissions() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let proposer_address = setup.owner_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));
@@ -231,7 +231,7 @@ fn it_requires_signer_majority_for_multiple_roles() {
 }
 
 #[test]
-fn it_succeeds_early_if_has_all_required_signatures_for_proposal_with_actions() {
+fn it_succeeds_early_when_has_all_required_signatures_for_proposal_with_actions() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let proposer_address = setup.owner_address.clone();
     let action_receiver = setup.blockchain.create_user_account(&rust_biguint!(0));

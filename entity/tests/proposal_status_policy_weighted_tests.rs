@@ -1,9 +1,9 @@
-use multiversx_sc::types::*;
-use multiversx_sc_scenario::*;
 use entity::config::*;
 use entity::governance::proposal::*;
 use entity::governance::*;
 use entity::permission::*;
+use multiversx_sc::types::*;
+use multiversx_sc_scenario::*;
 use setup::*;
 
 mod setup;
@@ -76,7 +76,7 @@ fn it_returns_active_when_just_created() {
 }
 
 #[test]
-fn it_succeeds_if_one_of_one_permission_policies_meets_quorum_and_passed_voting_period() {
+fn it_succeeds_when_one_of_one_permission_policies_meets_quorum_and_passed_voting_period() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let sc_address = setup.contract.address_ref().clone();
     let proposer_address = setup.user_address.clone();
@@ -145,7 +145,7 @@ fn it_succeeds_if_one_of_one_permission_policies_meets_quorum_and_passed_voting_
 }
 
 #[test]
-fn it_returns_defeated_if_one_of_one_permission_policies_does_not_meet_quorum() {
+fn it_returns_defeated_when_one_of_one_permission_policies_does_not_meet_quorum() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let sc_address = setup.contract.address_ref().clone();
     let proposer_address = setup.user_address.clone();

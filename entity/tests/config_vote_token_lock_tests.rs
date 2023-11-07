@@ -1,7 +1,7 @@
-use multiversx_sc_scenario::*;
 use entity::config::*;
 use entity::governance::*;
 use entity::Entity;
+use multiversx_sc_scenario::*;
 use setup::*;
 
 mod setup;
@@ -23,7 +23,7 @@ fn it_changes_the_vote_token_lock_when_called_by_trusted_host() {
 }
 
 #[test]
-fn it_fails_if_caller_not_trusted_host() {
+fn it_fails_when_caller_not_trusted_host() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup.configure_trusted_host();

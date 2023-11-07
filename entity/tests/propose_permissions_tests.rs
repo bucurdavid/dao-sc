@@ -112,7 +112,7 @@ fn it_sets_the_longest_policy_voting_period_for_the_proposal() {
 }
 
 #[test]
-fn it_allows_anyone_to_propose_if_leaderless() {
+fn it_allows_anyone_to_propose_when_leaderless() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let sc_address = setup.contract.address_ref().clone();
     let proposer_address = setup.user_address.clone();

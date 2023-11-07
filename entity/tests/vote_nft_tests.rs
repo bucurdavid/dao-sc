@@ -1,9 +1,9 @@
-use multiversx_sc::codec::multi_types::*;
-use multiversx_sc::types::*;
-use multiversx_sc_scenario::*;
 use entity::config::*;
 use entity::governance::errors::*;
 use entity::governance::*;
+use multiversx_sc::codec::multi_types::*;
+use multiversx_sc::types::*;
+use multiversx_sc_scenario::*;
 use setup::*;
 
 mod setup;
@@ -222,7 +222,7 @@ fn it_fails_to_vote_twice_with_the_same_nft() {
 }
 
 #[test]
-fn it_fails_if_less_than_configured_min_vote_weight() {
+fn it_fails_when_less_than_configured_min_vote_weight() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let owner_address = setup.owner_address.clone();
     let voter_address = setup.user_address.clone();
