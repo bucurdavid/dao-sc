@@ -1,12 +1,12 @@
+use entity::governance::*;
 use multiversx_sc::types::*;
 use multiversx_sc_scenario::*;
-use entity::governance::*;
 use setup::*;
 
 mod setup;
 
 #[test]
-fn it_burns_if_contract_calls_itself() {
+fn it_burns_when_contract_calls_itself() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup
@@ -28,7 +28,7 @@ fn it_burns_if_contract_calls_itself() {
 }
 
 #[test]
-fn it_fails_if_caller_not_self() {
+fn it_fails_when_caller_not_self() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup

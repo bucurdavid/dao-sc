@@ -74,7 +74,7 @@ fn it_returns_succeeded_when_just_created_but_only_required_proposers_signature(
 }
 
 #[test]
-fn it_succeeds_if_one_of_one_permission_policies_reaches_signer_quorum() {
+fn it_succeeds_when_one_of_one_permission_policies_reaches_signer_quorum() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let sc_address = setup.contract.address_ref();
     let proposer_address = setup.user_address.clone();
@@ -142,7 +142,7 @@ fn it_succeeds_if_one_of_one_permission_policies_reaches_signer_quorum() {
 }
 
 #[test]
-fn it_returns_defeated_if_one_of_two_permission_policies_does_not_meet_quorum_after_voting_period_ended() {
+fn it_returns_defeated_when_one_of_two_permission_policies_does_not_meet_quorum_after_voting_period_ended() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let sc_address = setup.contract.address_ref();
     let proposer_address = setup.user_address.clone();

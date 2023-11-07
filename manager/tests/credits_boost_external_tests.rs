@@ -1,6 +1,6 @@
-use multiversx_sc_scenario::*;
 use manager::config::*;
 use manager::credits::*;
+use multiversx_sc_scenario::*;
 
 mod setup;
 
@@ -49,7 +49,7 @@ fn it_registers_external_boosts_from_the_owner() {
 }
 
 #[test]
-fn it_fails_if_caller_is_user() {
+fn it_fails_when_caller_is_user() {
     let mut setup = setup::setup_manager(manager::contract_obj);
     let booster = setup.user_address.clone();
     let entity_address = setup.contract_entity_template.address_ref();
@@ -63,7 +63,7 @@ fn it_fails_if_caller_is_user() {
 }
 
 #[test]
-fn it_fails_if_the_entity_does_not_exist() {
+fn it_fails_when_the_entity_does_not_exist() {
     let mut setup = setup::setup_manager(manager::contract_obj);
     let booster = setup.user_address.clone();
     let entity_address = setup.contract_entity_template.address_ref();

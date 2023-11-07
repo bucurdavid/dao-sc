@@ -42,7 +42,7 @@ fn it_returns_active_for_a_newly_created_proposal() {
 }
 
 #[test]
-fn it_returns_defeated_if_quorum_not_met() {
+fn it_returns_defeated_when_quorum_not_met() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let voter_one = setup.blockchain.create_user_account(&rust_biguint!(1));
     let voter_two = setup.blockchain.create_user_account(&rust_biguint!(1));
@@ -88,7 +88,7 @@ fn it_returns_defeated_if_quorum_not_met() {
 }
 
 #[test]
-fn it_returns_defeated_if_quorum_met_but_votes_against_is_more_than_for() {
+fn it_returns_defeated_when_quorum_met_but_votes_against_is_more_than_for() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let voter_one = setup.blockchain.create_user_account(&rust_biguint!(1));
     let voter_two = setup.blockchain.create_user_account(&rust_biguint!(1));
@@ -143,7 +143,7 @@ fn it_returns_defeated_if_quorum_met_but_votes_against_is_more_than_for() {
 }
 
 #[test]
-fn it_returns_succeeded_if_for_votes_quorum_met_and_more_for_than_against_votes() {
+fn it_returns_succeeded_when_for_votes_quorum_met_and_more_for_than_against_votes() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let voter_one = setup.blockchain.create_user_account(&rust_biguint!(1));
     let voter_two = setup.blockchain.create_user_account(&rust_biguint!(1));
@@ -152,7 +152,7 @@ fn it_returns_succeeded_if_for_votes_quorum_met_and_more_for_than_against_votes(
 
     setup.configure_plug(10, 50);
 
-// propose FOR with 100 votes
+    // propose FOR with 100 votes
     setup
         .blockchain
         .execute_tx(&voter_one, &setup.contract, &rust_biguint!(0), |sc| {

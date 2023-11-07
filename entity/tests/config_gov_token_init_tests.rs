@@ -1,7 +1,7 @@
-use multiversx_sc_scenario::*;
 use entity::config::*;
 use entity::governance::*;
 use entity::permission::*;
+use multiversx_sc_scenario::*;
 use setup::*;
 
 mod setup;
@@ -29,7 +29,7 @@ fn it_sets_the_governance_token_initially_by_leader() {
 }
 
 #[test]
-fn it_fails_if_caller_not_leader() {
+fn it_fails_when_caller_not_leader() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup
@@ -41,7 +41,7 @@ fn it_fails_if_caller_not_leader() {
 }
 
 #[test]
-fn it_fails_if_gov_token_already_set() {
+fn it_fails_when_gov_token_already_set() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup

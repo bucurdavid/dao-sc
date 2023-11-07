@@ -1,13 +1,13 @@
-use multiversx_sc_scenario::*;
 use manager::config::*;
 use manager::credits::*;
 use manager::features::*;
+use multiversx_sc_scenario::*;
 use setup::*;
 
 mod setup;
 
 #[test]
-fn it_recalculates_to_daily_base_cost_if_no_features_set() {
+fn it_recalculates_to_daily_base_cost_when_no_features_set() {
     let mut setup = setup::setup_manager(manager::contract_obj);
     let entity_address = setup.contract_entity_template.address_ref();
 

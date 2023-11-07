@@ -193,7 +193,7 @@ fn it_votes_against_a_proposal() {
 }
 
 #[test]
-fn it_fails_if_proposal_voting_period_has_ended() {
+fn it_fails_when_proposal_voting_period_has_ended() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let mut proposal_id = 0;
 
@@ -231,7 +231,7 @@ fn it_fails_if_proposal_voting_period_has_ended() {
 }
 
 #[test]
-fn it_fails_if_less_than_configured_min_vote_weight() {
+fn it_fails_when_less_than_configured_min_vote_weight() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let mut proposal_id = 0;
 

@@ -1,6 +1,6 @@
-use multiversx_sc_scenario::*;
 use entity::config::*;
 use entity::governance::*;
+use multiversx_sc_scenario::*;
 use setup::*;
 
 mod setup;
@@ -22,7 +22,7 @@ fn it_issues_a_governance_token() {
 }
 
 #[test]
-fn it_fails_if_caller_not_a_leader() {
+fn it_fails_when_caller_not_a_leader() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let caller = setup.blockchain.create_user_account(&rust_biguint!(1));
 
@@ -35,7 +35,7 @@ fn it_fails_if_caller_not_a_leader() {
 }
 
 #[test]
-fn it_fails_if_gov_token_has_already_been_issued() {
+fn it_fails_when_gov_token_has_already_been_issued() {
     let mut setup = EntitySetup::new(entity::contract_obj);
 
     setup
