@@ -267,6 +267,13 @@ fn it_returns_defeated_when_not_all_policies_are_met() {
 
     setup
         .blockchain
+        .execute_query(&setup.contract, |sc| {
+            assert_eq!(ProposalStatus::Active, sc.get_proposal_status_view(proposal_id));
+        })
+        .assert_ok();
+
+    setup
+        .blockchain
         .execute_tx(&proposer_address, &setup.contract, &rust_biguint!(0), |sc| {
             sc.sign_endpoint(proposal_id, OptionalValue::None);
         })
