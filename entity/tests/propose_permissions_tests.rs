@@ -118,13 +118,11 @@ fn it_allows_anyone_to_propose_when_leaderless() {
     let proposer_address = setup.user_address.clone();
 
     setup.configure_gov_token(true);
+    setup.configure_leaderless();
 
     setup
         .blockchain
         .execute_esdt_transfer(&proposer_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(MIN_PROPOSE_WEIGHT), |sc| {
-            // remove leader role
-            sc.roles().swap_remove(&managed_buffer!(ROLE_BUILTIN_LEADER));
-
             let mut actions = Vec::<Action<DebugApi>>::new();
             actions.push(Action::<DebugApi> {
                 destination: managed_address!(&sc_address),
