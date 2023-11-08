@@ -127,14 +127,14 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
         let has_actions = !proposal.actions_hash.is_empty() || !proposal.permissions.is_empty();
         let is_leaderless = self.is_leaderless();
 
-        let (meets_policy_requirements, has_token_weighted_policy) = if has_actions {
-            self.meets_policy_requirements(&proposal, is_leaderless)
+        let (has_policies, meets_policy_requirements, has_weighted_policy) = if has_actions {
+            self.get_policy_requirements(&proposal, is_leaderless)
         } else {
-            (false, false)
+            (false, false, false)
         };
 
         // early succeed if signer majority & no token weighted policy
-        if meets_policy_requirements && !has_token_weighted_policy {
+        if meets_policy_requirements && !has_weighted_policy {
             return ProposalStatus::Succeeded;
         }
 
@@ -143,8 +143,9 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
         }
 
         let is_weight_based = has_gov_token || self.is_plugged();
+        let is_leaderless_weighted = is_leaderless && !has_policies;
 
-        if (is_leaderless || !has_actions) && is_weight_based {
+        if is_weight_based && (is_leaderless_weighted || !has_actions) {
             return match self.has_sufficient_votes(&proposal, &self.quorum().get()) {
                 true => ProposalStatus::Succeeded,
                 false => ProposalStatus::Defeated,
@@ -158,7 +159,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
         ProposalStatus::Defeated
     }
 
-    fn meets_policy_requirements(&self, proposal: &Proposal<Self::Api>, is_leaderless: bool) -> (bool, bool) {
+    fn get_policy_requirements(&self, proposal: &Proposal<Self::Api>, is_leaderless: bool) -> (bool, bool, bool) {
         let proposer_id = self.users().get_user_id(&proposal.proposer);
         let proposer_roles = self.user_roles(proposer_id);
 
@@ -169,16 +170,17 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
                 .map(|role| self.has_signer_majority_for_role(&proposal, &role))
                 .all(|res| res == true);
 
-            return (has_signer_majority, false);
+            return (false, has_signer_majority, false);
+        }
+
+        if proposer_roles.is_empty() || proposal.permissions.is_empty() {
+            return (false, false, false);
         }
 
         // Flags to check if all permissions are satisfied and if any token-weighted policies are applied.
         let mut is_satisfied_all = true;
-        let mut has_token_weighted_policy = false;
-
-        if proposer_roles.is_empty() || proposal.permissions.is_empty() {
-            return (false, false);
-        }
+        let mut has_policies = false;
+        let mut has_weighted_policy = false;
 
         // Evaluating each permission against the proposer's roles and associated policies.
         for permission in proposal.permissions.iter() {
@@ -186,9 +188,11 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
                 .iter()
                 .map(|role| {
                     if let Some(policy) = self.policies(&role).get(&permission) {
+                        has_policies = true;
+
                         match policy.method {
                             PolicyMethod::Weight => {
-                                has_token_weighted_policy = true;
+                                has_weighted_policy = true;
                                 self.has_sufficient_votes(&proposal, &policy.quorum)
                             }
                             PolicyMethod::One => self.proposal_signers(proposal.id, &role).contains(&proposer_id),
@@ -207,7 +211,7 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
             }
         }
 
-        (is_satisfied_all, has_token_weighted_policy)
+        (has_policies, is_satisfied_all, has_weighted_policy)
     }
 
     fn execute_actions(&self, actions: &ManagedVec<Action<Self::Api>>) {
