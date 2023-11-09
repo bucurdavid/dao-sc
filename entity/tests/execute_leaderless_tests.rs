@@ -104,7 +104,7 @@ fn it_fails_when_the_proposal_has_been_defeated() {
             });
 
             let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(actions));
-            let actions_permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"perm")]);
+            let actions_permissions = MultiValueManagedVec::new();
 
             proposal_id = sc.propose_endpoint(
                 managed_buffer!(b"id"),
