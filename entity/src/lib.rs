@@ -27,6 +27,9 @@ pub trait Entity:
         }
     }
 
+    #[endpoint]
+    fn upgrade(&self) {}
+
     #[endpoint(changeVoteTokenLock)]
     fn change_vote_token_lock_endpoint(&self, token: TokenIdentifier, lock: bool) {
         self.require_caller_trusted_host();
