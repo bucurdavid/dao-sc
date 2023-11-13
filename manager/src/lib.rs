@@ -28,6 +28,9 @@ pub trait Manager:
         self.cost_creation_amount().set(&cost_entity_creation);
     }
 
+    #[endpoint]
+    fn upgrade(&self) {}
+
     #[endpoint(addAdmin)]
     fn add_admin_endpoint(&self, address: ManagedAddress) {
         self.require_caller_is_admin();
