@@ -47,14 +47,23 @@ pub trait ContractModule:
         content_hash: ManagedBuffer,
         content_sig: ManagedBuffer,
         actions_hash: ManagedBuffer,
-        permissions: ManagedVec<ManagedBuffer>,
+        permissions: MultiValueManagedVec<ManagedBuffer>,
     ) {
         let caller = self.blockchain().get_caller();
         // TODO: guard caller self or has permission like having built-in developer role
 
         self.stage_contract(&address, &code);
 
-        self.create_proposal(caller, trusted_host_id, content_hash, content_sig, actions_hash, 0, BigUint::zero(), permissions);
+        self.create_proposal(
+            caller,
+            trusted_host_id,
+            content_hash,
+            content_sig,
+            actions_hash,
+            0,
+            BigUint::zero(),
+            permissions.into_vec(),
+        );
     }
 
     #[endpoint(activateContract)]
