@@ -103,9 +103,11 @@ pub trait ContractModule:
         require!(has_dev_role, "caller must be developer");
     }
 
+    #[view(getContractStage)]
     #[storage_mapper("contract:stage")]
     fn stage(&self, address: &ManagedAddress) -> SingleValueMapper<ManagedBuffer>;
 
+    #[view(isContractStageLocked)]
     #[storage_mapper("contract:stage_lock")]
     fn stage_lock(&self, address: &ManagedAddress) -> SingleValueMapper<bool>;
 }
