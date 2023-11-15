@@ -4,6 +4,7 @@ use crate::config;
 use crate::governance;
 use crate::governance::events;
 use crate::permission;
+use crate::permission::ROLE_BUILTIN_DEVELOPER;
 use crate::plug;
 
 #[multiversx_sc::module]
@@ -33,7 +34,7 @@ pub trait ContractModule:
 
     #[endpoint(stageContract)]
     fn stage_contract_endpoint(&self, address: ManagedAddress, code: ManagedBuffer) {
-        // TODO: guard caller self or has permission like having built-in developer role
+        self.require_caller_is_developer();
 
         self.stage_contract(&address, &code);
     }
@@ -49,13 +50,14 @@ pub trait ContractModule:
         actions_hash: ManagedBuffer,
         permissions: MultiValueManagedVec<ManagedBuffer>,
     ) {
-        let caller = self.blockchain().get_caller();
-        // TODO: guard caller self or has permission like having built-in developer role
+        self.require_caller_is_developer();
 
         self.stage_contract(&address, &code);
 
+        let proposer = self.blockchain().get_caller();
+
         self.create_proposal(
-            caller,
+            proposer,
             trusted_host_id,
             content_hash,
             content_sig,
@@ -89,6 +91,14 @@ pub trait ContractModule:
 
         self.stage(&address).set(code);
         self.stage_lock(&address).set(true);
+    }
+
+    fn require_caller_is_developer(&self) {
+        let caller = self.blockchain().get_caller();
+        let dev_role = ManagedBuffer::from(ROLE_BUILTIN_DEVELOPER);
+        let has_dev_role = self.has_role(&caller, &dev_role);
+
+        require!(has_dev_role, "caller must be developer");
     }
 
     #[storage_mapper("contract:stage")]
