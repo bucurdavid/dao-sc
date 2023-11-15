@@ -69,17 +69,19 @@ pub trait ContractModule:
     }
 
     #[endpoint(activateContract)]
-    fn activate_contract_endpoint(&self, address: ManagedAddress, gas: u64, egld_value: BigUint, code_metadata: CodeMetadata, args: MultiValueEncoded<ManagedBuffer>) {
+    fn activate_contract_endpoint(&self, address: ManagedAddress, code_metadata: CodeMetadata, args: MultiValueEncoded<ManagedBuffer>) {
         self.require_caller_self();
         require!(!self.stage(&address).is_empty(), "contract not staged");
 
         let args_buffer = args.to_arg_buffer();
         let code = self.stage(&address).take();
+        let gas = self.blockchain().get_gas_left();
+        let value = BigUint::zero();
 
         if address.is_zero() {
-            self.send_raw().deploy_contract(gas, &egld_value, &code, code_metadata, &args_buffer);
+            self.send_raw().deploy_contract(gas, &value, &code, code_metadata, &args_buffer);
         } else {
-            self.send_raw().upgrade_contract(&address, gas, &egld_value, &code, code_metadata, &args_buffer);
+            self.send_raw().upgrade_contract(&address, gas, &value, &code, code_metadata, &args_buffer);
         }
 
         self.stage_lock(&address).clear();
