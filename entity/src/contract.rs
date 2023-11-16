@@ -24,9 +24,7 @@ pub trait ContractModule:
     #[endpoint(unlockContractStage)]
     fn unlock_contract_stage_endpoint(&self, address: ManagedAddress) {
         self.require_caller_self();
-
-        let locked = self.stage_lock(&address).get();
-        require!(locked, "contract stage is unlocked already");
+        require!(self.is_stage_locked(&address), "contract stage is unlocked already");
 
         self.stage_lock(&address).clear();
         self.stage(&address).clear();
@@ -88,8 +86,7 @@ pub trait ContractModule:
     }
 
     fn stage_contract(&self, address: &ManagedAddress, code: &ManagedBuffer) {
-        let locked = self.stage_lock(&address).get();
-        require!(locked == false, "contract stage is locked");
+        require!(!self.is_stage_locked(&address), "contract stage is locked");
 
         self.stage(&address).set(code);
         self.stage_lock(&address).set(true);
@@ -101,6 +98,10 @@ pub trait ContractModule:
         let has_dev_role = self.has_role(&caller, &dev_role);
 
         require!(has_dev_role, "caller must be developer");
+    }
+
+    fn is_stage_locked(&self, address: &ManagedAddress) -> bool {
+        !self.stage_lock(&address).is_empty()
     }
 
     #[view(getContractStage)]
