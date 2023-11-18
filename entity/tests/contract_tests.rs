@@ -197,7 +197,7 @@ fn it_cancels_a_previously_created_activation_proposal_when_exists() {
             let second_proposal = sc.proposals(second_proposal_id).get();
             assert_eq!(sc.get_proposal_status(&second_proposal), ProposalStatus::Active);
 
-            assert_eq!(sc.stage_previous_proposal(&managed_address!(&contract_address)).get(), second_proposal_id);
+            assert_eq!(sc.stage_current_proposal(&managed_address!(&contract_address)).get(), second_proposal_id);
         })
         .assert_ok();
 }

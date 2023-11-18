@@ -53,10 +53,10 @@ pub trait ContractModule:
     ) -> u64 {
         self.require_caller_is_developer();
 
-        let active_proposal_id = self.stage_previous_proposal(&address).get();
+        let active_proposal_id = self.stage_current_proposal(&address).get();
 
         if active_proposal_id > 0 {
-            self.cancel_previous_stage_proposal(&address, active_proposal_id);
+            self.cancel_stage_current_proposal(&address, active_proposal_id);
         }
 
         self.stage_contract(&address, &code);
@@ -74,7 +74,7 @@ pub trait ContractModule:
             permissions.into_vec(),
         );
 
-        self.stage_previous_proposal(&address).set(proposal.id);
+        self.stage_current_proposal(&address).set(proposal.id);
 
         proposal.id
     }
@@ -124,7 +124,7 @@ pub trait ContractModule:
         require!(has_dev_role, "caller must be developer");
     }
 
-    fn cancel_previous_stage_proposal(&self, address: &ManagedAddress, active_proposal_id: u64) {
+    fn cancel_stage_current_proposal(&self, address: &ManagedAddress, active_proposal_id: u64) {
         let active_proposal = self.proposals(active_proposal_id).get();
 
         if self.get_proposal_status(&active_proposal) != ProposalStatus::Active {
@@ -150,6 +150,6 @@ pub trait ContractModule:
     #[storage_mapper("contract:stage_lock")]
     fn stage_lock(&self, address: &ManagedAddress) -> SingleValueMapper<bool>;
 
-    #[storage_mapper("contract:stage_previous_proposal")]
-    fn stage_previous_proposal(&self, address: &ManagedAddress) -> SingleValueMapper<u64>;
+    #[storage_mapper("contract:stage_current_proposal")]
+    fn stage_current_proposal(&self, address: &ManagedAddress) -> SingleValueMapper<u64>;
 }
