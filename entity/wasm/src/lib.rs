@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                           65
+// Endpoints:                           64
 // Async Callback:                       1
-// Total number of exported functions:  67
+// Total number of exported functions:  66
 
 #![no_std]
 
@@ -44,8 +44,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         stageContract => stage_contract_endpoint
         stageContractAndPropose => stage_contract_and_propose_endpoint
         activateContract => activate_contract_endpoint
-        getContractStage => stage
-        isContractStageLocked => stage_lock
+        getContractStage => get_contract_stage_view
         createRole => create_role_endpoint
         removeRole => remove_role_endpoint
         assignRole => assign_role_endpoint
