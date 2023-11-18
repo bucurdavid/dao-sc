@@ -3,6 +3,7 @@ multiversx_sc::imports!();
 use crate::config;
 use crate::governance;
 use crate::governance::events;
+use crate::governance::proposal::ProposalStatus;
 use crate::permission;
 use crate::permission::ROLE_BUILTIN_DEVELOPER;
 use crate::plug;
@@ -29,8 +30,7 @@ pub trait ContractModule:
         self.require_caller_self();
         require!(self.is_stage_locked(&address), "contract stage is unlocked already");
 
-        self.stage_lock(&address).clear();
-        self.stage(&address).clear();
+        self.clear_stage(&address);
     }
 
     #[endpoint(stageContract)]
@@ -50,14 +50,20 @@ pub trait ContractModule:
         content_sig: ManagedBuffer,
         actions_hash: ManagedBuffer,
         permissions: MultiValueManagedVec<ManagedBuffer>,
-    ) {
+    ) -> u64 {
         self.require_caller_is_developer();
+
+        let active_proposal_id = self.stage_current_proposal(&address).get();
+
+        if active_proposal_id > 0 {
+            self.cancel_stage_current_proposal(&address, active_proposal_id);
+        }
 
         self.stage_contract(&address, &code);
 
         let proposer = self.blockchain().get_caller();
 
-        self.create_proposal(
+        let proposal = self.create_proposal(
             proposer,
             trusted_host_id,
             content_hash,
@@ -67,6 +73,10 @@ pub trait ContractModule:
             BigUint::zero(),
             permissions.into_vec(),
         );
+
+        self.stage_current_proposal(&address).set(proposal.id);
+
+        proposal.id
     }
 
     #[endpoint(activateContract)]
@@ -114,6 +124,22 @@ pub trait ContractModule:
         require!(has_dev_role, "caller must be developer");
     }
 
+    fn cancel_stage_current_proposal(&self, address: &ManagedAddress, active_proposal_id: u64) {
+        let active_proposal = self.proposals(active_proposal_id).get();
+
+        if self.get_proposal_status(&active_proposal) != ProposalStatus::Active {
+            return;
+        }
+
+        self.cancel_proposal(active_proposal);
+        self.clear_stage(&address);
+    }
+
+    fn clear_stage(&self, address: &ManagedAddress) {
+        self.stage_lock(&address).clear();
+        self.stage(&address).clear();
+    }
+
     fn is_stage_locked(&self, address: &ManagedAddress) -> bool {
         !self.stage_lock(&address).is_empty()
     }
@@ -123,4 +149,7 @@ pub trait ContractModule:
 
     #[storage_mapper("contract:stage_lock")]
     fn stage_lock(&self, address: &ManagedAddress) -> SingleValueMapper<bool>;
+
+    #[storage_mapper("contract:stage_current_proposal")]
+    fn stage_current_proposal(&self, address: &ManagedAddress) -> SingleValueMapper<u64>;
 }

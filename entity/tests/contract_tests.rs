@@ -1,3 +1,4 @@
+use entity::config::*;
 use entity::contract::*;
 use entity::governance::proposal::*;
 use entity::permission::*;
@@ -110,6 +111,93 @@ fn it_stages_contract_and_creates_proposal_when_caller_has_permission() {
 
             assert!(sc.stage_lock(&managed_address!(&contract_address)).get(), "stage should be locked");
             assert!(!sc.stage(&managed_address!(&contract_address)).is_empty(), "stage should not be empty");
+        })
+        .assert_ok();
+}
+
+#[test]
+fn it_cancels_a_previously_created_activation_proposal_when_exists() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+    let dev_address = setup.blockchain.create_user_account(&rust_biguint!(0));
+    let contract = setup.blockchain.create_sc_account(&rust_biguint!(0), Option::None, entity::contract_obj, "");
+    let contract_address = contract.address_ref().clone();
+
+    setup
+        .blockchain
+        .execute_tx(&dev_address, &setup.contract, &rust_biguint!(0), |sc| {
+            sc.create_role(managed_buffer!(ROLE_BUILTIN_DEVELOPER));
+            sc.assign_role(managed_address!(&dev_address), managed_buffer!(ROLE_BUILTIN_DEVELOPER));
+
+            sc.create_permission(
+                managed_buffer!(b"activateSc"),
+                managed_biguint!(0),
+                managed_address!(&contract_address),
+                managed_buffer!(b"stageContractAndPropose"),
+                ManagedVec::new(),
+                ManagedVec::new(),
+            );
+
+            sc.create_policy(
+                managed_buffer!(ROLE_BUILTIN_DEVELOPER),
+                managed_buffer!(b"activateSc"),
+                PolicyMethod::Quorum,
+                managed_biguint!(2u64),
+                1,
+            );
+
+            // first activation proposal
+            let action = Action::<DebugApi> {
+                destination: managed_address!(&contract_address),
+                endpoint: managed_buffer!(b"stageContractAndPropose"),
+                arguments: ManagedVec::new(),
+                gas_limit: 5_000_000u64,
+                value: managed_biguint!(0),
+                payments: ManagedVec::new(),
+            };
+
+            let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(vec![action]));
+            let permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"activateSc")]);
+
+            let first_proposal_id = sc.stage_contract_and_propose_endpoint(
+                managed_address!(&contract_address),
+                managed_buffer!(b"new_code"),
+                managed_buffer!(b"trusted_host_id1"),
+                managed_buffer!(b"content_hash"),
+                managed_buffer!(b"content_sig"),
+                actions_hash,
+                permissions,
+            );
+
+            // second activation proposal with different code
+            let action = Action::<DebugApi> {
+                destination: managed_address!(&contract_address),
+                endpoint: managed_buffer!(b"stageContractAndPropose"),
+                arguments: ManagedVec::new(),
+                gas_limit: 5_000_000u64,
+                value: managed_biguint!(0),
+                payments: ManagedVec::new(),
+            };
+
+            let actions_hash = sc.calculate_actions_hash(&ManagedVec::from(vec![action]));
+            let permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"activateSc")]);
+
+            let second_proposal_id = sc.stage_contract_and_propose_endpoint(
+                managed_address!(&contract_address),
+                managed_buffer!(b"some_other_code"),
+                managed_buffer!(b"trusted_host_id2"),
+                managed_buffer!(b"content_hash"),
+                managed_buffer!(b"content_sig"),
+                actions_hash,
+                permissions,
+            );
+
+            let first_proposal = sc.proposals(first_proposal_id).get();
+            assert_eq!(sc.get_proposal_status(&first_proposal), ProposalStatus::Canceled);
+
+            let second_proposal = sc.proposals(second_proposal_id).get();
+            assert_eq!(sc.get_proposal_status(&second_proposal), ProposalStatus::Active);
+
+            assert_eq!(sc.stage_current_proposal(&managed_address!(&contract_address)).get(), second_proposal_id);
         })
         .assert_ok();
 }
