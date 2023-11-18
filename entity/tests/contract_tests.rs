@@ -8,25 +8,37 @@ use setup::*;
 mod setup;
 
 #[test]
-fn it_locks_and_unlocks_contract_stage() {
+fn it_locks_the_contract_stage() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let contract_address = setup.contract.address_ref();
 
-    // Locking the contract stage
     setup
         .blockchain
         .execute_tx(contract_address, &setup.contract, &rust_biguint!(0), |sc| {
+            sc.stage(&managed_address!(contract_address)).set(managed_buffer!(b"dummy_code"));
+
             sc.lock_contract_stage_endpoint(managed_address!(contract_address));
+
             assert!(sc.is_stage_locked(&managed_address!(contract_address)), "contract stage should be locked");
         })
         .assert_ok();
+}
 
-    // Unlocking the contract stage
+#[test]
+fn it_unlocks_the_contract_stage() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+    let contract_address = setup.contract.address_ref();
+
     setup
         .blockchain
         .execute_tx(contract_address, &setup.contract, &rust_biguint!(0), |sc| {
+            sc.stage(&managed_address!(contract_address)).set(managed_buffer!(b"dummy_code"));
+            sc.stage_lock(&managed_address!(contract_address)).set(true);
+
             sc.unlock_contract_stage_endpoint(managed_address!(contract_address));
+
             assert!(!sc.is_stage_locked(&managed_address!(contract_address)), "contract stage should be unlocked");
+            assert!(sc.stage(&managed_address!(contract_address)).is_empty(), "contract stage should be empty");
         })
         .assert_ok();
 }
@@ -47,8 +59,9 @@ fn it_fails_stage_contract_by_non_developer() {
 #[test]
 fn it_stages_contract_and_creates_proposal_when_caller_has_permission() {
     let mut setup = EntitySetup::new(entity::contract_obj);
-    let contract_address = setup.contract.address_ref().clone();
     let dev_address = setup.blockchain.create_user_account(&rust_biguint!(0));
+    let contract = setup.blockchain.create_sc_account(&rust_biguint!(0), Option::None, entity::contract_obj, "");
+    let contract_address = contract.address_ref().clone();
 
     setup
         .blockchain
@@ -86,7 +99,7 @@ fn it_stages_contract_and_creates_proposal_when_caller_has_permission() {
             let permissions = MultiValueManagedVec::from(vec![managed_buffer!(b"activateSc")]);
 
             sc.stage_contract_and_propose_endpoint(
-                managed_address!(&dev_address),
+                managed_address!(&contract_address),
                 managed_buffer!(b"new_code"),
                 managed_buffer!(b"trusted_host_id"),
                 managed_buffer!(b"content_hash"),
@@ -95,8 +108,8 @@ fn it_stages_contract_and_creates_proposal_when_caller_has_permission() {
                 permissions,
             );
 
-            assert!(sc.stage_lock(&managed_address!(&dev_address)).get(), "contract stage should be locked");
-            assert!(!sc.stage(&managed_address!(&dev_address)).is_empty(), "contract should be staged");
+            assert!(sc.stage_lock(&managed_address!(&contract_address)).get(), "stage should be locked");
+            assert!(!sc.stage(&managed_address!(&contract_address)).is_empty(), "stage should not be empty");
         })
         .assert_ok();
 }
@@ -112,4 +125,116 @@ fn it_fails_activate_contract_when_no_code_staged() {
             sc.activate_contract_endpoint(managed_address!(contract_address), CodeMetadata::DEFAULT, MultiValueEncoded::new());
         })
         .assert_user_error("contract not staged");
+}
+
+#[test]
+fn it_fails_to_lock_stage_when_code_stage_is_empty() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+    let contract_address = setup.blockchain.create_user_account(&rust_biguint!(0));
+
+    setup
+        .blockchain
+        .execute_tx(&setup.contract.address_ref(), &setup.contract, &rust_biguint!(0), |sc| {
+            sc.lock_contract_stage_endpoint(managed_address!(&contract_address));
+        })
+        .assert_user_error("contract stage is empty");
+}
+
+#[test]
+fn it_fails_to_lock_stage_when_caller_not_self() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+    let contract_address = setup.blockchain.create_user_account(&rust_biguint!(0));
+
+    setup
+        .blockchain
+        .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
+            sc.lock_contract_stage_endpoint(managed_address!(&contract_address));
+        })
+        .assert_user_error("action not allowed by user");
+}
+
+#[test]
+fn it_fails_to_unlock_stage_when_caller_not_self() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+    let contract_address = setup.blockchain.create_user_account(&rust_biguint!(0));
+
+    setup
+        .blockchain
+        .execute_tx(&setup.owner_address, &setup.contract, &rust_biguint!(0), |sc| {
+            sc.unlock_contract_stage_endpoint(managed_address!(&contract_address));
+        })
+        .assert_user_error("action not allowed by user");
+}
+
+#[test]
+fn it_fails_to_stage_code_when_stage_is_locked() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+    let dev_address = setup.blockchain.create_user_account(&rust_biguint!(0));
+    let contract_address = setup.blockchain.create_user_account(&rust_biguint!(0));
+
+    setup
+        .blockchain
+        .execute_tx(&dev_address, &setup.contract, &rust_biguint!(0), |sc| {
+            sc.create_role(managed_buffer!(ROLE_BUILTIN_DEVELOPER));
+            sc.assign_role(managed_address!(&dev_address), managed_buffer!(ROLE_BUILTIN_DEVELOPER));
+
+            sc.stage_lock(&managed_address!(&contract_address)).set(true);
+
+            sc.stage_contract_endpoint(managed_address!(&contract_address), managed_buffer!(b"dummy_code"));
+        })
+        .assert_user_error("contract stage is locked");
+}
+
+#[test]
+fn it_fails_to_stage_code_when_code_is_empty() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+    let dev_address = setup.blockchain.create_user_account(&rust_biguint!(0));
+    let contract = setup.blockchain.create_sc_account(&rust_biguint!(0), Option::None, entity::contract_obj, "");
+    let contract_address = contract.address_ref().clone();
+
+    setup
+        .blockchain
+        .execute_tx(&dev_address, &setup.contract, &rust_biguint!(0), |sc| {
+            sc.create_role(managed_buffer!(ROLE_BUILTIN_DEVELOPER));
+            sc.assign_role(managed_address!(&dev_address), managed_buffer!(ROLE_BUILTIN_DEVELOPER));
+
+            let code = managed_buffer!(b"");
+
+            sc.stage_contract_endpoint(managed_address!(&contract_address), code);
+        })
+        .assert_user_error("code must not be empty");
+}
+
+#[test]
+fn it_fails_to_stage_code_when_address_not_a_contract_address() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+    let dev_address = setup.blockchain.create_user_account(&rust_biguint!(0));
+    let user_address = setup.blockchain.create_user_account(&rust_biguint!(0));
+
+    setup
+        .blockchain
+        .execute_tx(&dev_address, &setup.contract, &rust_biguint!(0), |sc| {
+            sc.create_role(managed_buffer!(ROLE_BUILTIN_DEVELOPER));
+            sc.assign_role(managed_address!(&dev_address), managed_buffer!(ROLE_BUILTIN_DEVELOPER));
+
+            sc.stage_contract_endpoint(managed_address!(&user_address), managed_buffer!(b"dummy_code"));
+        })
+        .assert_user_error("address must be contract");
+}
+
+#[test]
+fn it_fails_to_stage_code_when_address_is_self() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+    let dev_address = setup.blockchain.create_user_account(&rust_biguint!(0));
+    let contract_address = setup.contract.address_ref().clone();
+
+    setup
+        .blockchain
+        .execute_tx(&dev_address, &setup.contract, &rust_biguint!(0), |sc| {
+            sc.create_role(managed_buffer!(ROLE_BUILTIN_DEVELOPER));
+            sc.assign_role(managed_address!(&dev_address), managed_buffer!(ROLE_BUILTIN_DEVELOPER));
+
+            sc.stage_contract_endpoint(managed_address!(&contract_address), managed_buffer!(b"dummy_code"));
+        })
+        .assert_user_error("address must not be self");
 }

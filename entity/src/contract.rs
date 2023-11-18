@@ -18,6 +18,12 @@ pub trait ContractModule:
         let locked = self.stage_lock(&address).get();
         require!(!locked, "contract stage is locked already");
 
+        let locked = self.stage_lock(&address).get();
+        require!(!locked, "contract stage is locked already");
+
+        let has_code = !self.stage(&address).is_empty();
+        require!(has_code, "contract stage is empty");
+
         self.stage_lock(&address).set(true);
     }
 
@@ -95,6 +101,9 @@ pub trait ContractModule:
 
     fn stage_contract(&self, address: &ManagedAddress, code: &ManagedBuffer) {
         require!(!self.is_stage_locked(&address), "contract stage is locked");
+        require!(self.blockchain().is_smart_contract(&address), "address must be contract");
+        require!(&self.blockchain().get_sc_address() != address, "address must not be self");
+        require!(!code.is_empty(), "code must not be empty");
 
         self.stage(&address).set(code);
         self.stage_lock(&address).set(true);
