@@ -255,3 +255,32 @@ fn it_returns_executed_for_an_executed_proposal() {
         })
         .assert_ok();
 }
+
+#[test]
+fn it_returns_canceled_when_ends_at_is_zero() {
+    let mut setup = EntitySetup::new(entity::contract_obj);
+    let proposer_address = setup.blockchain.create_user_account(&rust_biguint!(1));
+
+    setup.configure_gov_token(true);
+
+    setup
+        .blockchain
+        .execute_esdt_transfer(&setup.owner_address, &setup.contract, ENTITY_GOV_TOKEN_ID, 0, &rust_biguint!(QURUM), |sc| {
+            let proposal_id = sc.propose_endpoint(
+                managed_buffer!(b"id"),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
+                ManagedBuffer::new(),
+                POLL_DEFAULT_ID,
+                MultiValueManagedVec::new(),
+            );
+
+            // set to zero
+            let mut proposal = sc.proposals(proposal_id).get();
+            proposal.ends_at = 0;
+            sc.proposals(proposal_id).set(proposal);
+
+            assert_eq!(sc.get_proposal_status_view(proposal_id), ProposalStatus::Canceled);
+        })
+        .assert_ok();
+}

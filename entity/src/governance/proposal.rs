@@ -42,6 +42,7 @@ pub enum ProposalStatus {
     Defeated,
     Succeeded,
     Executed,
+    Canceled,
 }
 
 #[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug, Clone)]
@@ -118,7 +119,22 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
         proposal
     }
 
+    fn cancel_proposal(&self, mut proposal: Proposal<Self::Api>) {
+        let status = self.get_proposal_status(&proposal);
+
+        require!(status == ProposalStatus::Active, "proposal is not active");
+
+        proposal.ends_at = 0;
+        self.proposals(proposal.id).set(&proposal);
+
+        self.emit_cancel_event(&proposal);
+    }
+
     fn get_proposal_status(&self, proposal: &Proposal<Self::Api>) -> ProposalStatus {
+        if proposal.ends_at == 0 {
+            return ProposalStatus::Canceled;
+        }
+
         if proposal.was_executed {
             return ProposalStatus::Executed;
         }
