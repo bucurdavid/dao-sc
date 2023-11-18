@@ -383,6 +383,15 @@ pub trait GovernanceModule:
         self.emit_direct_execute_event();
     }
 
+    #[endpoint(cancelProposal)]
+    fn cancel_proposal_endpoint(&self, proposal_id: u64) {
+        let caller = self.blockchain().get_caller();
+        let proposal = self.proposals(proposal_id).get();
+        require!(proposal.proposer == caller, "proposer must cancel proposal");
+
+        self.cancel_proposal(proposal);
+    }
+
     /// Withdraw ESDT governance tokens once the proposals voting period has ended.
     /// Used by members who voted FOR or AGAINST a proposal using ESDTs.
     #[endpoint(withdraw)]
