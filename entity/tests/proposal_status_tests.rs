@@ -275,7 +275,10 @@ fn it_returns_canceled_when_ends_at_is_zero() {
                 MultiValueManagedVec::new(),
             );
 
-            sc.cancel_proposal_endpoint(proposal_id);
+            // set to zero
+            let mut proposal = sc.proposals(proposal_id).get();
+            proposal.ends_at = 0;
+            sc.proposals(proposal_id).set(proposal);
 
             assert_eq!(sc.get_proposal_status_view(proposal_id), ProposalStatus::Canceled);
         })
