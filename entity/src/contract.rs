@@ -85,6 +85,14 @@ pub trait ContractModule:
         self.stage_lock(&address).clear();
     }
 
+    #[view(getContractStage)]
+    fn get_contract_stage_view(&self, address: ManagedAddress) -> MultiValue2<bool, ManagedBuffer> {
+        let is_locked = self.is_stage_locked(&address);
+        let code = self.stage(&address).get();
+
+        (is_locked, code).into()
+    }
+
     fn stage_contract(&self, address: &ManagedAddress, code: &ManagedBuffer) {
         require!(!self.is_stage_locked(&address), "contract stage is locked");
 
@@ -104,11 +112,9 @@ pub trait ContractModule:
         !self.stage_lock(&address).is_empty()
     }
 
-    #[view(getContractStage)]
     #[storage_mapper("contract:stage")]
     fn stage(&self, address: &ManagedAddress) -> SingleValueMapper<ManagedBuffer>;
 
-    #[view(isContractStageLocked)]
     #[storage_mapper("contract:stage_lock")]
     fn stage_lock(&self, address: &ManagedAddress) -> SingleValueMapper<bool>;
 }
