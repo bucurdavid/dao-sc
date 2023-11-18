@@ -18,9 +18,6 @@ pub trait ContractModule:
         let locked = self.stage_lock(&address).get();
         require!(!locked, "contract stage is locked already");
 
-        let locked = self.stage_lock(&address).get();
-        require!(!locked, "contract stage is locked already");
-
         let has_code = !self.stage(&address).is_empty();
         require!(has_code, "contract stage is empty");
 
