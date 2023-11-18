@@ -224,7 +224,9 @@ pub trait PermissionModule: config::ConfigModule + plug::PlugModule {
     }
 
     fn assign_role(&self, address: ManagedAddress, role_name: ManagedBuffer) {
-        require!(self.roles().contains(&role_name), "role does not exist");
+        if !self.roles().contains(&role_name) {
+            self.create_role(role_name.clone());
+        }
 
         let user_id = self.users().get_or_create_user(&address);
 
