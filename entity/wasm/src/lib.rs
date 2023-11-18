@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                           57
+// Endpoints:                           64
 // Async Callback:                       1
-// Total number of exported functions:  59
+// Total number of exported functions:  66
 
 #![no_std]
 
@@ -22,6 +22,7 @@ multiversx_sc_wasm_adapter::endpoints! {
     entity
     (
         init => init
+        upgrade => upgrade
         changeVoteTokenLock => change_vote_token_lock_endpoint
         registerDns => register_dns
         getVersion => version_view
@@ -38,6 +39,12 @@ multiversx_sc_wasm_adapter::endpoints! {
         getMinVoteWeight => min_vote_weight
         getMinProposeWeight => min_propose_weight
         getVotingPeriodMinutes => voting_period_in_minutes
+        lockContractStage => lock_contract_stage_endpoint
+        unlockContractStage => unlock_contract_stage_endpoint
+        stageContract => stage_contract_endpoint
+        stageContractAndPropose => stage_contract_and_propose_endpoint
+        activateContract => activate_contract_endpoint
+        getContractStage => get_contract_stage_view
         createRole => create_role_endpoint
         removeRole => remove_role_endpoint
         assignRole => assign_role_endpoint

@@ -4,6 +4,7 @@ multiversx_sc::derive_imports!();
 use crate::{config, plug};
 
 pub const ROLE_BUILTIN_LEADER: &[u8] = b"leader";
+pub const ROLE_BUILTIN_DEVELOPER: &[u8] = b"developer";
 
 #[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, TypeAbi)]
 pub struct PermissionDetails<M: ManagedTypeApi> {
