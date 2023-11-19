@@ -71,7 +71,7 @@ pub trait Manager:
         self.set_features(&entity_address, features.into_vec());
         self.recalculate_daily_cost(&entity_address);
         self.boost(caller, entity_address.clone(), payment.amount.clone());
-        self.forward_payment_to_org(payment);
+        self.forward_payment_to_org(EgldOrEsdtTokenPayment::from(payment));
 
         entity_address
     }

@@ -22,6 +22,7 @@ multiversx_sc_wasm_adapter::endpoints! {
     manager
     (
         init => init
+        upgrade => upgrade
         addAdmin => add_admin_endpoint
         removeAdmin => remove_admin_endpoint
         forwardToken => forward_token_endpoint
@@ -50,7 +51,6 @@ multiversx_sc_wasm_adapter::endpoints! {
         getCreditsInfo => get_credits_info_view
         initDexModule => init_dex_module
         initOrgModule => init_organization_module
-        forwardCostTokensToOrg => forward_cost_tokens_to_org
     )
 }
 

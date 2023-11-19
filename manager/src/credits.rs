@@ -43,7 +43,7 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
         require!(payment.amount > 0, "amount can not be zero");
 
         self.boost(caller, entity_address, payment.amount.clone());
-        self.forward_payment_to_org(payment);
+        self.forward_distribution_to_org(payment);
     }
 
     #[payable("*")]
@@ -66,7 +66,7 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
         let cost_payment = self.swap_wegld_to_cost_tokens(wegld.amount);
 
         self.boost(caller, entity, cost_payment.amount.clone());
-        self.forward_payment_to_org(cost_payment);
+        self.forward_distribution_to_org(cost_payment);
     }
 
     #[endpoint(registerExternalBoost)]
