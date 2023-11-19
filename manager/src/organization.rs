@@ -10,16 +10,6 @@ pub trait OrganizationModule: config::ConfigModule {
         self.org_contract_address().set(org_contract);
     }
 
-    #[only_owner]
-    #[endpoint(forwardCostTokensToOrg)]
-    fn forward_cost_tokens_to_org(&self) {
-        require!(!self.org_contract_address().is_empty(), "org address must be configured");
-        let cost_token_id = self.cost_token_id().get();
-        let balance = self.blockchain().get_sc_balance(&EgldOrEsdtTokenIdentifier::esdt(cost_token_id.clone()), 0);
-
-        self.forward_payment_to_org(EsdtTokenPayment::new(cost_token_id, 0, balance));
-    }
-
     fn forward_payment_to_org(&self, payment: EsdtTokenPayment) {
         if self.org_contract_address().is_empty() {
             return;
