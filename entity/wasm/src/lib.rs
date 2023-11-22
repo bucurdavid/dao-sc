@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                           64
+// Endpoints:                           65
 // Async Callback:                       1
-// Total number of exported functions:  66
+// Total number of exported functions:  67
 
 #![no_std]
 
@@ -75,6 +75,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         sign => sign_endpoint
         execute => execute_endpoint
         directExecute => direct_execute_endpoint
+        cancelProposal => cancel_proposal_endpoint
         withdraw => withdraw_endpoint
         issueGovToken => issue_gov_token_endpoint
         setGovTokenLocalRoles => set_gov_token_local_roles_endpoint
