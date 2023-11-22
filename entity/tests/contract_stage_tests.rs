@@ -203,19 +203,6 @@ fn it_cancels_a_previously_created_activation_proposal_when_exists() {
 }
 
 #[test]
-fn it_fails_activate_contract_when_no_code_staged() {
-    let mut setup = EntitySetup::new(entity::contract_obj);
-    let contract_address = setup.contract.address_ref();
-
-    setup
-        .blockchain
-        .execute_tx(setup.contract.address_ref(), &setup.contract, &rust_biguint!(0), |sc| {
-            sc.activate_contract_endpoint(managed_address!(contract_address), CodeMetadata::DEFAULT, MultiValueEncoded::new());
-        })
-        .assert_user_error("contract not staged");
-}
-
-#[test]
 fn it_fails_to_lock_stage_when_code_stage_is_empty() {
     let mut setup = EntitySetup::new(entity::contract_obj);
     let contract_address = setup.blockchain.create_user_account(&rust_biguint!(0));

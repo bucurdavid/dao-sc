@@ -80,9 +80,10 @@ pub trait ContractModule:
     }
 
     #[endpoint(activateContract)]
-    fn activate_contract_endpoint(&self, address: ManagedAddress, code_metadata: CodeMetadata, args: MultiValueEncoded<ManagedBuffer>) {
+    fn activate_contract_endpoint(&self, unique_id: ManagedBuffer, address: ManagedAddress, code_metadata: CodeMetadata, args: MultiValueEncoded<ManagedBuffer>) {
         self.require_caller_self();
         require!(!self.stage(&address).is_empty(), "contract not staged");
+        require!(!self.unique_ids().contains(&unique_id), "unique id already exists");
 
         let args_buffer = args.to_arg_buffer();
         let code = self.stage(&address).take();
@@ -95,6 +96,7 @@ pub trait ContractModule:
             self.send_raw().upgrade_contract(&address, gas, &value, &code, code_metadata, &args_buffer);
         }
 
+        self.unique_ids().insert(unique_id);
         self.stage_lock(&address).clear();
     }
 
@@ -152,4 +154,7 @@ pub trait ContractModule:
 
     #[storage_mapper("contract:stage_current_proposal")]
     fn stage_current_proposal(&self, address: &ManagedAddress) -> SingleValueMapper<u64>;
+
+    #[storage_mapper("contract:unique_ids")]
+    fn unique_ids(&self) -> UnorderedSetMapper<ManagedBuffer<Self::Api>>;
 }
