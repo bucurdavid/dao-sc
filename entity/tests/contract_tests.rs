@@ -210,7 +210,12 @@ fn it_fails_activate_contract_when_no_code_staged() {
     setup
         .blockchain
         .execute_tx(setup.contract.address_ref(), &setup.contract, &rust_biguint!(0), |sc| {
-            sc.activate_contract_endpoint(managed_address!(contract_address), CodeMetadata::DEFAULT, MultiValueEncoded::new());
+            sc.activate_contract_endpoint(
+                managed_buffer!(b"uniqueid1"),
+                managed_address!(contract_address),
+                CodeMetadata::DEFAULT,
+                MultiValueEncoded::new(),
+            );
         })
         .assert_user_error("contract not staged");
 }
