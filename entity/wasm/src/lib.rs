@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                           65
+// Endpoints:                           67
 // Async Callback:                       1
-// Total number of exported functions:  67
+// Total number of exported functions:  69
 
 #![no_std]
 
@@ -32,6 +32,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         isLockingVoteTokens => lock_vote_tokens
         getProposalIdCounter => next_proposal_id
         getProposalNftVotes => proposal_nft_votes
+        getWithdrawableVoters => withdrawable_voters
         getWithdrawableProposalIds => withdrawable_proposal_ids
         getWithdrawableVotes => withdrawable_votes
         getProposalAddressVotes => votes
@@ -77,6 +78,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         directExecute => direct_execute_endpoint
         cancelProposal => cancel_proposal_endpoint
         withdraw => withdraw_endpoint
+        withdrawAll => withdraw_all_endpoint
         issueGovToken => issue_gov_token_endpoint
         setGovTokenLocalRoles => set_gov_token_local_roles_endpoint
         mint => mint_endpoint
