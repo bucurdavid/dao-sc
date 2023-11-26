@@ -303,7 +303,34 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
         self.proposal_poll(proposal_id, option_id).update(|current| *current += weight);
     }
 
-    fn withdraw_tokens(&self, proposal_id: u64) -> SCResult<(), ()> {
+    fn withdraw_proposal_votes(&self, proposal_id: u64) {
+        let mut voter_ids_mapper = self.withdrawable_voters(proposal_id);
+        let safe_voter_ids = voter_ids_mapper.iter().collect::<ManagedVec<usize>>();
+
+        for voter_id in safe_voter_ids.iter() {
+            let voter_address = self.users().get_user_address_unchecked(voter_id);
+            let withdrawn = self.withdraw_votes(&voter_address, proposal_id);
+
+            if withdrawn.is_ok() {
+                voter_ids_mapper.swap_remove(&voter_id);
+            }
+        }
+    }
+
+    fn withdraw_user_votes(&self, voter: &ManagedAddress) {
+        let mut proposal_ids_mapper = self.withdrawable_proposal_ids(&voter);
+        let safe_proposal_ids = proposal_ids_mapper.iter().collect::<ManagedVec<u64>>();
+
+        for proposal_id in safe_proposal_ids.iter() {
+            let withdrawn = self.withdraw_votes(&voter, proposal_id);
+
+            if withdrawn.is_ok() {
+                proposal_ids_mapper.swap_remove(&proposal_id);
+            }
+        }
+    }
+
+    fn withdraw_votes(&self, voter: &ManagedAddress, proposal_id: u64) -> SCResult<(), ()> {
         if self.proposals(proposal_id).is_empty() {
             return Ok(());
         }
@@ -315,12 +342,11 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
             return Err(());
         }
 
-        let caller = self.blockchain().get_caller();
         let mut returnables: ManagedVec<EsdtTokenPayment> = ManagedVec::new();
 
         // keep for backwards compatibility
         let gov_token_id = self.gov_token_id().get();
-        let votes_mapper = self.votes(proposal_id, &caller);
+        let votes_mapper = self.votes(proposal_id, &voter);
         let votes = votes_mapper.get();
 
         if votes > 0 {
@@ -330,18 +356,18 @@ pub trait ProposalModule: config::ConfigModule + permission::PermissionModule + 
         }
         // *end backwards compatibility
 
-        for vote in self.withdrawable_votes(proposal_id, &caller).iter() {
+        for vote in self.withdrawable_votes(proposal_id, &voter).iter() {
             self.guarded_vote_tokens(&vote.token_identifier, vote.token_nonce)
                 .update(|current| *current -= &vote.amount);
 
             returnables.push(vote);
         }
 
-        self.withdrawable_votes(proposal_id, &caller).clear();
+        self.withdrawable_votes(proposal_id, &voter).clear();
         self.emit_withdraw_event(&proposal);
 
         if !returnables.is_empty() {
-            self.send().direct_multi(&caller, &returnables);
+            self.send().direct_multi(&voter, &returnables);
         }
 
         return Ok(());

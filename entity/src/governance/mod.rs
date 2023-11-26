@@ -392,22 +392,20 @@ pub trait GovernanceModule:
         self.cancel_proposal(proposal);
     }
 
-    /// Withdraw ESDT governance tokens once the proposals voting period has ended.
+    /// Withdraw locked governance tokens once the proposals voting period has ended.
     /// Used by members who voted FOR or AGAINST a proposal using ESDTs.
     #[endpoint(withdraw)]
     fn withdraw_endpoint(&self) {
         let caller = self.blockchain().get_caller();
 
-        let mut proposal_ids_mapper = self.withdrawable_proposal_ids(&caller);
-        let safe_proposal_ids = proposal_ids_mapper.iter().collect::<ManagedVec<u64>>();
+        self.withdraw_user_votes(&caller);
+    }
 
-        for proposal_id in safe_proposal_ids.iter() {
-            let withdrawn = self.withdraw_tokens(proposal_id);
-
-            if withdrawn.is_ok() {
-                proposal_ids_mapper.swap_remove(&proposal_id);
-            }
-        }
+    /// Withdraw locked governance tokens once the proposals voting period has ended.
+    /// Usable by anyone to withdraw tokens for all voters.
+    #[endpoint(withdrawAll)]
+    fn withdraw_all_endpoint(&self, proposal_id: u64) {
+        self.withdraw_proposal_votes(proposal_id);
     }
 
     /// Issue and configure a fresh governance ESDT owned by the smart contract.
@@ -571,10 +569,12 @@ pub trait GovernanceModule:
             return;
         }
 
+        let caller_id = self.users().get_or_create_user(&caller);
         let mut returnables = ManagedVec::new();
 
         for payment in payments.into_iter() {
             if payment.token_nonce == 0 || self.lock_vote_tokens(&payment.token_identifier).get() {
+                self.withdrawable_voters(proposal_id).insert(caller_id);
                 self.withdrawable_proposal_ids(&caller).insert(proposal_id);
                 self.withdrawable_votes(proposal_id, &caller).push(&payment);
                 self.guarded_vote_tokens(&payment.token_identifier, payment.token_nonce)
