@@ -115,6 +115,15 @@ pub trait GovernanceModule:
         self.try_change_voting_period_in_minutes(value);
     }
 
+    /// Set token nonces that are allowed to vote.
+    /// Can only be called by the contract itself.
+    #[endpoint(setRestrictedVoteNonces)]
+    fn set_restricted_vote_nonces_endpoint(&self, nonces: MultiValueEncoded<u64>) {
+        self.require_caller_self();
+        self.restricted_vote_nonces().clear();
+        self.restricted_vote_nonces().extend(nonces.into_iter());
+    }
+
     /// Set the address of the plug smart contract.
     /// Can only be called by the contract itself.
     /// Can only be called once.
@@ -156,6 +165,8 @@ pub trait GovernanceModule:
         self.require_payments_with_gov_token();
         let caller = self.blockchain().get_caller();
         let payments = self.call_value().all_esdt_transfers().clone_value();
+
+        self.require_vote_tokens_allowed(&payments);
 
         if self.is_plugged() {
             self.call_plug_vote_weight_async()
@@ -255,6 +266,7 @@ pub trait GovernanceModule:
         let payments = self.call_value().all_esdt_transfers();
         let payment_weight = self.get_vote_weight_from_payments(&payments);
 
+        self.require_vote_tokens_allowed(&payments);
         self.commit_vote_payments(&caller, proposal_id, &payments);
 
         if self.is_plugged() {
@@ -281,6 +293,7 @@ pub trait GovernanceModule:
         let payments = self.call_value().all_esdt_transfers();
         let payment_weight = self.get_vote_weight_from_payments(&payments);
 
+        self.require_vote_tokens_allowed(&payments);
         self.commit_vote_payments(&caller, proposal_id, &payments);
 
         if self.is_plugged() {

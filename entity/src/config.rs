@@ -65,6 +65,17 @@ pub trait ConfigModule {
             .verify_ed25519(trusted_host.as_managed_buffer(), signable_hashed.as_managed_buffer(), &signature.as_managed_buffer());
     }
 
+    fn require_vote_tokens_allowed(&self, payments: &ManagedVec<EsdtTokenPayment<Self::Api>>) {
+        if self.restricted_vote_nonces().is_empty() {
+            return;
+        }
+
+        for payment in payments.into_iter() {
+            let allowed = self.restricted_vote_nonces().contains(&payment.token_nonce);
+            require!(allowed, "vote token nonce is restricted");
+        }
+    }
+
     fn try_change_governance_token(&self, token_id: &TokenIdentifier) {
         require!(token_id.is_valid_esdt_identifier(), "invalid token id");
         self.gov_token_id().set(token_id);
@@ -162,4 +173,8 @@ pub trait ConfigModule {
     #[view(getVotingPeriodMinutes)]
     #[storage_mapper("voting_period_minutes")]
     fn voting_period_in_minutes(&self) -> SingleValueMapper<usize>;
+
+    #[view(getRestrictedVoteNonces)]
+    #[storage_mapper("restricted_vote_nonces")]
+    fn restricted_vote_nonces(&self) -> UnorderedSetMapper<u64>;
 }
