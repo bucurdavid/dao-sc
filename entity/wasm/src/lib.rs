@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                           67
+// Endpoints:                           69
 // Async Callback:                       1
-// Total number of exported functions:  69
+// Total number of exported functions:  71
 
 #![no_std]
 
@@ -40,6 +40,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         getMinVoteWeight => min_vote_weight
         getMinProposeWeight => min_propose_weight
         getVotingPeriodMinutes => voting_period_in_minutes
+        getRestrictedVoteNonces => restricted_vote_nonces
         lockContractStage => lock_contract_stage_endpoint
         unlockContractStage => unlock_contract_stage_endpoint
         stageContract => stage_contract_endpoint
@@ -69,6 +70,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         changeMinVoteWeight => change_min_vote_weight_endpoint
         changeMinProposeWeight => change_min_propose_weight_endpoint
         changeVotingPeriodMinutes => change_voting_period_in_minutes_endpoint
+        setRestrictedVoteNonces => set_restricted_vote_nonces_endpoint
         setPlug => set_plug_endpoint
         propose => propose_endpoint
         voteFor => vote_for_endpoint
