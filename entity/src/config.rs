@@ -35,8 +35,7 @@ pub trait ConfigModule {
         require!(!self.gov_token_id().is_empty(), "gov token must be set");
     }
 
-    fn require_payments_with_gov_token(&self) {
-        let payments = self.call_value().all_esdt_transfers();
+    fn require_payments_with_gov_token(&self, payments: &ManagedVec<EsdtTokenPayment<Self::Api>>) {
         let gov_token_id = self.gov_token_id().get();
 
         for payment in payments.into_iter() {
