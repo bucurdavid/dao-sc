@@ -49,7 +49,7 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
         self.recalculate_daily_cost(&address);
     }
 
-    #[endpoint(setDailyFeatureCost)]
+    #[endpoint(setCreditsCostFeature)]
     fn set_credits_cost_feature_amount_endpoint(&self, feature: ManagedBuffer, amount: BigUint) {
         self.require_caller_is_admin();
         require!(amount > 0, "can not be zero");
