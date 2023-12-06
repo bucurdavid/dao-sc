@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                           29
+// Endpoints:                           31
 // Async Callback (empty):               1
-// Total number of exported functions:  31
+// Total number of exported functions:  33
 
 #![no_std]
 
@@ -31,24 +31,26 @@ multiversx_sc_wasm_adapter::endpoints! {
         upgradeEntity => upgrade_entity_endpoint
         setFeatures => set_features_endpoint
         setEntityCreationCost => set_entity_creation_cost_endpoint
-        setDailyBaseCost => set_daily_base_cost_endpoint
-        setDailyFeatureCost => set_daily_feature_cost_endpoint
         getAdmins => admins
         getEntities => entities
         getEntityTemplateAddress => entity_templ_address
         getTrustedHostAddress => trusted_host_address
         getCostTokenId => cost_token_id
         getEntityCreationCost => cost_creation_amount
-        getBaseDailyCost => cost_base_daily_amount
-        getFeatureDailyCost => cost_feature_daily_amount
         getFeatures => features
         initCreditsModule => init_credits_module
         setCreditsBonusFactor => set_credits_bonus_factor_endpoint
+        setCreditsCostBase => set_credits_cost_base_endpoint
+        setCreditsCostExtraPercent => set_credits_cost_extra_percent_endpoint
+        setDailyFeatureCost => set_credits_cost_feature_amount_endpoint
         boost => boost_endpoint
         boostWithSwap => boost_with_swap_endpoint
         registerExternalBoost => register_external_boost_endpoint
         getCredits => get_credits_view
         getCreditsInfo => get_credits_info_view
+        getBaseDailyCost => credits_cost_base_amount
+        getBaseExtraPercent => credits_cost_extra_percent
+        getCreditsCostFeature => credits_cost_feature_amount
         initDexModule => init_dex_module
         initOrgModule => init_organization_module
     )

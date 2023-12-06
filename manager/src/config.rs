@@ -27,20 +27,6 @@ pub trait ConfigModule {
         self.cost_creation_amount().set(amount);
     }
 
-    #[endpoint(setDailyBaseCost)]
-    fn set_daily_base_cost_endpoint(&self, amount: BigUint) {
-        self.require_caller_is_admin();
-        require!(amount > 0, "can not be zero");
-        self.cost_base_daily_amount().set(amount);
-    }
-
-    #[endpoint(setDailyFeatureCost)]
-    fn set_daily_feature_cost_endpoint(&self, feature: ManagedBuffer, amount: BigUint) {
-        self.require_caller_is_admin();
-        require!(amount > 0, "can not be zero");
-        self.cost_feature_daily_amount(&feature).set(amount);
-    }
-
     #[view(getAdmins)]
     #[storage_mapper("admins")]
     fn admins(&self) -> UnorderedSetMapper<ManagedAddress>;
@@ -64,12 +50,4 @@ pub trait ConfigModule {
     #[view(getEntityCreationCost)]
     #[storage_mapper("cost_creation_amount")]
     fn cost_creation_amount(&self) -> SingleValueMapper<BigUint>;
-
-    #[view(getBaseDailyCost)]
-    #[storage_mapper("cost_base_daily_amount")]
-    fn cost_base_daily_amount(&self) -> SingleValueMapper<BigUint>;
-
-    #[view(getFeatureDailyCost)]
-    #[storage_mapper("cost_feature_daily_amount")]
-    fn cost_feature_daily_amount(&self, feature: &ManagedBuffer) -> SingleValueMapper<BigUint>;
 }

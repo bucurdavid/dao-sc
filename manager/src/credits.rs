@@ -34,6 +34,28 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
         self.credits_bonus_factor().set(bonus_factor);
     }
 
+    #[endpoint(setCreditsCostBase)]
+    fn set_credits_cost_base_endpoint(&self, amount: BigUint) {
+        self.require_caller_is_admin();
+        require!(amount > 0, "can not be zero");
+        self.credits_cost_base_amount().set(amount);
+    }
+
+    #[endpoint(setCreditsCostExtraPercent)]
+    fn set_credits_cost_extra_percent_endpoint(&self, address: ManagedAddress, percent: u32) {
+        self.require_caller_is_admin();
+        require!(percent > 0 && percent <= 100_00, "invalid percent");
+        self.credits_cost_extra_percent(&address).set(percent);
+        self.recalculate_daily_cost(&address);
+    }
+
+    #[endpoint(setDailyFeatureCost)]
+    fn set_credits_cost_feature_amount_endpoint(&self, feature: ManagedBuffer, amount: BigUint) {
+        self.require_caller_is_admin();
+        require!(amount > 0, "can not be zero");
+        self.credits_cost_feature_amount(&feature).set(amount);
+    }
+
     #[payable("*")]
     #[endpoint(boost)]
     fn boost_endpoint(&self, entity_address: ManagedAddress) {
@@ -114,20 +136,26 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
         self.boost_event(booster, entity, amount, virtual_amount, bonus_factor);
     }
 
-    fn recalculate_daily_cost(&self, entity_address: &ManagedAddress) {
-        let mut entry = self.get_or_create_entry(&entity_address);
-        let mut daily_cost = self.cost_base_daily_amount().get();
+    fn recalculate_daily_cost(&self, entity: &ManagedAddress) {
+        let mut entry = self.get_or_create_entry(&entity);
+        let mut daily_cost = self.credits_cost_base_amount().get();
+        let base_extra_percent = self.credits_cost_extra_percent(&entity).get();
 
         entry.last_period_change = self.blockchain().get_block_timestamp();
         entry.period_amount = self.calculate_available_credits(&entry);
 
-        for feature in self.features(&entity_address).iter() {
-            daily_cost += self.cost_feature_daily_amount(&feature).get();
+        for feature in self.features(&entity).iter() {
+            daily_cost += self.credits_cost_feature_amount(&feature).get();
         }
 
-        entry.daily_cost = daily_cost;
+        entry.daily_cost = if base_extra_percent > 0 {
+            let extra_cost = &daily_cost * &BigUint::from(base_extra_percent) / &BigUint::from(10000u64);
+            &daily_cost + &extra_cost
+        } else {
+            daily_cost
+        };
 
-        self.credits_entries(&entity_address).set(entry);
+        self.credits_entries(&entity).set(entry);
     }
 
     fn calculate_available_credits(&self, entry: &CreditEntry<Self::Api>) -> BigUint {
@@ -148,7 +176,7 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
             CreditEntry {
                 total_amount: BigUint::zero(),
                 period_amount: BigUint::zero(),
-                daily_cost: self.cost_base_daily_amount().get(),
+                daily_cost: self.credits_cost_base_amount().get(),
                 last_period_change: self.blockchain().get_block_timestamp(),
             }
         } else {
@@ -167,6 +195,18 @@ pub trait CreditsModule: config::ConfigModule + features::FeaturesModule + dex::
 
     #[storage_mapper("credits:total_deposits")]
     fn credits_total_deposits_amount(&self) -> SingleValueMapper<BigUint>;
+
+    #[view(getBaseDailyCost)]
+    #[storage_mapper("credits:cost_base")]
+    fn credits_cost_base_amount(&self) -> SingleValueMapper<BigUint>;
+
+    #[view(getBaseExtraPercent)]
+    #[storage_mapper("credits:cost_extra_percent")]
+    fn credits_cost_extra_percent(&self, entity: &ManagedAddress) -> SingleValueMapper<u32>;
+
+    #[view(getCreditsCostFeature)]
+    #[storage_mapper("credits:cost_feature")]
+    fn credits_cost_feature_amount(&self, feature: &ManagedBuffer) -> SingleValueMapper<BigUint>;
 
     #[storage_mapper("credits:boost_reward_token")]
     fn credits_reward_token(&self) -> SingleValueMapper<TokenIdentifier>;
